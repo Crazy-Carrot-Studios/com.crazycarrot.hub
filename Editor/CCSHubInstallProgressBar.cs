@@ -18,7 +18,7 @@ namespace CCS.Hub.Editor
     {
         public static void Draw()
         {
-            if (CCSCharacterControllerAssetsImportService.IsImportInProgress)
+            if (CCSCharacterControllerAssetsBootstrap.IsBootstrapBusy)
             {
                 float pulse = 0.5f + 0.5f * Mathf.Sin((float)EditorApplication.timeSinceStartup * 2.5f);
                 Rect rectAssets = EditorGUILayout.GetControlRect(false, 22f);
@@ -53,7 +53,7 @@ namespace CCS.Hub.Editor
 
         public static bool ShouldShow()
         {
-            if (CCSCharacterControllerAssetsImportService.IsImportInProgress)
+            if (CCSCharacterControllerAssetsBootstrap.IsBootstrapBusy)
             {
                 return true;
             }

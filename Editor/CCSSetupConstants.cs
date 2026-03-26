@@ -35,14 +35,11 @@ namespace CCS.Hub.Editor
         /// <summary>Registry row id for CCS Character Controller in <see cref="CCS.Hub.CCSPackageRegistry"/>.</summary>
         public const string CharacterControllerDefinitionId = "ccs-charactercontroller";
 
-        /// <summary>Unity asset path where Character Controller sources are imported (never under Packages/).</summary>
+        /// <summary>UPM package name for CCS Character Controller (resolved under Packages/ before Hub bootstraps into Assets).</summary>
+        public const string CharacterControllerPackageId = "com.crazycarrot.charactercontroller";
+
+        /// <summary>Unity asset path where Character Controller sources are bootstrapped for editing (not the transient Packages/ copy).</summary>
         public const string CharacterControllerAssetsRoot = "Assets/CCS/CharacterController";
-
-        /// <summary>Preferred Git branch for GitHub archive.zip (fallback: <see cref="CharacterControllerGitHubArchiveBranches"/>).</summary>
-        public const string CharacterControllerGitBranch = "main";
-
-        /// <summary>Branches tried in order until a zip archive downloads (handles repos defaulting to main or master).</summary>
-        public static readonly string[] CharacterControllerGitHubArchiveBranches = { "main", "master" };
 
         /// <summary>EditorPrefs: required Branding/Input/Cinemachine auto-install completed for this project.</summary>
         public const string EditorPrefsRequiredAutoDepsSatisfiedKey = "RequiredAutoDepsSatisfied";

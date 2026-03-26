@@ -10,6 +10,7 @@
 // ============================================================================
 
 using System.Collections.Generic;
+using System.Linq;
 using CCS.Hub;
 using UnityEditor;
 using UnityEngine;
@@ -101,7 +102,7 @@ namespace CCS.Hub.Editor
         {
             if (CCSPackageInstallService.IsBusy()
                 || CCSPackageInstallService.GetInstallBatchProgressNormalized() < 0f
-                || CCSCharacterControllerAssetsImportService.IsImportInProgress)
+                || CCSCharacterControllerAssetsBootstrap.IsBootstrapBusy)
             {
                 Repaint();
             }
@@ -159,7 +160,7 @@ namespace CCS.Hub.Editor
 
             subscribedToInstallEvents = true;
             CCSPackageInstallService.StateChanged += OnInstallPipelineStateChanged;
-            CCSCharacterControllerAssetsImportService.StateChanged += OnInstallPipelineStateChanged;
+            CCSCharacterControllerAssetsBootstrap.StateChanged += OnInstallPipelineStateChanged;
         }
 
         private void UnsubscribeInstallEvents()
@@ -171,7 +172,7 @@ namespace CCS.Hub.Editor
 
             subscribedToInstallEvents = false;
             CCSPackageInstallService.StateChanged -= OnInstallPipelineStateChanged;
-            CCSCharacterControllerAssetsImportService.StateChanged -= OnInstallPipelineStateChanged;
+            CCSCharacterControllerAssetsBootstrap.StateChanged -= OnInstallPipelineStateChanged;
         }
 
         private void OnInstallPipelineStateChanged()
@@ -250,7 +251,7 @@ namespace CCS.Hub.Editor
         {
             CCSHubBrandingUi.TryDrawSectionLabel("Available CCS tools");
             EditorGUILayout.LabelField(
-                "Optional Git CCS packages install via Package Manager under Packages/. Character Controller is imported into Assets/CCS/CharacterController only (not as a package).",
+                "Optional CCS Git packages install via Package Manager. Character Controller uses a two-step flow: Package Manager fetches the Git package under Packages/, then CCS Hub imports that source into Assets/CCS/CharacterController (like importing a .unitypackage).",
                 EditorStyles.miniLabel);
             EditorGUILayout.Space(4f);
 
@@ -285,13 +286,13 @@ namespace CCS.Hub.Editor
         private static void DrawAssetsExplanation()
         {
             EditorGUILayout.HelpBox(
-                "Character Controller is downloaded from the public GitHub repository into Assets/CCS/CharacterController (editable project sources). Optional CCS tools that remain UPM-only resolve under Packages/.",
+                "Character Controller: UPM installs the Git checkout under Packages/ first; the Hub then copies/bootstraps into Assets/CCS so content is visible and editable in the Project window. The Hub removes the package dependency after copy to avoid compiling duplicate scripts.",
                 MessageType.None);
         }
 
         private void DrawToolbar()
         {
-            bool busy = CCSPackageInstallService.IsBusy() || CCSCharacterControllerAssetsImportService.IsImportInProgress;
+            bool busy = CCSPackageInstallService.IsBusy() || CCSCharacterControllerAssetsBootstrap.IsBootstrapBusy;
             using (new EditorGUI.DisabledScope(busy))
             {
                 if (GUILayout.Button("Install selected", GUILayout.Height(32f)))
@@ -322,10 +323,10 @@ namespace CCS.Hub.Editor
                 CCSHubInstallProgressBar.Draw();
             }
 
-            if (CCSCharacterControllerAssetsImportService.IsImportInProgress)
+            if (CCSCharacterControllerAssetsBootstrap.IsBootstrapBusy)
             {
                 EditorGUILayout.HelpBox(
-                    "Importing Character Controller into Assets/CCS/CharacterController…",
+                    "Importing Character Controller into Assets/CCS/CharacterController (copying from Packages/ or removing duplicate package entry)…",
                     MessageType.Warning);
             }
             else if (CCSPackageInstallService.IsBusy())
@@ -369,21 +370,43 @@ namespace CCS.Hub.Editor
 
         private CCSPackageInstallStatus GetOptionalRowStatus(CCSPackageDefinition definition)
         {
-            if (definition.SourceType == CCSPackageSourceType.AssetsGitImport)
+            if (definition.Id == CCSSetupConstants.CharacterControllerDefinitionId)
             {
-                if (CCSCharacterControllerAssetsImportService.IsFailed(definition.Id))
+                if (CCSCharacterControllerAssetsBootstrap.IsFailed(definition.Id))
                 {
                     return CCSPackageInstallStatus.Failed;
                 }
 
-                if (CCSCharacterControllerAssetsImportService.IsImporting(definition.Id))
+                if (CCSCharacterControllerAssetsBootstrap.IsBootstrapBusy)
                 {
                     return CCSPackageInstallStatus.Installing;
                 }
 
-                if (CCSCharacterControllerAssetsImportService.IsCharacterControllerImportedIntoAssets())
+                if (CCSCharacterControllerAssetsBootstrap.IsCharacterControllerProjectImportComplete())
                 {
                     return CCSPackageInstallStatus.Installed;
+                }
+
+                if (CCSPackageInstallService.IsFailed(definition.Id))
+                {
+                    return CCSPackageInstallStatus.Failed;
+                }
+
+                if (CCSPackageInstallService.IsInstalling(definition.Id) || CCSPackageInstallService.IsPending(definition.Id))
+                {
+                    return CCSPackageInstallService.IsPending(definition.Id)
+                        ? CCSPackageInstallStatus.Pending
+                        : CCSPackageInstallStatus.Installing;
+                }
+
+                if (!CCSPackageStatusService.IsListReady())
+                {
+                    return CCSPackageInstallStatus.Unknown;
+                }
+
+                if (CCSPackageStatusService.IsPackageInstalled(definition.PackageId))
+                {
+                    return CCSPackageInstallStatus.Installing;
                 }
 
                 return CCSPackageInstallStatus.NotInstalled;
@@ -420,7 +443,7 @@ namespace CCS.Hub.Editor
         private void RunInstallSelectedOptional()
         {
             List<CCSPackageDefinition> packageManagerBatch = new List<CCSPackageDefinition>();
-            int assetsImportStarted = 0;
+            int skippedAlreadyImported = 0;
 
             foreach (CCSPackageDefinition definition in CCSPackageRegistry.EnumerateOptionalToolsForHub())
             {
@@ -434,35 +457,43 @@ namespace CCS.Hub.Editor
                     continue;
                 }
 
-                if (definition.SourceType == CCSPackageSourceType.AssetsGitImport)
+                if (definition.Id == CCSSetupConstants.CharacterControllerDefinitionId
+                    && CCSCharacterControllerAssetsBootstrap.IsCharacterControllerProjectImportComplete())
                 {
-                    CCSCharacterControllerAssetsImportService.StartImport(definition);
-                    assetsImportStarted++;
+                    skippedAlreadyImported++;
                     continue;
+                }
+
+                if (definition.Id == CCSSetupConstants.CharacterControllerDefinitionId)
+                {
+                    CCSCharacterControllerAssetsBootstrap.ClearBootstrapFailureState();
                 }
 
                 packageManagerBatch.Add(definition);
             }
 
-            if (packageManagerBatch.Count == 0 && assetsImportStarted == 0)
+            if (packageManagerBatch.Count == 0)
             {
-                statusLine = "Select at least one optional tool, or mark setup complete.";
+                statusLine = skippedAlreadyImported > 0
+                    ? "Character Controller is already imported under Assets/CCS/CharacterController. Select another tool or mark setup complete."
+                    : "Select at least one optional tool, or mark setup complete.";
                 return;
             }
 
-            if (packageManagerBatch.Count > 0)
-            {
-                CCSPackageInstallService.EnqueueDefinitions(packageManagerBatch);
-            }
+            CCSPackageInstallService.EnqueueDefinitions(packageManagerBatch);
 
-            if (assetsImportStarted > 0 && packageManagerBatch.Count > 0)
+            bool batchIncludesCharacterController = packageManagerBatch.Any(
+                definition => definition.Id == CCSSetupConstants.CharacterControllerDefinitionId);
+
+            if (skippedAlreadyImported > 0)
             {
                 statusLine =
-                    $"Queued {packageManagerBatch.Count} Package Manager install(s) and started Character Controller import into Assets.";
+                    $"Queued {packageManagerBatch.Count} install(s). Character Controller was already present under Assets/CCS.";
             }
-            else if (assetsImportStarted > 0)
+            else if (batchIncludesCharacterController)
             {
-                statusLine = "Importing Character Controller into Assets/CCS/CharacterController…";
+                statusLine =
+                    $"Queued {packageManagerBatch.Count} install(s). After Package Manager adds Character Controller under Packages/, the Hub will import it into Assets/CCS/CharacterController.";
             }
             else
             {

@@ -1,5 +1,7 @@
 # CCS Hub (`com.crazycarrot.hub`)
 
+**Version: 0.1.5**
+
 First-run **bootstrap installer** and package hub for **Crazy Carrot Studios** Unity projects. After you add this package by Git URL, Unity runs a **CCS Setup Wizard** (once per project until you complete, skip, or reset) that can install required Unity packages and optional CCS Git packages **sequentially** via Package Manager, and scaffold **`Assets/CCS`** content folders.
 
 ## Standalone Git / UPM repository
@@ -31,7 +33,18 @@ This package is maintained in its **own** Git repository. **`package.json` lives
    Save the file and return to Unity so it resolves the package.
 
 3. After compile, the **CCS Hub** window may open automatically (unless you already completed or skipped setup for this project).
-4. Use **CCS → CCS Hub** for optional tools; use **Install selected** for Character Controller (imports into **Assets/CCS/CharacterController**, not as a separate UPM package).
+4. Use **CCS → CCS Hub** for optional tools; choose **CCS Character Controller** and **Install selected**.
+
+## Character Controller (UPM source → Assets/CCS)
+
+Unity Package Manager **never** writes optional CCS tools straight into `Assets/`; Git packages resolve under **`Packages/`**. CCS Hub uses a **two-step** flow so the result still feels like **Assets → Import Package**:
+
+1. **Ensure source:** `Client.Add` installs **`com.crazycarrot.charactercontroller`** from Git into **`Packages/com.crazycarrot.charactercontroller/`** (standard UPM layout).
+2. **Import / bootstrap:** The Hub copies that folder into **`Assets/CCS/CharacterController/`** (skipping the repository root `package.json` so Unity does not treat the Assets tree as a second UPM package), materializes **`Samples~/BasicSetup`** into **`BasicSetup`** when present, then **`Client.Remove`** the package entry so you do not compile the same scripts twice.
+
+**What appears under `Assets/CCS/CharacterController`:** whatever the package contains—typically **`Runtime/`**, **`Editor/`**, **`Content/`**, **`Animations/`**, **`Samples~`**, etc.—mirroring the package layout minus the root manifest.
+
+**Limitations / next steps:** Re-install overwrites that folder (destructive). If **`Client.Remove`** fails after copy, remove the package manually in Package Manager to avoid duplicate assemblies. Updating Character Controller later may require a documented “replace from package” or Git workflow—the Hub does not diff-merge versions yet.
 
 Manual menus:
 

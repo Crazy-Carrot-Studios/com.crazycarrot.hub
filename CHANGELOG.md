@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.5] - 2025-03-26
+
+### Changed
+
+- **CCS Character Controller** optional install now uses **Package Manager** (`com.crazycarrot.charactercontroller` Git URL) so sources land under **`Packages/`** first, then **CCS Hub** copies/bootstraps them into **`Assets/CCS/CharacterController`** and removes the UPM dependency to avoid duplicate script compilation. Replaces the previous GitHub **zip-only** import.
+- Added **`CCSCharacterControllerAssetsBootstrap`** and **`CCSAssetFolderCopyUtility`**; removed **`CCSCharacterControllerAssetsImportService`** (zip download) and folded editor-load sample materialization into the bootstrap type.
+- **README** shows the package **version** at the top for quick verification against `package.json`.
+
 ## [0.1.3] - 2025-03-26
 
 ### Fixed
