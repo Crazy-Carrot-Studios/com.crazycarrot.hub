@@ -1,21 +1,11 @@
-# CCS Hub — Documentation
+# CCS Hub — Package documentation
 
-## Overview
+This folder holds **embedded documentation** for the **CCS Hub** UPM package (`com.crazycarrot.hub`).
 
-**CCS Hub** is a first-run **bootstrap installer** for CCS projects. In a consuming Unity project, UPM code lives under **Packages** or the **Package Cache** after you add the hub by **Git URL**. In the **hub’s own repository**, the package layout starts at the **repo root** (`package.json` next to `Editor/`, `Runtime/`, etc.). The wizard can create **project content** under **`Assets/CCS`** only (folders), not embedded package files.
+Unity treats the `Documentation~` directory as optional package docs (not imported as runtime assets). Content here is for maintainers and for anyone browsing the package in a clone or Git checkout.
 
-## Package Manager
+For the **authoritative** install and workflow guide, see the package **`README.md`** at the repository root and **`CHANGELOG.md`**.
 
-Installs use **`UnityEditor.PackageManager.Client.Add`**. Only **one** add operation runs at a time; the hub queues the rest. Pending queue ids are stored in **Session State** so a **pending** list can survive **script reload** (an in-flight request cannot be resumed).
+---
 
-## Hybrid dependencies
-
-`package.json` intentionally keeps **`dependencies` empty** so optional CCS tools are not pulled only by static references. **CCS Branding**, **Input System**, and **Cinemachine** are installed from the wizard’s **Required** section (or **Install Required Only**).
-
-## DOTween
-
-**DOTween** is listed under **Manual / Special**. The official Demigiant distribution is **not** treated as a reliable one-click Git UPM install from this hub.
-
-## Extending the registry
-
-Edit **`CCSPackageRegistry`** in `Runtime/CCSPackageRegistry.cs` to add rows. Use **`CCSPackageDefinition`** and the category / source enums for consistent UI and install behavior.
+**Crazy Carrot Studios**
