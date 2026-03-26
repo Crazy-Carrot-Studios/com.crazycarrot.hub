@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.3] - 2025-03-26
+
+### Fixed
+
+- Removed root `Documentation~.meta` and `Samples~.meta` so Unity does not warn about missing tilde folders when the package is installed from Git (folder metas come from child `README` assets).
+- Character Controller GitHub zip import tries **`main`**, then **`master`**, when the first archive returns **404** (repos using either default branch).
+
 ## [0.1.2] - 2025-03-26
 
 ### Changed

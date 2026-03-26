@@ -38,8 +38,11 @@ namespace CCS.Hub.Editor
         /// <summary>Unity asset path where Character Controller sources are imported (never under Packages/).</summary>
         public const string CharacterControllerAssetsRoot = "Assets/CCS/CharacterController";
 
-        /// <summary>Git branch used when resolving GitHub archive.zip for Character Controller import.</summary>
+        /// <summary>Preferred Git branch for GitHub archive.zip (fallback: <see cref="CharacterControllerGitHubArchiveBranches"/>).</summary>
         public const string CharacterControllerGitBranch = "main";
+
+        /// <summary>Branches tried in order until a zip archive downloads (handles repos defaulting to main or master).</summary>
+        public static readonly string[] CharacterControllerGitHubArchiveBranches = { "main", "master" };
 
         /// <summary>EditorPrefs: required Branding/Input/Cinemachine auto-install completed for this project.</summary>
         public const string EditorPrefsRequiredAutoDepsSatisfiedKey = "RequiredAutoDepsSatisfied";

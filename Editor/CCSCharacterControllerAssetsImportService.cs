@@ -87,7 +87,7 @@ namespace CCS.Hub.Editor
                 return;
             }
 
-            if (!TryBuildGitHubArchiveZipUrl(definition.InstallIdentifier, CCSSetupConstants.CharacterControllerGitBranch, out string zipUrl))
+            if (!TryBuildGitHubArchiveZipUrl(definition.InstallIdentifier, CCSSetupConstants.CharacterControllerGitBranch, out _))
             {
                 CCSEditorLog.Error(
                     "CCS Hub: Character Controller import needs a public https://github.com/... Git URL. Private repos require a manual workflow.");
@@ -100,25 +100,82 @@ namespace CCS.Hub.Editor
             activeImportDefinitionId = definition.Id;
             RaiseStateChanged();
 
+            BeginGitHubArchiveDownload(definition, CCSSetupConstants.CharacterControllerGitHubArchiveBranches, 0);
+        }
+
+        /// <summary>Tries GitHub archive URLs in order (e.g. main then master) so public repos with either default branch work.</summary>
+        private static void BeginGitHubArchiveDownload(CCSPackageDefinition definition, string[] branches, int branchIndex)
+        {
+            if (branchIndex >= branches.Length)
+            {
+                CCSEditorLog.Error(
+                    "CCS Hub: Character Controller: no GitHub zip archive found (tried branches: "
+                    + string.Join(", ", branches)
+                    + "). Ensure the repo is public and has a default branch of main or master.");
+                FailedDefinitionIds.Add(definition.Id);
+                activeImportDefinitionId = null;
+                RaiseStateChanged();
+                return;
+            }
+
+            string branch = branches[branchIndex];
+            if (!TryBuildGitHubArchiveZipUrl(definition.InstallIdentifier, branch, out string zipUrl))
+            {
+                BeginGitHubArchiveDownload(definition, branches, branchIndex + 1);
+                return;
+            }
+
             string zipPath = Path.Combine(Application.temporaryCachePath, $"ccs-cc-import-{Guid.NewGuid():N}.zip");
             var request = new UnityWebRequest(zipUrl);
             request.downloadHandler = new DownloadHandlerFile(zipPath);
             UnityWebRequestAsyncOperation operation = request.SendWebRequest();
-            operation.completed += _ => OnZipDownloadCompleted(request, zipPath, definition.Id);
+            operation.completed += _ =>
+            {
+                try
+                {
+                    if (request.result == UnityWebRequest.Result.Success)
+                    {
+                        ProcessDownloadedCharacterControllerZip(zipPath, definition.Id);
+                        return;
+                    }
+
+                    long code = request.responseCode;
+                    if (code == 404 && branchIndex + 1 < branches.Length)
+                    {
+                        CCSEditorLog.Warning(
+                            $"CCS Hub: Character Controller archive not found for branch '{branch}' (404); trying '{branches[branchIndex + 1]}'…");
+                        BeginGitHubArchiveDownload(definition, branches, branchIndex + 1);
+                        return;
+                    }
+
+                    string err = request.error ?? request.result.ToString();
+                    CCSEditorLog.Error($"CCS Hub: Character Controller download failed: {err} (branch: {branch})");
+                    FailedDefinitionIds.Add(definition.Id);
+                    activeImportDefinitionId = null;
+                    RaiseStateChanged();
+                }
+                finally
+                {
+                    request.Dispose();
+                    if (File.Exists(zipPath))
+                    {
+                        try
+                        {
+                            File.Delete(zipPath);
+                        }
+                        catch (IOException)
+                        {
+                            // Best-effort temp cleanup.
+                        }
+                    }
+                }
+            };
         }
 
-        private static void OnZipDownloadCompleted(UnityWebRequest request, string zipPath, string definitionId)
+        private static void ProcessDownloadedCharacterControllerZip(string zipPath, string definitionId)
         {
             try
             {
-                if (request.result != UnityWebRequest.Result.Success)
-                {
-                    string err = request.error ?? request.result.ToString();
-                    CCSEditorLog.Error($"CCS Hub: Character Controller download failed: {err}");
-                    FailedDefinitionIds.Add(definitionId);
-                    return;
-                }
-
                 EditorUtility.DisplayProgressBar("CCS Hub", "Extracting Character Controller…", 0.45f);
 
                 string extractRoot = Path.Combine(Application.temporaryCachePath, $"ccs-cc-extract-{Guid.NewGuid():N}");
@@ -178,7 +235,6 @@ namespace CCS.Hub.Editor
                     }
                 }
 
-                request.Dispose();
                 activeImportDefinitionId = null;
                 RaiseStateChanged();
             }
