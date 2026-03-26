@@ -43,6 +43,10 @@ namespace CCS.Hub.Editor
         [SerializeField]
         private bool foldoutManual = true;
 
+        [Tooltip("Foldout for last setup summary (success, failed, manual).")]
+        [SerializeField]
+        private bool foldoutCompletion = true;
+
         private readonly Dictionary<string, bool> optionalSelectionByDefinitionId = new Dictionary<string, bool>();
         private string statusLine = "Ready.";
         private bool subscribedToInstallEvents;
@@ -83,20 +87,31 @@ namespace CCS.Hub.Editor
 
         private void OnGUI()
         {
-            DrawHeader();
-            EditorGUILayout.Space(6f);
-            scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
-            DrawCategory(CCSPackageCategory.Required, ref foldoutRequired);
-            DrawCategory(CCSPackageCategory.Recommended, ref foldoutRecommended);
-            DrawCategory(CCSPackageCategory.OptionalCCS, ref foldoutOptional);
-            DrawCategory(CCSPackageCategory.ManualSpecial, ref foldoutManual);
-            EditorGUILayout.Space(8f);
-            DrawRecommendedFolderCallout();
-            EditorGUILayout.EndScrollView();
-            EditorGUILayout.Space(6f);
-            DrawToolbar();
-            EditorGUILayout.Space(4f);
-            DrawStatusBar();
+            CCSHubBrandingUi.TryBeginBody();
+            try
+            {
+                DrawHeader();
+                EditorGUILayout.Space(6f);
+                DrawPostReloadBanner();
+                scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
+                DrawCategory(CCSPackageCategory.Required, ref foldoutRequired);
+                DrawCategory(CCSPackageCategory.Recommended, ref foldoutRecommended);
+                DrawCategory(CCSPackageCategory.OptionalCCS, ref foldoutOptional);
+                DrawCategory(CCSPackageCategory.ManualSpecial, ref foldoutManual);
+                EditorGUILayout.Space(8f);
+                DrawCompletionSummary();
+                EditorGUILayout.Space(8f);
+                DrawRecommendedFolderCallout();
+                EditorGUILayout.EndScrollView();
+                EditorGUILayout.Space(6f);
+                DrawToolbar();
+                EditorGUILayout.Space(4f);
+                DrawStatusBar();
+            }
+            finally
+            {
+                CCSHubBrandingUi.TryEndBody();
+            }
         }
 
         #endregion
@@ -163,12 +178,72 @@ namespace CCS.Hub.Editor
         private void DrawHeader()
         {
             EditorGUILayout.Space(4f);
-            GUIStyle titleStyle = new GUIStyle(EditorStyles.boldLabel) { fontSize = 15 };
-            GUILayout.Label(IsPackageHubMode ? "CCS Package Hub" : "CCS Setup Wizard", titleStyle);
-            GUILayout.Label("Crazy Carrot Studios", EditorStyles.boldLabel);
+            string title = IsPackageHubMode ? "CCS Package Hub" : "CCS Setup Wizard";
+            CCSHubBrandingUi.TryDrawTitleBanner(title);
+            CCSHubBrandingUi.TryDrawSectionLabel("Crazy Carrot Studios");
             EditorGUILayout.HelpBox(
                 "Install required Unity and CCS packages, optionally add more CCS tools, and scaffold Assets/CCS. Package content stays under Packages; this wizard never copies UPM files into Assets/CCS.",
                 MessageType.Info);
+        }
+
+        private static void DrawPostReloadBanner()
+        {
+            if (!CCSPackageInstallService.ShouldShowPostReloadInstallBanner())
+            {
+                return;
+            }
+
+            EditorGUILayout.HelpBox(
+                "Installing after reload: a pending Package Manager queue was restored. Client.Add runs one at a time until the queue is empty.",
+                MessageType.Warning);
+        }
+
+        private void DrawCompletionSummary()
+        {
+            foldoutCompletion = EditorGUILayout.Foldout(foldoutCompletion, "Last setup summary", true);
+            if (!foldoutCompletion)
+            {
+                return;
+            }
+
+            IReadOnlyList<string> successes = CCSPackageInstallService.LastSuccessfulInstallDisplayNames;
+            if (successes.Count > 0)
+            {
+                CCSHubBrandingUi.TryDrawSectionLabel("Installed this batch");
+                for (int index = 0; index < successes.Count; index++)
+                {
+                    EditorGUILayout.LabelField($"• {successes[index]}", EditorStyles.miniLabel);
+                }
+            }
+            else
+            {
+                EditorGUILayout.LabelField("No automated installs recorded for the latest batch yet.", EditorStyles.miniLabel);
+            }
+
+            EditorGUILayout.Space(4f);
+            List<string> failed = CCSPackageInstallService.GetFailedInstallDisplayNames();
+            CCSHubBrandingUi.TryDrawSectionLabel("Failed installs");
+            if (failed.Count == 0)
+            {
+                EditorGUILayout.LabelField("None recorded.", EditorStyles.miniLabel);
+            }
+            else
+            {
+                for (int index = 0; index < failed.Count; index++)
+                {
+                    EditorGUILayout.LabelField($"• {failed[index]}", EditorStyles.miniLabel);
+                }
+            }
+
+            EditorGUILayout.Space(4f);
+            CCSHubBrandingUi.TryDrawSectionLabel("Manual / special remaining");
+            foreach (CCSPackageDefinition definition in CCSPackageRegistry.EnumerateCategory(CCSPackageCategory.ManualSpecial))
+            {
+                if (definition.SourceType == CCSPackageSourceType.Manual && !definition.AutoInstallSupported)
+                {
+                    EditorGUILayout.LabelField($"• {definition.DisplayName}", EditorStyles.miniLabel);
+                }
+            }
         }
 
         private void DrawCategory(CCSPackageCategory category, ref bool foldout)
@@ -213,6 +288,11 @@ namespace CCS.Hub.Editor
             EditorGUILayout.BeginVertical(GUI.skin.box);
             EditorGUILayout.LabelField(definition.DisplayName, EditorStyles.boldLabel);
             EditorGUILayout.LabelField(definition.Description, EditorStyles.wordWrappedMiniLabel);
+            if (definition.Id == CCSSetupConstants.UnityUrpDefinitionId)
+            {
+                EditorGUILayout.HelpBox(CCSPackageProjectContext.GetUrpContextHint(), MessageType.None);
+            }
+
             EditorGUILayout.LabelField($"Source: {FormatSource(definition.SourceType)}  |  Id: {definition.PackageId}", EditorStyles.miniLabel);
             CCSPackageInstallStatus rowStatus = GetRowStatus(definition);
             EditorGUILayout.LabelField($"Status: {FormatStatus(rowStatus)}", EditorStyles.miniLabel);
@@ -291,6 +371,11 @@ namespace CCS.Hub.Editor
                 return CCSPackageInstallStatus.Manual;
             }
 
+            if (definition.Id == CCSSetupConstants.UnityUrpDefinitionId && CCSPackageProjectContext.IsUrpEffectivelyPresent())
+            {
+                return CCSPackageInstallStatus.Installed;
+            }
+
             if (CCSPackageInstallService.IsFailed(definition.Id))
             {
                 return CCSPackageInstallStatus.Failed;
@@ -331,6 +416,12 @@ namespace CCS.Hub.Editor
             bool busy = CCSPackageInstallService.IsBusy();
             using (new EditorGUI.DisabledScope(busy))
             {
+                if (GUILayout.Button("Run Full CCS Setup", GUILayout.Height(32f)))
+                {
+                    RunFullCcsSetup();
+                }
+
+                EditorGUILayout.Space(4f);
                 EditorGUILayout.BeginHorizontal();
                 if (GUILayout.Button("Install Selected", GUILayout.Height(28f)))
                 {
@@ -429,6 +520,14 @@ namespace CCS.Hub.Editor
 
             CCSPackageInstallService.EnqueueDefinitions(batch);
             statusLine = $"Queued {batch.Count} package install operation(s).";
+        }
+
+        private void RunFullCcsSetup()
+        {
+            RunInstallSelected(includeOptional: true);
+            int created = CCSProjectFolderUtility.CreateDefaultCcsFolderStructure();
+            statusLine =
+                $"Full CCS setup: queued required and selected optional installs; created or verified {created} folder node(s) under Assets/CCS.";
         }
 
         #endregion

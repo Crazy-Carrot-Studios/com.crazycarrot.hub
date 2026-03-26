@@ -2,6 +2,10 @@
 
 First-run **bootstrap installer** and package hub for **Crazy Carrot Studios** Unity projects. After you add this package by Git URL, Unity runs a **CCS Setup Wizard** (once per project until you complete, skip, or reset) that can install required Unity packages and optional CCS Git packages **sequentially** via Package Manager, and scaffold **`Assets/CCS`** content folders.
 
+## Standalone Git / UPM repository
+
+This package is maintained in its **own** Git repository. **`package.json` lives at the repository root** (not under another project’s `Packages/` folder). Unity’s **Add package from Git URL** clones that repo and treats the root as the UPM package, so installs stay clean. Optional: pin a release with `#v0.1.0` on the URL.
+
 ## Requirements
 
 - Unity **6000.3** (developed against **6000.3.10f1**)

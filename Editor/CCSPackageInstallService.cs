@@ -27,10 +27,12 @@ namespace CCS.Hub.Editor
 
         private static readonly Queue<CCSPackageDefinition> InstallQueue = new Queue<CCSPackageDefinition>();
         private static readonly HashSet<string> FailedDefinitionIds = new HashSet<string>();
+        private static readonly List<string> LastBatchSuccessDisplayNames = new List<string>();
         private static AddRequest activeAddRequest;
         private static CCSPackageDefinition activeDefinition;
         private static bool updateRegistered;
         private static bool waitingForPackageListBeforeDequeue;
+        private static bool postReloadInstallQueueHint;
 
         public static event Action StateChanged;
 
@@ -48,6 +50,31 @@ namespace CCS.Hub.Editor
 
         #region Public Methods
 
+        public static IReadOnlyList<string> LastSuccessfulInstallDisplayNames => LastBatchSuccessDisplayNames;
+
+        public static bool ShouldShowPostReloadInstallBanner()
+        {
+            return postReloadInstallQueueHint;
+        }
+
+        public static List<string> GetFailedInstallDisplayNames()
+        {
+            List<string> result = new List<string>();
+            foreach (string definitionId in FailedDefinitionIds)
+            {
+                if (CCSPackageRegistry.TryFindById(definitionId, out CCSPackageDefinition definition))
+                {
+                    result.Add(definition.DisplayName);
+                }
+                else
+                {
+                    result.Add(definitionId);
+                }
+            }
+
+            return result;
+        }
+
         public static void EnqueueDefinitions(IEnumerable<CCSPackageDefinition> definitions)
         {
             if (definitions == null)
@@ -55,10 +82,18 @@ namespace CCS.Hub.Editor
                 return;
             }
 
+            LastBatchSuccessDisplayNames.Clear();
+
             foreach (CCSPackageDefinition definition in definitions)
             {
                 if (!definition.AutoInstallSupported || definition.SourceType == CCSPackageSourceType.Manual)
                 {
+                    continue;
+                }
+
+                if (definition.Id == CCSSetupConstants.UnityUrpDefinitionId && CCSPackageProjectContext.IsUrpEffectivelyPresent())
+                {
+                    CCSEditorLog.Info("Queue skipped Universal RP because URP is already detected for this project.");
                     continue;
                 }
 
@@ -151,6 +186,7 @@ namespace CCS.Hub.Editor
 
             if (InstallQueue.Count > 0)
             {
+                postReloadInstallQueueHint = true;
                 CCSEditorLog.Info("Restored pending CCS Hub install queue from session state after domain reload.");
                 RegisterEditorUpdate();
                 RaiseStateChanged();
@@ -202,6 +238,8 @@ namespace CCS.Hub.Editor
                 EditorApplication.update -= ProcessInstallQueue;
                 updateRegistered = false;
             }
+
+            postReloadInstallQueueHint = false;
         }
 
         private static void ProcessInstallQueue()
@@ -247,6 +285,13 @@ namespace CCS.Hub.Editor
             CCSPackageDefinition next = InstallQueue.Dequeue();
             PersistQueueToSession();
 
+            if (next.Id == CCSSetupConstants.UnityUrpDefinitionId && CCSPackageProjectContext.IsUrpEffectivelyPresent())
+            {
+                CCSEditorLog.Info("Install step skipped; Universal RP already detected for this project.");
+                RaiseStateChanged();
+                return;
+            }
+
             if (CCSPackageStatusService.IsPackageInstalled(next.PackageId))
             {
                 CCSEditorLog.Info($"Install step skipped; already present: {next.DisplayName}");
@@ -271,6 +316,7 @@ namespace CCS.Hub.Editor
             if (activeAddRequest.Status == StatusCode.Success)
             {
                 CCSEditorLog.Info($"Client.Add succeeded for '{finished.DisplayName}'.");
+                LastBatchSuccessDisplayNames.Add(finished.DisplayName);
             }
             else
             {

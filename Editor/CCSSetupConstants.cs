@@ -25,6 +25,9 @@ namespace CCS.Hub.Editor
         public const string SessionStateAutoOpenedThisSession = "CCS.Hub.SetupAutoOpenedThisSession";
         public const string SessionStatePendingInstallQueueIds = "CCS.Hub.PendingInstallQueueIds";
 
+        /// <summary>Registry row id for Universal RP in <see cref="CCS.Hub.CCSPackageRegistry"/>.</summary>
+        public const string UnityUrpDefinitionId = "unity-urp";
+
         public static readonly string[] DefaultCcsProjectFolders =
         {
             "Assets/CCS",

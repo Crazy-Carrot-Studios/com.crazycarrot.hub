@@ -72,8 +72,10 @@ namespace CCS.Hub
                 autoInstallSupported: true,
                 showInFirstRunWizard: true,
                 showInPackageHub: true,
-                description: "Universal Render Pipeline. Target version in CCS stacks: 17.3.0 line (Unity 6).",
-                installNotes: string.Empty),
+                description:
+                "Universal Render Pipeline (Unity 6 CCS stacks often use the 17.3.x line). The hub detects an existing URP setup (package and/or active Universal pipeline asset) and will not queue a redundant URP add in that case.",
+                installNotes:
+                "If URP is already active, this row shows Installed and the add step is skipped. Enable \"Include in batch install\" only when you still need the UPM package added."),
             new CCSPackageDefinition(
                 "ccs-charactercreator",
                 "CCS Character Creator",

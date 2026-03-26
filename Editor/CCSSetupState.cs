@@ -74,8 +74,8 @@ namespace CCS.Hub.Editor
         {
             EditorPrefs.DeleteKey(ProjectEditorPrefsKey("SetupCompleted"));
             EditorPrefs.DeleteKey(ProjectEditorPrefsKey("SetupSkipped"));
-            SessionState.EraseBool(CCSSetupConstants.SessionStateAutoOpenedThisSession);
-            SessionState.EraseString(CCSSetupConstants.SessionStatePendingInstallQueueIds);
+            SessionState.SetBool(CCSSetupConstants.SessionStateAutoOpenedThisSession, false);
+            SessionState.SetString(CCSSetupConstants.SessionStatePendingInstallQueueIds, string.Empty);
             CCSEditorLog.Warning("CCS Hub setup flags and session install queue markers were cleared for development.");
         }
 

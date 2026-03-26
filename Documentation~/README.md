@@ -2,7 +2,7 @@
 
 ## Overview
 
-**CCS Hub** is a first-run **bootstrap installer** for CCS projects. UPM package code stays under **Packages** (or Package Cache). The wizard can create **project content** under **`Assets/CCS`** only (folders), not embedded package files.
+**CCS Hub** is a first-run **bootstrap installer** for CCS projects. In a consuming Unity project, UPM code lives under **Packages** or the **Package Cache** after you add the hub by **Git URL**. In the **hub’s own repository**, the package layout starts at the **repo root** (`package.json` next to `Editor/`, `Runtime/`, etc.). The wizard can create **project content** under **`Assets/CCS`** only (folders), not embedded package files.
 
 ## Package Manager
 
