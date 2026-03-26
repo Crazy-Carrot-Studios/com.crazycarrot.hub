@@ -14,8 +14,7 @@ namespace CCS.Hub.Editor
 {
     public static class CCSSetupConstants
     {
-        public const string MenuPathSetupWizard = "Tools/CCS/Setup Wizard";
-        public const string MenuPathPackageHub = "Tools/CCS/Package Hub";
+        public const string MenuPathSetupWizard = "Tools/CCS/CCS Hub";
         public const string MenuPathResetSetupState = "Tools/CCS/Developer/Reset Setup State";
 
         public const string EditorPrefsKeyPrefix = "CCS.Hub.";
@@ -25,8 +24,20 @@ namespace CCS.Hub.Editor
         public const string SessionStateAutoOpenedThisSession = "CCS.Hub.SetupAutoOpenedThisSession";
         public const string SessionStatePendingInstallQueueIds = "CCS.Hub.PendingInstallQueueIds";
 
+        /// <summary>Session flag: pending queue is the hub's automatic required-dependency pass (survives domain reload).</summary>
+        public const string SessionStateAutoRequiredPassActive = "CCS.Hub.AutoRequiredPassActive";
+
         /// <summary>Registry row id for Universal RP in <see cref="CCS.Hub.CCSPackageRegistry"/>.</summary>
         public const string UnityUrpDefinitionId = "unity-urp";
+
+        /// <summary>Registry row id for CCS Character Controller in <see cref="CCS.Hub.CCSPackageRegistry"/>.</summary>
+        public const string CharacterControllerDefinitionId = "ccs-charactercontroller";
+
+        /// <summary>EditorPrefs: required Branding/Input/Cinemachine auto-install completed for this project.</summary>
+        public const string EditorPrefsRequiredAutoDepsSatisfiedKey = "RequiredAutoDepsSatisfied";
+
+        /// <summary>EditorPrefs: human-readable summary of required packages (auto or already present).</summary>
+        public const string EditorPrefsRequiredAutoDepsSummaryKey = "RequiredAutoDepsSummary";
 
         public static readonly string[] DefaultCcsProjectFolders =
         {

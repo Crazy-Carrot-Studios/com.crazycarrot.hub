@@ -5,7 +5,7 @@
 // Author: James Schilz (Developer)
 // Created: March 25, 2025
 // Last Modified: March 25, 2025
-// Summary: Runs after import to refresh Package Manager state and auto-open the CCS Setup Wizard once per project session when appropriate.
+// Summary: Runs after import to refresh Package Manager state, completes required auto-installs first, then auto-opens the CCS Hub once for optional tools when appropriate.
 // Required Components: None
 // Where to Place: Packages/com.crazycarrot.hub/Editor/
 // ============================================================================
@@ -42,13 +42,38 @@ namespace CCS.Hub.Editor
         {
             CCSPackageStatusService.RefreshInstalledPackages(() =>
             {
+                void OpenFirstRunHub()
+                {
+                    if (!CCSSetupState.ShouldAutoOpenSetupWizard())
+                    {
+                        return;
+                    }
+
+                    CCSSetupState.MarkAutoOpenedThisSession();
+                    CCSSetupWindow.ShowFirstRunAuto();
+                }
+
+                void OnRequiredAutoFinished()
+                {
+                    CCSHubRequiredDependencyBootstrap.RequiredAutoInstallCompleted -= OnRequiredAutoFinished;
+                    OpenFirstRunHub();
+                }
+
+                CCSHubRequiredDependencyBootstrap.RequiredAutoInstallCompleted += OnRequiredAutoFinished;
+
+                CCSHubRequiredDependencyBootstrap.TryScheduleAutoInstall();
+
                 if (!CCSSetupState.ShouldAutoOpenSetupWizard())
                 {
+                    CCSHubRequiredDependencyBootstrap.RequiredAutoInstallCompleted -= OnRequiredAutoFinished;
                     return;
                 }
 
-                CCSSetupState.MarkAutoOpenedThisSession();
-                CCSSetupWindow.ShowFirstRunAuto();
+                if (CCSSetupState.AreRequiredAutoDependenciesSatisfied())
+                {
+                    CCSHubRequiredDependencyBootstrap.RequiredAutoInstallCompleted -= OnRequiredAutoFinished;
+                    OpenFirstRunHub();
+                }
             });
         }
 

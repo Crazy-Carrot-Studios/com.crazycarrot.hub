@@ -27,7 +27,8 @@ namespace CCS.Hub
             bool showInFirstRunWizard,
             bool showInPackageHub,
             string description,
-            string installNotes)
+            string installNotes,
+            bool showInOptionalToolsHub = false)
         {
             Id = id;
             DisplayName = displayName;
@@ -42,6 +43,7 @@ namespace CCS.Hub
             ShowInPackageHub = showInPackageHub;
             Description = description;
             InstallNotes = installNotes;
+            ShowInOptionalToolsHub = showInOptionalToolsHub;
         }
 
         public string Id { get; }
@@ -69,5 +71,10 @@ namespace CCS.Hub
         public string Description { get; }
 
         public string InstallNotes { get; }
+
+        /// <summary>
+        /// When true, this definition appears in the simplified CCS Hub optional-tools list (Character Controller, etc.).
+        /// </summary>
+        public bool ShowInOptionalToolsHub { get; }
     }
 }

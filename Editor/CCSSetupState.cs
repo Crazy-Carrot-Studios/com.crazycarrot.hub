@@ -38,6 +38,22 @@ namespace CCS.Hub.Editor
             return EditorPrefs.GetBool(ProjectEditorPrefsKey("SetupSkipped"), false);
         }
 
+        public static bool AreRequiredAutoDependenciesSatisfied()
+        {
+            return EditorPrefs.GetBool(ProjectEditorPrefsKey(CCSSetupConstants.EditorPrefsRequiredAutoDepsSatisfiedKey), false);
+        }
+
+        public static string GetRequiredAutoDependenciesSummary()
+        {
+            return EditorPrefs.GetString(ProjectEditorPrefsKey(CCSSetupConstants.EditorPrefsRequiredAutoDepsSummaryKey), string.Empty);
+        }
+
+        public static void SetRequiredAutoDependenciesSatisfied(string summary)
+        {
+            EditorPrefs.SetBool(ProjectEditorPrefsKey(CCSSetupConstants.EditorPrefsRequiredAutoDepsSatisfiedKey), true);
+            EditorPrefs.SetString(ProjectEditorPrefsKey(CCSSetupConstants.EditorPrefsRequiredAutoDepsSummaryKey), summary ?? string.Empty);
+        }
+
         public static bool ShouldAutoOpenSetupWizard()
         {
             if (IsSetupCompleted() || IsSetupSkipped())
@@ -74,8 +90,11 @@ namespace CCS.Hub.Editor
         {
             EditorPrefs.DeleteKey(ProjectEditorPrefsKey("SetupCompleted"));
             EditorPrefs.DeleteKey(ProjectEditorPrefsKey("SetupSkipped"));
+            EditorPrefs.DeleteKey(ProjectEditorPrefsKey(CCSSetupConstants.EditorPrefsRequiredAutoDepsSatisfiedKey));
+            EditorPrefs.DeleteKey(ProjectEditorPrefsKey(CCSSetupConstants.EditorPrefsRequiredAutoDepsSummaryKey));
             SessionState.SetBool(CCSSetupConstants.SessionStateAutoOpenedThisSession, false);
             SessionState.SetString(CCSSetupConstants.SessionStatePendingInstallQueueIds, string.Empty);
+            SessionState.SetBool(CCSSetupConstants.SessionStateAutoRequiredPassActive, false);
             CCSEditorLog.Warning("CCS Hub setup flags and session install queue markers were cleared for development.");
         }
 

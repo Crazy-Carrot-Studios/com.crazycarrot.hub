@@ -33,8 +33,12 @@ namespace CCS.Hub.Editor
         private static bool updateRegistered;
         private static bool waitingForPackageListBeforeDequeue;
         private static bool postReloadInstallQueueHint;
+        private static bool autoRequiredPassActive;
 
         public static event Action StateChanged;
+
+        /// <summary>Fired when a Client.Add completes successfully for a queued definition.</summary>
+        public static event Action<CCSPackageDefinition> PackageInstallSucceeded;
 
         #endregion
 
@@ -77,12 +81,32 @@ namespace CCS.Hub.Editor
 
         public static void EnqueueDefinitions(IEnumerable<CCSPackageDefinition> definitions)
         {
+            EnqueueDefinitions(definitions, isAutoRequiredBatch: false);
+        }
+
+        /// <summary>Queues required hub dependencies without user confirmation; completion is recorded in EditorPrefs by the bootstrap.</summary>
+        public static void EnqueueAutoRequiredDefinitions(IEnumerable<CCSPackageDefinition> definitions)
+        {
+            EnqueueDefinitions(definitions, isAutoRequiredBatch: true);
+        }
+
+        private static void EnqueueDefinitions(IEnumerable<CCSPackageDefinition> definitions, bool isAutoRequiredBatch)
+        {
             if (definitions == null)
             {
                 return;
             }
 
             LastBatchSuccessDisplayNames.Clear();
+            autoRequiredPassActive = isAutoRequiredBatch;
+            if (isAutoRequiredBatch)
+            {
+                SessionState.SetBool(CCSSetupConstants.SessionStateAutoRequiredPassActive, true);
+            }
+            else
+            {
+                SessionState.SetBool(CCSSetupConstants.SessionStateAutoRequiredPassActive, false);
+            }
 
             foreach (CCSPackageDefinition definition in definitions)
             {
@@ -240,6 +264,13 @@ namespace CCS.Hub.Editor
             }
 
             postReloadInstallQueueHint = false;
+
+            if (autoRequiredPassActive)
+            {
+                CCSHubRequiredDependencyBootstrap.NotifyAutoRequiredBatchFinished(LastBatchSuccessDisplayNames);
+                autoRequiredPassActive = false;
+                SessionState.SetBool(CCSSetupConstants.SessionStateAutoRequiredPassActive, false);
+            }
         }
 
         private static void ProcessInstallQueue()
@@ -317,6 +348,7 @@ namespace CCS.Hub.Editor
             {
                 CCSEditorLog.Info($"Client.Add succeeded for '{finished.DisplayName}'.");
                 LastBatchSuccessDisplayNames.Add(finished.DisplayName);
+                PackageInstallSucceeded?.Invoke(finished);
             }
             else
             {

@@ -28,8 +28,8 @@ namespace CCS.Hub
                 isRequired: true,
                 defaultSelected: true,
                 autoInstallSupported: true,
-                showInFirstRunWizard: true,
-                showInPackageHub: true,
+                showInFirstRunWizard: false,
+                showInPackageHub: false,
                 description: "Shared Crazy Carrot Studios editor branding and UI helpers for CCS tools.",
                 installNotes: string.Empty),
             new CCSPackageDefinition(
@@ -42,9 +42,9 @@ namespace CCS.Hub
                 isRequired: true,
                 defaultSelected: true,
                 autoInstallSupported: true,
-                showInFirstRunWizard: true,
-                showInPackageHub: true,
-                description: "Unity New Input System. Target version in CCS stacks: 1.18.0 (project may resolve newer compatible).",
+                showInFirstRunWizard: false,
+                showInPackageHub: false,
+                description: "Unity New Input System.",
                 installNotes: string.Empty),
             new CCSPackageDefinition(
                 "unity-cinemachine",
@@ -56,9 +56,9 @@ namespace CCS.Hub
                 isRequired: true,
                 defaultSelected: true,
                 autoInstallSupported: true,
-                showInFirstRunWizard: true,
-                showInPackageHub: true,
-                description: "Unity Cinemachine camera rigs. Target version in CCS stacks: 3.1.6.",
+                showInFirstRunWizard: false,
+                showInPackageHub: false,
+                description: "Unity Cinemachine camera rigs.",
                 installNotes: string.Empty),
             new CCSPackageDefinition(
                 "unity-urp",
@@ -70,12 +70,12 @@ namespace CCS.Hub
                 isRequired: false,
                 defaultSelected: false,
                 autoInstallSupported: true,
-                showInFirstRunWizard: true,
-                showInPackageHub: true,
+                showInFirstRunWizard: false,
+                showInPackageHub: false,
                 description:
-                "Universal Render Pipeline (Unity 6 CCS stacks often use the 17.3.x line). The hub detects an existing URP setup (package and/or active Universal pipeline asset) and will not queue a redundant URP add in that case.",
+                "Universal Render Pipeline. Not shown in the simplified hub UI; install from Package Manager if your project needs URP.",
                 installNotes:
-                "If URP is already active, this row shows Installed and the add step is skipped. Enable \"Include in batch install\" only when you still need the UPM package added."),
+                "Optional pipeline package. CCS Hub does not auto-install URP so HDRP/Built-in projects are not altered."),
             new CCSPackageDefinition(
                 "ccs-charactercreator",
                 "CCS Character Creator",
@@ -86,8 +86,8 @@ namespace CCS.Hub
                 isRequired: false,
                 defaultSelected: false,
                 autoInstallSupported: true,
-                showInFirstRunWizard: true,
-                showInPackageHub: true,
+                showInFirstRunWizard: false,
+                showInPackageHub: false,
                 description: "Optional CCS character creation tooling when the repository is available.",
                 installNotes: string.Empty),
             new CCSPackageDefinition(
@@ -98,12 +98,15 @@ namespace CCS.Hub
                 "https://github.com/Crazy-Carrot-Studios/com.crazycarrot.charactercontroller.git",
                 CCSPackageCategory.OptionalCCS,
                 isRequired: false,
-                defaultSelected: false,
+                defaultSelected: true,
                 autoInstallSupported: true,
-                showInFirstRunWizard: true,
-                showInPackageHub: true,
-                description: "CCS locomotion and character controller package.",
-                installNotes: string.Empty),
+                showInFirstRunWizard: false,
+                showInPackageHub: false,
+                description:
+                "CCS locomotion and character controller. Installs as a UPM package under Packages; the hub then places starter project content under Assets/CCS (see install notes).",
+                installNotes:
+                "Package code resolves under Packages. CCS Hub creates the Assets/CCS folder tree and imports the package sample into Assets/CCS when available.",
+                showInOptionalToolsHub: true),
             new CCSPackageDefinition(
                 "ccs-inventory",
                 "CCS Inventory",
@@ -114,8 +117,8 @@ namespace CCS.Hub
                 isRequired: false,
                 defaultSelected: false,
                 autoInstallSupported: true,
-                showInFirstRunWizard: true,
-                showInPackageHub: true,
+                showInFirstRunWizard: false,
+                showInPackageHub: false,
                 description: "Optional CCS inventory systems when the repository is available.",
                 installNotes: string.Empty),
             new CCSPackageDefinition(
@@ -128,8 +131,8 @@ namespace CCS.Hub
                 isRequired: false,
                 defaultSelected: false,
                 autoInstallSupported: true,
-                showInFirstRunWizard: true,
-                showInPackageHub: true,
+                showInFirstRunWizard: false,
+                showInPackageHub: false,
                 description: "Optional CCS attributes framework when the repository is available.",
                 installNotes: string.Empty),
             new CCSPackageDefinition(
@@ -142,8 +145,8 @@ namespace CCS.Hub
                 isRequired: false,
                 defaultSelected: false,
                 autoInstallSupported: true,
-                showInFirstRunWizard: true,
-                showInPackageHub: true,
+                showInFirstRunWizard: false,
+                showInPackageHub: false,
                 description: "Optional CCS vitals and health-style systems when the repository is available.",
                 installNotes: string.Empty),
             new CCSPackageDefinition(
@@ -156,8 +159,8 @@ namespace CCS.Hub
                 isRequired: false,
                 defaultSelected: false,
                 autoInstallSupported: true,
-                showInFirstRunWizard: true,
-                showInPackageHub: true,
+                showInFirstRunWizard: false,
+                showInPackageHub: false,
                 description: "Optional CCS UMA-related helpers when the repository is available.",
                 installNotes: string.Empty),
             new CCSPackageDefinition(
@@ -170,11 +173,40 @@ namespace CCS.Hub
                 isRequired: false,
                 defaultSelected: false,
                 autoInstallSupported: false,
-                showInFirstRunWizard: true,
-                showInPackageHub: true,
-                description: "DOTween is not installed automatically. Official Demigiant distributions expect writable Assets/Plugin-style setup and are not reliable as a plain Git UPM install. Import DOTween from the Asset Store or your approved internal package, then continue.",
+                showInFirstRunWizard: false,
+                showInPackageHub: false,
+                description: "DOTween is not installed automatically. Import from the Asset Store or your approved workflow.",
                 installNotes: "Manual or custom CCS-supported workflow only. Do not assume Git URL UPM install."),
         };
+
+        /// <summary>Optional tools shown in the simplified CCS Hub window (Character Controller, etc.).</summary>
+        public static IEnumerable<CCSPackageDefinition> EnumerateOptionalToolsForHub()
+        {
+            for (int index = 0; index < All.Count; index++)
+            {
+                CCSPackageDefinition definition = All[index];
+                if (definition.ShowInOptionalToolsHub)
+                {
+                    yield return definition;
+                }
+            }
+        }
+
+        /// <summary>Definitions that are required and installed automatically by the hub (no user confirmation).</summary>
+        public static IEnumerable<CCSPackageDefinition> EnumerateAutoRequiredDefinitions()
+        {
+            for (int index = 0; index < All.Count; index++)
+            {
+                CCSPackageDefinition definition = All[index];
+                if (definition.IsRequired
+                    && definition.Category == CCSPackageCategory.Required
+                    && definition.AutoInstallSupported
+                    && definition.SourceType != CCSPackageSourceType.Manual)
+                {
+                    yield return definition;
+                }
+            }
+        }
 
         public static bool TryFindById(string definitionId, out CCSPackageDefinition definition)
         {
