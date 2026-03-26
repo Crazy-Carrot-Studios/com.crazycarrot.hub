@@ -16,6 +16,11 @@ namespace CCS.Hub
     {
         UnityRegistry = 0,
         GitUrl = 1,
-        Manual = 2
+        Manual = 2,
+
+        /// <summary>
+        /// Import from a public Git HTTPS URL into Assets (never via Package Manager). Used for CCS Character Controller and similar project-local drops.
+        /// </summary>
+        AssetsGitImport = 3
     }
 }

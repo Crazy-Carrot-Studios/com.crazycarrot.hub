@@ -118,7 +118,9 @@ namespace CCS.Hub.Editor
             int enqueuedCount = 0;
             foreach (CCSPackageDefinition definition in definitions)
             {
-                if (!definition.AutoInstallSupported || definition.SourceType == CCSPackageSourceType.Manual)
+                if (!definition.AutoInstallSupported
+                    || definition.SourceType == CCSPackageSourceType.Manual
+                    || definition.SourceType == CCSPackageSourceType.AssetsGitImport)
                 {
                     continue;
                 }

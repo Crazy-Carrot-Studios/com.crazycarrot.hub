@@ -94,7 +94,7 @@ namespace CCS.Hub
                 "ccs-charactercontroller",
                 "CCS Character Controller",
                 "com.crazycarrot.charactercontroller",
-                CCSPackageSourceType.GitUrl,
+                CCSPackageSourceType.AssetsGitImport,
                 "https://github.com/Crazy-Carrot-Studios/com.crazycarrot.charactercontroller.git",
                 CCSPackageCategory.OptionalCCS,
                 isRequired: false,
@@ -103,9 +103,9 @@ namespace CCS.Hub
                 showInFirstRunWizard: false,
                 showInPackageHub: false,
                 description:
-                "CCS locomotion and character controller. Installs as a UPM package under Packages; the hub then places starter project content under Assets/CCS (see install notes).",
+                "CCS locomotion and character controller. Hub downloads the public GitHub snapshot into Assets/CCS/CharacterController (not Package Manager).",
                 installNotes:
-                "Package code resolves under Packages. CCS Hub creates the Assets/CCS folder tree and imports the package sample into Assets/CCS when available.",
+                "Sources live under Assets/CCS/CharacterController. When a Samples~/BasicSetup folder is present, the hub also materializes Assets/CCS/CharacterController/BasicSetup for editable starter content.",
                 showInOptionalToolsHub: true),
             new CCSPackageDefinition(
                 "ccs-inventory",
@@ -201,7 +201,8 @@ namespace CCS.Hub
                 if (definition.IsRequired
                     && definition.Category == CCSPackageCategory.Required
                     && definition.AutoInstallSupported
-                    && definition.SourceType != CCSPackageSourceType.Manual)
+                    && definition.SourceType != CCSPackageSourceType.Manual
+                    && definition.SourceType != CCSPackageSourceType.AssetsGitImport)
                 {
                     yield return definition;
                 }

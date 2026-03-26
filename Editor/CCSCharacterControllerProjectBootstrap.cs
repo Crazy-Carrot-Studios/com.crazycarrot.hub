@@ -4,90 +4,44 @@
 // GameObject: N/A (Editor Utility)
 // Author: James Schilz (Developer)
 // Created: March 25, 2025
-// Summary: After the Character Controller UPM package is installed, creates Assets/CCS and copies package sample content into Assets when present.
+// Summary: After Character Controller exists under Assets/CCS/CharacterController, materializes Samples~/BasicSetup into BasicSetup when needed (Unity ignores Samples~ in Assets).
 // Required Components: None
 // Where to Place: Packages/com.crazycarrot.hub/Editor/
 // ============================================================================
 
 using System.IO;
-using CCS.Hub;
 using UnityEditor;
 using UnityEngine;
 
 namespace CCS.Hub.Editor
 {
     /// <summary>
-    /// UPM keeps packages under Packages/; this bootstrap copies starter content from the package's Samples~ folder into Assets/CCS.
+    /// Character Controller is imported into Assets only (not UPM). This type runs a light pass on editor load to materialize sample content.
     /// </summary>
     [InitializeOnLoad]
     public static class CCSCharacterControllerProjectBootstrap
     {
         static CCSCharacterControllerProjectBootstrap()
         {
-            CCSPackageInstallService.PackageInstallSucceeded += OnPackageInstallSucceeded;
+            EditorApplication.delayCall += OnEditorLoaded;
         }
 
-        private static void OnPackageInstallSucceeded(CCSPackageDefinition definition)
+        private static void OnEditorLoaded()
         {
-            if (definition.Id != CCSSetupConstants.CharacterControllerDefinitionId)
+            if (!CCSCharacterControllerAssetsImportService.IsCharacterControllerImportedIntoAssets())
             {
                 return;
             }
 
-            EditorApplication.delayCall += RunBootstrap;
+            TryMaterializeSamplesBasicSetupIfNeeded();
         }
 
-        private static void RunBootstrap()
+        /// <summary>
+        /// Delegates to <see cref="CCSCharacterControllerAssetsImportService.TryMaterializeSamplesBasicSetupIfNeeded"/> for shared logic.
+        /// </summary>
+        public static void TryMaterializeSamplesBasicSetupIfNeeded()
         {
-            if (!CCSPackageStatusService.IsPackageInstalled("com.crazycarrot.charactercontroller"))
-            {
-                return;
-            }
-
-            CCSProjectFolderUtility.CreateDefaultCcsFolderStructure();
-            TryCopyCharacterControllerSampleFromPackage();
-        }
-
-        private static void TryCopyCharacterControllerSampleFromPackage()
-        {
-            UnityEditor.PackageManager.PackageInfo info =
-                UnityEditor.PackageManager.PackageInfo.FindForAssetPath("Packages/com.crazycarrot.charactercontroller");
-            if (info == null)
-            {
-                CCSEditorLog.Warning(
-                    "CCS Hub: Character Controller is not resolved under Packages yet; Assets/CCS folders were created. Retry after Package Manager finishes.");
-                return;
-            }
-
-            string assetDestRoot = "Assets/CCS/CharacterController/BasicSetup";
-            if (AssetDatabase.IsValidFolder(assetDestRoot))
-            {
-                string[] guids = AssetDatabase.FindAssets(string.Empty, new[] { assetDestRoot });
-                if (guids != null && guids.Length > 0)
-                {
-                    CCSEditorLog.Info($"CCS Hub: {assetDestRoot} already has content; skipping sample copy.");
-                    return;
-                }
-            }
-
-            string sourcePhysical = Path.Combine(info.resolvedPath, "Samples~", "BasicSetup");
-            if (!Directory.Exists(sourcePhysical))
-            {
-                CCSEditorLog.Info(
-                    "CCS Hub: No Samples~/BasicSetup folder in the Character Controller package; Assets/CCS structure is ready for your content.");
-                return;
-            }
-
-            string destPhysical = Path.Combine(Application.dataPath, "CCS", "CharacterController", "BasicSetup");
-            string parentPhysical = Path.GetDirectoryName(destPhysical);
-            if (!string.IsNullOrEmpty(parentPhysical))
-            {
-                Directory.CreateDirectory(parentPhysical);
-            }
-
-            FileUtil.CopyFileOrDirectory(sourcePhysical, destPhysical);
-            AssetDatabase.Refresh();
-            CCSEditorLog.Info("CCS Hub: copied Character Controller sample to Assets/CCS/CharacterController/BasicSetup.");
+            CCSCharacterControllerAssetsImportService.TryMaterializeSamplesBasicSetupIfNeeded();
         }
     }
 }

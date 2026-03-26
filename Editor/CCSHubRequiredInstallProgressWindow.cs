@@ -82,7 +82,8 @@ namespace CCS.Hub.Editor
         private void OnEditorUpdateRepaint()
         {
             if (CCSPackageInstallService.IsBusy()
-                || CCSPackageInstallService.GetInstallBatchProgressNormalized() < 0f)
+                || CCSPackageInstallService.GetInstallBatchProgressNormalized() < 0f
+                || CCSCharacterControllerAssetsImportService.IsImportInProgress)
             {
                 Repaint();
             }

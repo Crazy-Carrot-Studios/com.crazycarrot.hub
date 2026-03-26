@@ -35,24 +35,23 @@ namespace CCS.Hub.Editor
         /// <summary>Registry row id for CCS Character Controller in <see cref="CCS.Hub.CCSPackageRegistry"/>.</summary>
         public const string CharacterControllerDefinitionId = "ccs-charactercontroller";
 
+        /// <summary>Unity asset path where Character Controller sources are imported (never under Packages/).</summary>
+        public const string CharacterControllerAssetsRoot = "Assets/CCS/CharacterController";
+
+        /// <summary>Git branch used when resolving GitHub archive.zip for Character Controller import.</summary>
+        public const string CharacterControllerGitBranch = "main";
+
         /// <summary>EditorPrefs: required Branding/Input/Cinemachine auto-install completed for this project.</summary>
         public const string EditorPrefsRequiredAutoDepsSatisfiedKey = "RequiredAutoDepsSatisfied";
 
         /// <summary>EditorPrefs: human-readable summary of required packages (auto or already present).</summary>
         public const string EditorPrefsRequiredAutoDepsSummaryKey = "RequiredAutoDepsSummary";
 
+        /// <summary>Hub scaffold for Character Controller: only Assets/CCS and the controller root (no empty sibling template folders).</summary>
         public static readonly string[] DefaultCcsProjectFolders =
         {
             "Assets/CCS",
-            "Assets/CCS/Art",
-            "Assets/CCS/Materials",
-            "Assets/CCS/Prefabs",
-            "Assets/CCS/Scenes",
-            "Assets/CCS/Scripts",
-            "Assets/CCS/ScriptableObjects",
-            "Assets/CCS/Settings",
-            "Assets/CCS/UI",
-            "Assets/CCS/Animations",
+            "Assets/CCS/CharacterController",
         };
     }
 }

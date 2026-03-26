@@ -18,6 +18,14 @@ namespace CCS.Hub.Editor
     {
         public static void Draw()
         {
+            if (CCSCharacterControllerAssetsImportService.IsImportInProgress)
+            {
+                float pulse = 0.5f + 0.5f * Mathf.Sin((float)EditorApplication.timeSinceStartup * 2.5f);
+                Rect rectAssets = EditorGUILayout.GetControlRect(false, 22f);
+                EditorGUI.ProgressBar(rectAssets, Mathf.Clamp01(pulse), "Importing Character Controller into Assets…");
+                return;
+            }
+
             float normalized = CCSPackageInstallService.GetInstallBatchProgressNormalized();
             string label;
             if (normalized < 0f)
@@ -45,6 +53,11 @@ namespace CCS.Hub.Editor
 
         public static bool ShouldShow()
         {
+            if (CCSCharacterControllerAssetsImportService.IsImportInProgress)
+            {
+                return true;
+            }
+
             if (CCSPackageInstallService.IsBusy()
                 || CCSPackageInstallService.GetInstallBatchProgressNormalized() < 0f)
             {

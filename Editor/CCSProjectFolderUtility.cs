@@ -5,7 +5,7 @@
 // Author: James Schilz (Developer)
 // Created: March 25, 2025
 // Last Modified: March 25, 2025
-// Summary: Idempotently creates the standard Assets/CCS content folder structure for CCS projects.
+// Summary: Idempotently creates Assets/CCS and Assets/CCS/CharacterController for hub Character Controller import (no empty template siblings).
 // Required Components: None
 // Where to Place: Packages/com.crazycarrot.hub/Editor/
 // ============================================================================
