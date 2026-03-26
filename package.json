@@ -1,0 +1,24 @@
+{
+  "name": "com.crazycarrot.hub",
+  "version": "0.1.0",
+  "displayName": "CCS Hub",
+  "description": "Bootstrap and Package Manager hub for Crazy Carrot Studios Unity packages. Provides Tools/CCS/Package Hub to install CCS packages from Git and scaffold Assets/CCS project folders.",
+  "unity": "6000.3",
+  "unityRelease": "10f1",
+  "documentationUrl": "https://github.com/Crazy-Carrot-Studios/com.crazycarrot.hub",
+  "changelogUrl": "https://github.com/Crazy-Carrot-Studios/com.crazycarrot.hub/blob/main/CHANGELOG.md",
+  "licensesUrl": "https://github.com/Crazy-Carrot-Studios/com.crazycarrot.hub/blob/main/LICENSE.md",
+  "author": {
+    "name": "Crazy Carrot Studios",
+    "url": "https://github.com/Crazy-Carrot-Studios"
+  },
+  "keywords": [
+    "CCS",
+    "Crazy Carrot Studios",
+    "package manager",
+    "bootstrap",
+    "editor"
+  ],
+  "dependencies": {},
+  "samples": []
+}
