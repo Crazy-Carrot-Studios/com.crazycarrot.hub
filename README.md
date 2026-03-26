@@ -21,9 +21,8 @@ This package is maintained in its **own** Git repository. **`package.json` lives
 
 Manual menus:
 
-- **Tools → CCS → Setup Wizard**
-- **Tools → CCS → Package Hub**
-- **Tools → CCS → Developer → Reset Setup State** (testing)
+- **CCS → CCS Hub**
+- **CCS → Developer → Reset Setup State** (testing)
 
 ## Hybrid dependency model
 

@@ -4,7 +4,7 @@
 // GameObject: N/A (Editor Utility)
 // Author: James Schilz (Developer)
 // Created: March 25, 2025
-// Summary: Legacy type alias for the CCS Hub window. Use CCSSetupWindow / Tools/CCS/CCS Hub.
+// Summary: Legacy type alias for the CCS Hub window. Use CCSSetupWindow / CCS/CCS Hub.
 // Required Components: None
 // Where to Place: Packages/com.crazycarrot.hub/Editor/
 // ============================================================================

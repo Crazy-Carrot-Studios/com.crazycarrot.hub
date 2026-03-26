@@ -5,7 +5,7 @@
 // Author: James Schilz (Developer)
 // Created: March 25, 2025
 // Last Modified: March 25, 2025
-// Summary: Runs after import to refresh Package Manager state, completes required auto-installs first, then auto-opens the CCS Hub once for optional tools when appropriate.
+// Summary: On import, shows required-install progress UI, runs auto-installs, then opens the main CCS Hub when complete.
 // Required Components: None
 // Where to Place: Packages/com.crazycarrot.hub/Editor/
 // ============================================================================
@@ -17,12 +17,6 @@ namespace CCS.Hub.Editor
     [InitializeOnLoad]
     public static class CCSSetupBootstrap
     {
-        #region Variables
-
-        // Bootstrap uses static entry only; no serialized state.
-
-        #endregion
-
         #region Unity Callbacks
 
         static CCSSetupBootstrap()
@@ -32,16 +26,19 @@ namespace CCS.Hub.Editor
 
         #endregion
 
-        #region Public Methods
-
-        #endregion
-
         #region Private Methods
 
         private static void OnEditorDelayCall()
         {
             CCSPackageStatusService.RefreshInstalledPackages(() =>
             {
+                if (!CCSSetupState.ShouldAutoOpenSetupWizard())
+                {
+                    return;
+                }
+
+                CCSHubRequiredInstallProgressWindow.ShowForFirstRun();
+
                 void OpenFirstRunHub()
                 {
                     if (!CCSSetupState.ShouldAutoOpenSetupWizard())
@@ -50,6 +47,7 @@ namespace CCS.Hub.Editor
                     }
 
                     CCSSetupState.MarkAutoOpenedThisSession();
+                    CCSHubRequiredInstallProgressWindow.CloseForFirstRun();
                     CCSSetupWindow.ShowFirstRunAuto();
                 }
 
@@ -66,6 +64,7 @@ namespace CCS.Hub.Editor
                 if (!CCSSetupState.ShouldAutoOpenSetupWizard())
                 {
                     CCSHubRequiredDependencyBootstrap.RequiredAutoInstallCompleted -= OnRequiredAutoFinished;
+                    CCSHubRequiredInstallProgressWindow.CloseForFirstRun();
                     return;
                 }
 

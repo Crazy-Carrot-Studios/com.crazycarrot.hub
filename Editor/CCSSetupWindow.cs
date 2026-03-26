@@ -29,6 +29,7 @@ namespace CCS.Hub.Editor
         private readonly Dictionary<string, bool> optionalSelectionByDefinitionId = new Dictionary<string, bool>();
         private string statusLine = "Ready.";
         private bool subscribedToInstallEvents;
+        private bool subscribedToEditorUpdate;
 
         #endregion
 
@@ -40,6 +41,11 @@ namespace CCS.Hub.Editor
             CCSSetupWindow window = GetWindow<CCSSetupWindow>(true, "CCS Hub", true);
             window.minSize = new Vector2(460f, 420f);
             window.Show();
+            EditorApplication.delayCall += () =>
+            {
+                window.Focus();
+                window.Repaint();
+            };
         }
 
         public static void ShowFirstRunAuto()
@@ -47,6 +53,11 @@ namespace CCS.Hub.Editor
             CCSSetupWindow window = GetWindow<CCSSetupWindow>(true, "CCS Hub", true);
             window.minSize = new Vector2(460f, 420f);
             window.Show();
+            EditorApplication.delayCall += () =>
+            {
+                window.Focus();
+                window.Repaint();
+            };
         }
 
         private void OnEnable()
@@ -55,11 +66,44 @@ namespace CCS.Hub.Editor
             InitializeOptionalSelection();
             CCSPackageStatusService.RefreshInstalledPackages(() => Repaint());
             SubscribeInstallEvents();
+            SubscribeEditorUpdateRepaint();
         }
 
         private void OnDisable()
         {
             UnsubscribeInstallEvents();
+            UnsubscribeEditorUpdateRepaint();
+        }
+
+        private void SubscribeEditorUpdateRepaint()
+        {
+            if (subscribedToEditorUpdate)
+            {
+                return;
+            }
+
+            subscribedToEditorUpdate = true;
+            EditorApplication.update += OnEditorUpdateRepaint;
+        }
+
+        private void UnsubscribeEditorUpdateRepaint()
+        {
+            if (!subscribedToEditorUpdate)
+            {
+                return;
+            }
+
+            subscribedToEditorUpdate = false;
+            EditorApplication.update -= OnEditorUpdateRepaint;
+        }
+
+        private void OnEditorUpdateRepaint()
+        {
+            if (CCSPackageInstallService.IsBusy()
+                || CCSPackageInstallService.GetInstallBatchProgressNormalized() < 0f)
+            {
+                Repaint();
+            }
         }
 
         private void OnGUI()
@@ -256,7 +300,7 @@ namespace CCS.Hub.Editor
                 if (GUILayout.Button("Skip for now", GUILayout.Height(24f)))
                 {
                     CCSSetupState.SetSetupSkipped(true);
-                    statusLine = "Skipped. Reopen from Tools / CCS / CCS Hub anytime.";
+                    statusLine = "Skipped. Reopen from CCS / CCS Hub anytime.";
                     Close();
                 }
 
@@ -267,6 +311,12 @@ namespace CCS.Hub.Editor
                 }
 
                 EditorGUILayout.EndHorizontal();
+            }
+
+            if (CCSHubInstallProgressBar.ShouldShow())
+            {
+                EditorGUILayout.Space(4f);
+                CCSHubInstallProgressBar.Draw();
             }
 
             if (busy)

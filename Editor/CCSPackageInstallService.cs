@@ -35,6 +35,12 @@ namespace CCS.Hub.Editor
         private static bool postReloadInstallQueueHint;
         private static bool autoRequiredPassActive;
 
+        /// <summary>Steps in the current enqueue batch (Client.Add or dequeue-skip each count as one).</summary>
+        private static int batchProgressTotal;
+
+        private static int batchProgressProcessed;
+        private static bool batchProgressIndeterminate;
+
         public static event Action StateChanged;
 
         /// <summary>Fired when a Client.Add completes successfully for a queued definition.</summary>
@@ -108,6 +114,8 @@ namespace CCS.Hub.Editor
                 SessionState.SetBool(CCSSetupConstants.SessionStateAutoRequiredPassActive, false);
             }
 
+            batchProgressIndeterminate = false;
+            int enqueuedCount = 0;
             foreach (CCSPackageDefinition definition in definitions)
             {
                 if (!definition.AutoInstallSupported || definition.SourceType == CCSPackageSourceType.Manual)
@@ -128,7 +136,11 @@ namespace CCS.Hub.Editor
                 }
 
                 InstallQueue.Enqueue(definition);
+                enqueuedCount++;
             }
+
+            batchProgressTotal = enqueuedCount;
+            batchProgressProcessed = 0;
 
             PersistQueueToSession();
             RegisterEditorUpdate();
@@ -186,6 +198,37 @@ namespace CCS.Hub.Editor
             return activeDefinition.DisplayName;
         }
 
+        /// <summary>
+        /// Overall install progress for the current batch (0–1). Returns -1 when progress cannot be quantified (e.g. queue restored after domain reload).
+        /// </summary>
+        public static float GetInstallBatchProgressNormalized()
+        {
+            if (batchProgressIndeterminate)
+            {
+                return -1f;
+            }
+
+            if (batchProgressTotal <= 0)
+            {
+                return IsBusy() ? 0f : 1f;
+            }
+
+            float p = (float)batchProgressProcessed / batchProgressTotal;
+            if (activeAddRequest != null && !activeAddRequest.IsCompleted)
+            {
+                p += Mathf.Clamp01(0.35f / batchProgressTotal);
+            }
+
+            return Mathf.Clamp01(p);
+        }
+
+        public static bool TryGetInstallBatchProgressCounts(out int processed, out int total)
+        {
+            processed = batchProgressProcessed;
+            total = batchProgressTotal;
+            return batchProgressTotal > 0 && !batchProgressIndeterminate;
+        }
+
         #endregion
 
         #region Private Methods
@@ -211,6 +254,14 @@ namespace CCS.Hub.Editor
             if (InstallQueue.Count > 0)
             {
                 postReloadInstallQueueHint = true;
+                if (SessionState.GetBool(CCSSetupConstants.SessionStateAutoRequiredPassActive, false))
+                {
+                    autoRequiredPassActive = true;
+                }
+
+                batchProgressIndeterminate = true;
+                batchProgressTotal = 0;
+                batchProgressProcessed = 0;
                 CCSEditorLog.Info("Restored pending CCS Hub install queue from session state after domain reload.");
                 RegisterEditorUpdate();
                 RaiseStateChanged();
@@ -271,6 +322,20 @@ namespace CCS.Hub.Editor
                 autoRequiredPassActive = false;
                 SessionState.SetBool(CCSSetupConstants.SessionStateAutoRequiredPassActive, false);
             }
+
+            ResetBatchProgressTracking();
+        }
+
+        private static void ResetBatchProgressTracking()
+        {
+            batchProgressTotal = 0;
+            batchProgressProcessed = 0;
+            batchProgressIndeterminate = false;
+        }
+
+        private static void IncrementBatchProgressProcessed()
+        {
+            batchProgressProcessed++;
         }
 
         private static void ProcessInstallQueue()
@@ -319,6 +384,7 @@ namespace CCS.Hub.Editor
             if (next.Id == CCSSetupConstants.UnityUrpDefinitionId && CCSPackageProjectContext.IsUrpEffectivelyPresent())
             {
                 CCSEditorLog.Info("Install step skipped; Universal RP already detected for this project.");
+                IncrementBatchProgressProcessed();
                 RaiseStateChanged();
                 return;
             }
@@ -326,6 +392,7 @@ namespace CCS.Hub.Editor
             if (CCSPackageStatusService.IsPackageInstalled(next.PackageId))
             {
                 CCSEditorLog.Info($"Install step skipped; already present: {next.DisplayName}");
+                IncrementBatchProgressProcessed();
                 RaiseStateChanged();
                 return;
             }
@@ -356,6 +423,8 @@ namespace CCS.Hub.Editor
                 CCSEditorLog.Error($"Client.Add failed for '{finished.DisplayName}': {message}");
                 FailedDefinitionIds.Add(finished.Id);
             }
+
+            IncrementBatchProgressProcessed();
         }
 
         private static void RaiseStateChanged()
