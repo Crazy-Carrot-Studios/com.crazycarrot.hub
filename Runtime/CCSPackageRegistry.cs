@@ -93,7 +93,7 @@ namespace CCS.Hub
             new CCSPackageDefinition(
                 "ccs-charactercontroller",
                 "CCS Character Controller",
-                "com.crazycarrot.charactercontroller",
+                "ccs.charactercontroller.assets-only",
                 CCSPackageSourceType.AssetsGitImport,
                 "https://github.com/Crazy-Carrot-Studios/com.crazycarrot.charactercontroller.git",
                 CCSPackageCategory.OptionalCCS,
@@ -103,9 +103,9 @@ namespace CCS.Hub
                 showInFirstRunWizard: false,
                 showInPackageHub: false,
                 description:
-                "CCS locomotion and character controller. Hub downloads the public GitHub snapshot into Assets/CCS/CharacterController (not Package Manager).",
+                "CCS locomotion and character controller. Hub downloads the GitHub snapshot into Assets/CCS/CharacterController only — never add com.crazycarrot.charactercontroller to Package Manager.",
                 installNotes:
-                "Sources live under Assets/CCS/CharacterController. When a Samples~/BasicSetup folder is present, the hub also materializes Assets/CCS/CharacterController/BasicSetup for editable starter content.",
+                "Do not add the Git URL as a UPM dependency. Use Install selected here; sources live under Assets/CCS/CharacterController. UPM package.json is not kept so Unity does not list this under Packages.",
                 showInOptionalToolsHub: true),
             new CCSPackageDefinition(
                 "ccs-inventory",

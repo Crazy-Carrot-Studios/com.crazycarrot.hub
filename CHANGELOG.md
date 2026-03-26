@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.2] - 2025-03-26
+
+### Changed
+
+- Character Controller **GitHub import** skips repository **package.json** (and meta) so Unity does not treat **Assets/CCS/CharacterController** as an installable UPM package. Legacy **package.json** in that folder is removed on load when sources are present.
+- Registry **PackageId** is **`ccs.charactercontroller.assets-only`** (not `com.crazycarrot.charactercontroller`) to avoid confusion with a Package Manager dependency.
+
 ## [0.1.1] - 2025-03-25
 
 ### Changed

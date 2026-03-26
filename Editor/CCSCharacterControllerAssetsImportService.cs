@@ -43,15 +43,26 @@ namespace CCS.Hub.Editor
             return activeImportDefinitionId == definitionId;
         }
 
-        /// <summary>True when package.json exists under Assets/CCS/CharacterController.</summary>
+        /// <summary>
+        /// True when Character Controller sources are present under Assets/CCS/CharacterController.
+        /// Hub imports omit <c>package.json</c> so Unity does not list it as a UPM package; we detect via folders (or legacy package.json).
+        /// </summary>
         public static bool IsCharacterControllerImportedIntoAssets()
         {
-            string packageJson = Path.Combine(
-                Application.dataPath,
-                "CCS",
-                "CharacterController",
-                "package.json");
-            return File.Exists(packageJson);
+            string root = Path.Combine(Application.dataPath, "CCS", "CharacterController");
+            if (!Directory.Exists(root))
+            {
+                return false;
+            }
+
+            if (File.Exists(Path.Combine(root, "package.json")))
+            {
+                return true;
+            }
+
+            return Directory.Exists(Path.Combine(root, "Runtime"))
+                || Directory.Exists(Path.Combine(root, "Scripts"))
+                || Directory.Exists(Path.Combine(root, "Editor"));
         }
 
         public static void StartImport(CCSPackageDefinition definition)
@@ -142,9 +153,11 @@ namespace CCS.Hub.Editor
                 }
 
                 Directory.CreateDirectory(destRoot);
-                CopyFilesOnlySkipEmptyDirectories(innerSource, destRoot);
+                CopyFilesOnlySkipEmptyDirectories(innerSource, destRoot, skipUpmPackageManifest: true);
 
                 AssetDatabase.Refresh();
+
+                TryStripPackageManifestFromCharacterControllerAssets();
 
                 TryMaterializeSamplesBasicSetupIfNeeded();
 
@@ -195,12 +208,38 @@ namespace CCS.Hub.Editor
                 FileUtil.DeleteFileOrDirectory(destBasic);
             }
 
-            CopyFilesOnlySkipEmptyDirectories(samplesBasic, destBasic);
+            CopyFilesOnlySkipEmptyDirectories(samplesBasic, destBasic, skipUpmPackageManifest: false);
             AssetDatabase.Refresh();
             CCSEditorLog.Info("CCS Hub: Materialized Samples~/BasicSetup into Assets/CCS/CharacterController/BasicSetup.");
         }
 
-        internal static void CopyFilesOnlySkipEmptyDirectories(string sourceRoot, string destinationRoot)
+        /// <summary>
+        /// Removes a legacy UPM <c>package.json</c> from the Character Controller Assets folder so Unity does not register it under Packages.
+        /// Safe once Runtime/Scripts content exists.
+        /// </summary>
+        public static void TryStripPackageManifestFromCharacterControllerAssets()
+        {
+            string root = Path.Combine(Application.dataPath, "CCS", "CharacterController");
+            string physicalManifest = Path.Combine(root, "package.json");
+            if (!File.Exists(physicalManifest))
+            {
+                return;
+            }
+
+            if (!Directory.Exists(Path.Combine(root, "Runtime"))
+                && !Directory.Exists(Path.Combine(root, "Scripts")))
+            {
+                return;
+            }
+
+            string assetPath = $"{CCSSetupConstants.CharacterControllerAssetsRoot}/package.json";
+            if (AssetDatabase.DeleteAsset(assetPath))
+            {
+                CCSEditorLog.Info("CCS Hub: Removed package.json under Assets/CCS/CharacterController so Character Controller stays Assets-only (not a UPM package).");
+            }
+        }
+
+        internal static void CopyFilesOnlySkipEmptyDirectories(string sourceRoot, string destinationRoot, bool skipUpmPackageManifest)
         {
             sourceRoot = Path.GetFullPath(sourceRoot.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
             destinationRoot = Path.GetFullPath(destinationRoot.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
@@ -213,6 +252,11 @@ namespace CCS.Hub.Editor
             foreach (string filePath in Directory.GetFiles(sourceRoot, "*", SearchOption.AllDirectories))
             {
                 string relative = filePath.Substring(sourceRoot.Length).TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+                if (skipUpmPackageManifest && ShouldSkipUpmPackageManifestFile(relative))
+                {
+                    continue;
+                }
+
                 string destPath = Path.Combine(destinationRoot, relative);
                 string destDir = Path.GetDirectoryName(destPath);
                 if (!string.IsNullOrEmpty(destDir))
@@ -222,6 +266,13 @@ namespace CCS.Hub.Editor
 
                 File.Copy(filePath, destPath, true);
             }
+        }
+
+        /// <summary>Skips repository-root UPM manifest so imported content is plain Assets, not an installable package.</summary>
+        private static bool ShouldSkipUpmPackageManifestFile(string relativePath)
+        {
+            string norm = relativePath.Replace('\\', '/');
+            return norm == "package.json" || norm == "package.json.meta";
         }
 
         private static bool TryBuildGitHubArchiveZipUrl(string gitHttpsUrl, string branch, out string zipUrl)

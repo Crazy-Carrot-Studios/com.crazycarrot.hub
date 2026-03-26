@@ -33,6 +33,7 @@ namespace CCS.Hub.Editor
                 return;
             }
 
+            CCSCharacterControllerAssetsImportService.TryStripPackageManifestFromCharacterControllerAssets();
             TryMaterializeSamplesBasicSetupIfNeeded();
         }
 
