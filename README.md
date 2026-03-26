@@ -13,11 +13,25 @@ This package is maintained in its **own** Git repository. **`package.json` lives
 ## Fresh project workflow
 
 1. Create a Unity 6 project.
-2. **Window → Package Manager → + → Add package from Git URL**
-3. Install: `https://github.com/Crazy-Carrot-Studios/com.crazycarrot.hub.git`
-4. After compile, the **CCS Setup Wizard** opens automatically (unless you already completed or skipped setup for this project).
-5. Choose optional CCS packages, then **Install Selected** or **Install Required Only**.
-6. Use **Create CCS Project Folders** as needed.
+2. Add the hub using **one** of these methods:
+
+   **A — Package Manager (Git URL field)**  
+   **Window → Package Manager → + → Add package from Git URL**  
+   In the URL box, paste **only** this (no label, no `Install:` prefix, no backticks):
+
+   `https://github.com/Crazy-Carrot-Studios/com.crazycarrot.hub.git`
+
+   If Unity says the package name is invalid and shows `Install: https://...`, you pasted the wrong text—use the bare URL above.
+
+   **B — Edit `Packages/manifest.json` manually**  
+   Inside the `"dependencies"` object, add:
+
+   `"com.crazycarrot.hub": "https://github.com/Crazy-Carrot-Studios/com.crazycarrot.hub.git"`
+
+   Save the file and return to Unity so it resolves the package.
+
+3. After compile, the **CCS Hub** window may open automatically (unless you already completed or skipped setup for this project).
+4. Use **CCS → CCS Hub** for optional tools; use **Install selected** for Character Controller (imports into **Assets/CCS/CharacterController**, not as a separate UPM package).
 
 Manual menus:
 
