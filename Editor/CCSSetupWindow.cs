@@ -233,9 +233,18 @@ namespace CCS.Hub.Editor
             EditorGUILayout.Space(4f);
             CCSHubBrandingUi.TryDrawTitleBanner("CCS Hub");
             CCSHubBrandingUi.TryDrawSectionLabel("Crazy Carrot Studios");
-            EditorGUILayout.HelpBox(
-                "Required CCS dependencies (Branding, Input System, Cinemachine) install automatically when the Hub loads. Choose optional Character Controller and/or DOTween below, then click Install. Progress appears below; when your selections finish, setup completes and windows close automatically.",
-                MessageType.Info);
+            if (CCSSetupState.IsSetupCompleted())
+            {
+                EditorGUILayout.HelpBox(
+                    "Setup complete for this project. You can install more CCS modules below or reopen this window anytime from CCS / CCS Hub.",
+                    MessageType.Info);
+            }
+            else
+            {
+                EditorGUILayout.HelpBox(
+                    "Required CCS dependencies are listed from the Hub manifest and install automatically on first run. Choose optional Character Controller and/or DOTween below, then click Install. Progress uses the CCS Hub setup window; when your selections finish, setup completes and windows close automatically.",
+                    MessageType.Info);
+            }
         }
 
         private static void DrawPostReloadBanner()
@@ -398,6 +407,8 @@ namespace CCS.Hub.Editor
                     return "Failed";
                 case CCSPackageInstallStatus.Manual:
                     return "Manual";
+                case CCSPackageInstallStatus.Skipped:
+                    return "Skipped";
                 default:
                     return status.ToString();
             }
@@ -427,6 +438,11 @@ namespace CCS.Hub.Editor
                     return CCSPackageInstallStatus.Failed;
                 }
 
+                if (CCSPackageInstallService.IsSkipped(definition.Id))
+                {
+                    return CCSPackageInstallStatus.Skipped;
+                }
+
                 if (CCSPackageInstallService.IsInstalling(definition.Id) || CCSPackageInstallService.IsPending(definition.Id))
                 {
                     return CCSPackageInstallService.IsPending(definition.Id)
@@ -450,6 +466,11 @@ namespace CCS.Hub.Editor
             if (CCSPackageInstallService.IsFailed(definition.Id))
             {
                 return CCSPackageInstallStatus.Failed;
+            }
+
+            if (CCSPackageInstallService.IsSkipped(definition.Id))
+            {
+                return CCSPackageInstallStatus.Skipped;
             }
 
             if (CCSPackageInstallService.IsInstalling(definition.Id))
@@ -536,7 +557,7 @@ namespace CCS.Hub.Editor
                     && ccSel;
                 CCSHubOptionalInstallContext.BeginOptionalUserTracking(ccChecked, includeDotweenOptional);
                 CCSPackageInstallService.EnqueueOptionalWithRequiredPrerequisites(packageManagerBatch);
-                CCSHubOptionalInstallProgressWindow.ShowAfterOptionalInstallEnqueue();
+                CCSSetupProgressWindow.ShowOptionalPhase();
                 Close();
                 return;
             }

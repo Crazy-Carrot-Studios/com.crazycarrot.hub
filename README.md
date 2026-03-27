@@ -1,12 +1,12 @@
 # CCS Hub (`com.crazycarrot.hub`)
 
-**Version: 0.1.26**
+**Version: 0.2.0**
 
 First-run **bootstrap installer** and package hub for **Crazy Carrot Studios** Unity projects. After you add this package by Git URL, Unity runs a **CCS Setup Wizard** (once per project until you complete, skip, or reset) that can install required Unity packages and optional CCS Git packages **sequentially** via Package Manager, and scaffold **`Assets/CCS`** content folders.
 
 ## Standalone Git / UPM repository
 
-This package is maintained in its **own** Git repository. **`package.json` lives at the repository root** (not under another project’s `Packages/` folder). Unity’s **Add package from Git URL** clones that repo and treats the root as the UPM package, so installs stay clean. Optional: pin a release with `#v0.1.26` (or another tag) on the URL.
+This package is maintained in its **own** Git repository. **`package.json` lives at the repository root** (not under another project’s `Packages/` folder). Unity’s **Add package from Git URL** clones that repo and treats the root as the UPM package, so installs stay clean. Optional: pin a release with `#v0.2.0` (or another tag) on the URL.
 
 ## Requirements
 
@@ -32,7 +32,7 @@ This package is maintained in its **own** Git repository. **`package.json` lives
 
    Save the file and return to Unity so it resolves the package.
 
-3. After compile, the **CCS Hub** window may open automatically (unless you already completed or skipped setup for this project).
+3. After compile, the **CCS Hub — Setup** progress window opens for first-run required installs; when those finish and the editor is stable, **CCS Hub** opens for optional tools (unless you already completed or skipped setup for this project).
 4. Use **CCS → CCS Hub** for optional tools; choose **CCS Character Controller** and **Install selected**.
 
 ## Character Controller (UPM source → Assets/CCS)
@@ -53,7 +53,8 @@ Manual menu:
 ## Hybrid dependency model
 
 - **Do not rely on `package.json` alone** for optional CCS tools. The wizard uses `UnityEditor.PackageManager.Client.Add` for registry and Git URLs.
-- **CCS Branding** and core Unity packages (**Input System**, **Cinemachine**) are installed from the wizard’s **Required** list, not only as transitive `package.json` dependencies.
+- **Required and optional package lists** are **data-driven** from `Runtime/Resources/CCSDependencyManifest.json` inside this package (pinned Unity packages use `installIdentifier` like `com.unity.inputsystem@1.18.0`). Extend that file to add more required or optional rows without scattering IDs across scripts.
+- **CCS Branding** and core Unity packages (**Input System**, **Cinemachine**) are installed from the manifest **required** array, not only as transitive `package.json` dependencies.
 - **DOTween** is listed under **Manual / Special**: the official Demigiant flow is not treated as a guaranteed one-click Git UPM install. Import via Asset Store or your approved internal workflow.
 
 ## Sequential installs
@@ -66,4 +67,4 @@ https://github.com/Crazy-Carrot-Studios/com.crazycarrot.hub
 
 ---
 
-**Version 0.1.26** (same value as `package.json` `"version"`).
+**Version 0.2.0** (same value as `package.json` `"version"`).

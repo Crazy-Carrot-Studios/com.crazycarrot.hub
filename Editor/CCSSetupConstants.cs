@@ -42,6 +42,12 @@ namespace CCS.Hub.Editor
         /// <summary>Registry row id for Universal RP in <see cref="CCS.Hub.CCSPackageRegistry"/>.</summary>
         public const string UnityUrpDefinitionId = "unity-urp";
 
+        /// <summary>Registry row id for CCS Branding in <see cref="CCS.Hub.CCSPackageRegistry"/> (first required auto-install; Hub opens after this UPM add succeeds).</summary>
+        public const string BrandingDefinitionId = "ccs-branding";
+
+        /// <summary>UPM package name for CCS Branding.</summary>
+        public const string BrandingPackageId = "com.crazycarrot.branding";
+
         /// <summary>Registry row id for CCS Character Controller in <see cref="CCS.Hub.CCSPackageRegistry"/>.</summary>
         public const string CharacterControllerDefinitionId = "ccs-charactercontroller";
 

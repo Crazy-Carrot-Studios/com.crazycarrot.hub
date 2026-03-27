@@ -20,6 +20,9 @@ namespace CCS.Hub
         Pending = 3,
         Installing = 4,
         Failed = 5,
-        Manual = 6
+        Manual = 6,
+
+        /// <summary>Queue skipped this entry because the package was already present (no Client.Add).</summary>
+        Skipped = 7
     }
 }

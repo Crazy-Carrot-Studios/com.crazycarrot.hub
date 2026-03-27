@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-03-27
+
+### Added
+
+- **Manifest-driven registry:** `Runtime/Resources/CCSDependencyManifest.json` defines **required**, **optional**, and **catalog** packages; `CCSPackageInstallDefinition` rows deserialize via `CCSDependencyManifest` and map to `CCSPackageDefinition`. A **legacy fallback** in `CCSPackageRegistry` applies if the manifest is missing or invalid.
+- **CCSSetupOrchestrator:** After required UPM installs finish and the editor is stable (not compiling/updating, queue idle), first-run opens the **CCS Hub** optional UI automatically.
+- **CCSSetupProgressWindow:** Unified first-run progress UI (required and optional phases) with item name, **Required/Optional** tier, status (**Pending / Installing / Installed / Failed / Skipped**), stage text, overall batch counts, post-reload banner, and **Retry** for failed required packages.
+- **Install service:** `IsSkipped` for dequeue skips (already installed), `RetryFailedDefinition` for per-package retry with logging.
+
+### Changed
+
+- **First-run flow:** `CCSSetupBootstrap` opens **CCSSetupProgressWindow** immediately when auto-setup applies, then queues manifest-driven required installs **one at a time** (existing `CCSPackageInstallService` behavior). The main Hub window opens **after** the full required pass completes and Unity is stable—not mid-queue after Branding only.
+- **CCSSetupWindow:** Optional installs use **CCSSetupProgressWindow** (optional phase); **Setup complete** is shown when `EditorPrefs` reports completion. Status labels include **Skipped** when applicable.
+
+### Removed
+
+- **CCSHubRequiredInstallProgressWindow** and **CCSHubOptionalInstallProgressWindow** (replaced by **CCSSetupProgressWindow**).
+
+## [0.1.27] - 2026-03-27
+
+### Changed
+
+- **First-run Hub open:** The main CCS Hub window now opens **as soon as CCS Branding** (`com.crazycarrot.branding`) **finishes installing** via the required auto-install queue (instead of on the first editor tick before Branding completes). If Branding is **already** present, the Hub still opens on the next tick for first-run projects. Input System and Cinemachine may continue installing afterward.
+
 ## [0.1.26] - 2026-03-27
 
 ### Changed

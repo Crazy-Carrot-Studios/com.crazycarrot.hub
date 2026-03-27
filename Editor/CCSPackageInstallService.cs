@@ -27,6 +27,7 @@ namespace CCS.Hub.Editor
 
         private static readonly Queue<CCSPackageDefinition> InstallQueue = new Queue<CCSPackageDefinition>();
         private static readonly HashSet<string> FailedDefinitionIds = new HashSet<string>();
+        private static readonly HashSet<string> SkippedDefinitionIds = new HashSet<string>();
         private static readonly List<string> LastBatchSuccessDisplayNames = new List<string>();
         private static AddRequest activeAddRequest;
         private static CCSPackageDefinition activeDefinition;
@@ -199,6 +200,29 @@ namespace CCS.Hub.Editor
         {
             FailedDefinitionIds.Clear();
             RaiseStateChanged();
+        }
+
+        /// <summary>True when the queue skipped this definition because the package was already installed (no Client.Add).</summary>
+        public static bool IsSkipped(string definitionId)
+        {
+            return !string.IsNullOrEmpty(definitionId) && SkippedDefinitionIds.Contains(definitionId);
+        }
+
+        /// <summary>Re-queues a failed definition after the user chooses Retry (one Client.Add at a time).</summary>
+        public static void RetryFailedDefinition(CCSPackageDefinition definition)
+        {
+            if (string.IsNullOrEmpty(definition.Id) || !FailedDefinitionIds.Contains(definition.Id))
+            {
+                return;
+            }
+
+            FailedDefinitionIds.Remove(definition.Id);
+            InstallQueue.Enqueue(definition);
+            batchProgressTotal++;
+            PersistQueueToSession();
+            RegisterEditorUpdate();
+            RaiseStateChanged();
+            CCSEditorLog.Info($"Retry queued for '{definition.DisplayName}' ({definition.Id}).");
         }
 
         public static bool IsBusy()
@@ -432,6 +456,7 @@ namespace CCS.Hub.Editor
             if (next.Id == CCSSetupConstants.UnityUrpDefinitionId && CCSPackageProjectContext.IsUrpEffectivelyPresent())
             {
                 CCSEditorLog.Info("Install step skipped; Universal RP already detected for this project.");
+                SkippedDefinitionIds.Add(next.Id);
                 IncrementBatchProgressProcessed();
                 RaiseStateChanged();
                 return;
@@ -440,6 +465,7 @@ namespace CCS.Hub.Editor
             if (CCSPackageStatusService.IsPackageInstalled(next.PackageId))
             {
                 CCSEditorLog.Info($"Install step skipped; already present: {next.DisplayName}");
+                SkippedDefinitionIds.Add(next.Id);
                 IncrementBatchProgressProcessed();
                 RaiseStateChanged();
                 return;

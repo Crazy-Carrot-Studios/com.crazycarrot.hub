@@ -5,7 +5,7 @@
 // Author: James Schilz (Developer)
 // Created: March 25, 2025
 // Last Modified: March 27, 2026
-// Summary: On import, queues required UPM installs (Branding, Input System, Cinemachine). When first-run applies, opens CCS Hub on the next editor tick so optional installs are visible while required packages install in the background (no blocking required-only modal).
+// Summary: On import, shows first-run progress UI and queues manifest-driven required UPM installs. CCSSetupOrchestrator opens the CCS Hub optional UI after required installs finish and the editor is stable.
 // Required Components: None
 // Where to Place: Packages/com.crazycarrot.hub/Editor/
 // ============================================================================
@@ -32,27 +32,13 @@ namespace CCS.Hub.Editor
         {
             CCSPackageStatusService.RefreshInstalledPackages(() =>
             {
-                CCSHubRequiredDependencyBootstrap.TryScheduleAutoInstall();
-
-                if (!CCSSetupState.ShouldAutoOpenSetupWizard())
+                if (CCSSetupState.ShouldAutoOpenSetupWizard())
                 {
-                    return;
+                    CCSSetupProgressWindow.ShowRequiredPhase();
                 }
 
-                EditorApplication.delayCall += OpenFirstRunHubNow;
+                CCSHubRequiredDependencyBootstrap.TryScheduleAutoInstall();
             });
-        }
-
-        private static void OpenFirstRunHubNow()
-        {
-            if (!CCSSetupState.ShouldAutoOpenSetupWizard())
-            {
-                return;
-            }
-
-            CCSSetupState.MarkAutoOpenedThisSession();
-            CCSHubRequiredInstallProgressWindow.CloseForFirstRun();
-            CCSSetupWindow.ShowFirstRunAuto();
         }
 
         #endregion
