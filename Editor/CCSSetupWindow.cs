@@ -480,7 +480,7 @@ namespace CCS.Hub.Editor
                 return;
             }
 
-            CCSPackageInstallService.EnqueueDefinitions(packageManagerBatch);
+            CCSPackageInstallService.EnqueueOptionalWithRequiredPrerequisites(packageManagerBatch);
             CCSHubOptionalInstallProgressWindow.ShowAfterOptionalInstallEnqueue();
             Close();
         }

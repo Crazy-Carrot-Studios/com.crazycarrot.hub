@@ -96,6 +96,42 @@ namespace CCS.Hub.Editor
             EnqueueDefinitions(definitions, isAutoRequiredBatch: true);
         }
 
+        /// <summary>
+        /// Queues missing hub required packages (Branding, Input System, Cinemachine, …) first, then the optional batch.
+        /// Unity cannot list Git URLs as nested <c>package.json</c> dependencies, so required CCS Git packages must be installed in order via the Hub.
+        /// </summary>
+        public static void EnqueueOptionalWithRequiredPrerequisites(IEnumerable<CCSPackageDefinition> optionalDefinitions)
+        {
+            var combined = new List<CCSPackageDefinition>();
+            bool anyRequiredEnqueued = false;
+
+            foreach (CCSPackageDefinition definition in CCSPackageRegistry.EnumerateAutoRequiredDefinitions())
+            {
+                if (ShouldSkipEnqueueing(definition))
+                {
+                    continue;
+                }
+
+                combined.Add(definition);
+                anyRequiredEnqueued = true;
+            }
+
+            if (optionalDefinitions != null)
+            {
+                foreach (CCSPackageDefinition definition in optionalDefinitions)
+                {
+                    if (ShouldSkipEnqueueing(definition))
+                    {
+                        continue;
+                    }
+
+                    combined.Add(definition);
+                }
+            }
+
+            EnqueueDefinitions(combined, isAutoRequiredBatch: anyRequiredEnqueued);
+        }
+
         private static void EnqueueDefinitions(IEnumerable<CCSPackageDefinition> definitions, bool isAutoRequiredBatch)
         {
             if (definitions == null)
@@ -118,22 +154,8 @@ namespace CCS.Hub.Editor
             int enqueuedCount = 0;
             foreach (CCSPackageDefinition definition in definitions)
             {
-                if (!definition.AutoInstallSupported
-                    || definition.SourceType == CCSPackageSourceType.Manual
-                    || definition.SourceType == CCSPackageSourceType.AssetsGitImport)
+                if (ShouldSkipEnqueueing(definition))
                 {
-                    continue;
-                }
-
-                if (definition.Id == CCSSetupConstants.UnityUrpDefinitionId && CCSPackageProjectContext.IsUrpEffectivelyPresent())
-                {
-                    CCSEditorLog.Info("Queue skipped Universal RP because URP is already detected for this project.");
-                    continue;
-                }
-
-                if (CCSPackageStatusService.IsListReady() && CCSPackageStatusService.IsPackageInstalled(definition.PackageId))
-                {
-                    CCSEditorLog.Info($"Queue skipped '{definition.DisplayName}' because Package Manager reports it as installed.");
                     continue;
                 }
 
@@ -147,6 +169,30 @@ namespace CCS.Hub.Editor
             PersistQueueToSession();
             RegisterEditorUpdate();
             RaiseStateChanged();
+        }
+
+        private static bool ShouldSkipEnqueueing(CCSPackageDefinition definition)
+        {
+            if (!definition.AutoInstallSupported
+                || definition.SourceType == CCSPackageSourceType.Manual
+                || definition.SourceType == CCSPackageSourceType.AssetsGitImport)
+            {
+                return true;
+            }
+
+            if (definition.Id == CCSSetupConstants.UnityUrpDefinitionId && CCSPackageProjectContext.IsUrpEffectivelyPresent())
+            {
+                CCSEditorLog.Info("Queue skipped Universal RP because URP is already detected for this project.");
+                return true;
+            }
+
+            if (CCSPackageStatusService.IsListReady() && CCSPackageStatusService.IsPackageInstalled(definition.PackageId))
+            {
+                CCSEditorLog.Info($"Queue skipped '{definition.DisplayName}' because Package Manager reports it as installed.");
+                return true;
+            }
+
+            return false;
         }
 
         public static void ClearFailedFlags()
