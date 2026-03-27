@@ -31,7 +31,7 @@ namespace CCS.Hub.Editor
         public static bool IsDemigiantDotweenPresentInProject()
         {
             string demigiant = Path.Combine(Application.dataPath, "Plugins", "Demigiant");
-            return Directory.Exists(demiant);
+            return Directory.Exists(demigiant);
         }
 
         /// <summary>
