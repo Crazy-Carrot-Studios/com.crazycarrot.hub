@@ -48,6 +48,16 @@ namespace CCS.Hub.Editor
             return EditorPrefs.GetString(ProjectEditorPrefsKey(CCSSetupConstants.EditorPrefsRequiredAutoDepsSummaryKey), string.Empty);
         }
 
+        public static bool GetIncludeDotweenOptional()
+        {
+            return EditorPrefs.GetBool(ProjectEditorPrefsKey(CCSSetupConstants.EditorPrefsIncludeDotweenOptionalKey), false);
+        }
+
+        public static void SetIncludeDotweenOptional(bool value)
+        {
+            EditorPrefs.SetBool(ProjectEditorPrefsKey(CCSSetupConstants.EditorPrefsIncludeDotweenOptionalKey), value);
+        }
+
         public static void SetRequiredAutoDependenciesSatisfied(string summary)
         {
             EditorPrefs.SetBool(ProjectEditorPrefsKey(CCSSetupConstants.EditorPrefsRequiredAutoDepsSatisfiedKey), true);

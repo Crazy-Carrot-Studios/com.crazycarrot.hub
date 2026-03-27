@@ -28,6 +28,7 @@ namespace CCS.Hub.Editor
         private bool foldoutAutoInstalled = true;
 
         private readonly Dictionary<string, bool> optionalSelectionByDefinitionId = new Dictionary<string, bool>();
+        private bool includeDotweenOptional;
         private string statusLine = "Ready.";
         private bool subscribedToInstallEvents;
         private bool subscribedToEditorUpdate;
@@ -64,6 +65,7 @@ namespace CCS.Hub.Editor
         private void OnEnable()
         {
             titleContent = new GUIContent("CCS Hub");
+            includeDotweenOptional = CCSSetupState.GetIncludeDotweenOptional();
             InitializeOptionalSelection();
             CCSPackageStatusService.RefreshInstalledPackages(() => Repaint());
             SubscribeInstallEvents();
@@ -256,6 +258,25 @@ namespace CCS.Hub.Editor
             }
         }
 
+        private void DrawDotweenOptionalSection()
+        {
+            EditorGUILayout.Space(8f);
+            CCSHubBrandingUi.TryDrawSectionLabel("Optional DOTween");
+            EditorGUILayout.Space(4f);
+            EditorGUI.BeginChangeCheck();
+            includeDotweenOptional = EditorGUILayout.ToggleLeft(
+                "Include Demigiant DOTween (merges into Assets/Plugins and Assets/Resources)",
+                includeDotweenOptional);
+            if (EditorGUI.EndChangeCheck())
+            {
+                CCSSetupState.SetIncludeDotweenOptional(includeDotweenOptional);
+            }
+
+            EditorGUILayout.HelpBox(
+                "Shipped inside the Character Controller package as DemigiantDOTweenBundle. You are responsible for complying with Demigiant / DOTween license terms.",
+                MessageType.None);
+        }
+
         private void DrawOptionalToolRow(CCSPackageDefinition definition)
         {
             EditorGUILayout.BeginVertical(GUI.skin.box);
@@ -424,6 +445,8 @@ namespace CCS.Hub.Editor
 
         private void RunInstallSelectedOptional()
         {
+            SessionState.SetBool(CCSSetupConstants.SessionStateDotweenCopyPending, false);
+
             List<CCSPackageDefinition> packageManagerBatch = new List<CCSPackageDefinition>();
             int skippedAlreadyImported = 0;
 
@@ -454,8 +477,30 @@ namespace CCS.Hub.Editor
                 packageManagerBatch.Add(definition);
             }
 
+            bool wantsDotween = includeDotweenOptional;
+            bool batchContainsCc = packageManagerBatch.Any(d => d.Id == CCSSetupConstants.CharacterControllerDefinitionId);
+
+            if (wantsDotween && batchContainsCc)
+            {
+                SessionState.SetBool(CCSSetupConstants.SessionStateDotweenCopyPending, true);
+            }
+            else if (wantsDotween && !batchContainsCc)
+            {
+                if (!CCSDotweenBundleInstaller.TryCopyDemigiantIntoProject(out string dotweenErr))
+                {
+                    statusLine = dotweenErr;
+                    return;
+                }
+            }
+
             if (packageManagerBatch.Count == 0)
             {
+                if (wantsDotween && !batchContainsCc)
+                {
+                    statusLine = "DOTween (Demigiant) copied into Assets/Plugins and Assets/Resources.";
+                    return;
+                }
+
                 statusLine = skippedAlreadyImported > 0
                     ? "Character Controller is already imported under Assets/CCS/CharacterController. Select another tool or mark setup complete."
                     : "Select at least one optional tool, or mark setup complete.";

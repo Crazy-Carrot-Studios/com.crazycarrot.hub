@@ -239,6 +239,29 @@ namespace CCS.Hub.Editor
                     return;
                 }
 
+                if (SessionState.GetBool(CCSSetupConstants.SessionStateDotweenCopyPending, false))
+                {
+                    SessionState.SetBool(CCSSetupConstants.SessionStateDotweenCopyPending, false);
+                    string bundlePath = Path.Combine(
+                        sourceRoot,
+                        "Assets",
+                        "CCS",
+                        "CharacterController",
+                        CCSDotweenBundleInstaller.BundleFolderName);
+                    if (Directory.Exists(bundlePath))
+                    {
+                        if (!CCSDotweenBundleInstaller.TryCopyFromBundleRoot(bundlePath, out string dotweenErr))
+                        {
+                            CCSEditorLog.Warning($"CCS Hub: DOTween copy failed: {dotweenErr}");
+                        }
+                    }
+                    else
+                    {
+                        CCSEditorLog.Warning(
+                            "CCS Hub: DOTween was requested but DemigiantDOTweenBundle was not found in the Character Controller package.");
+                    }
+                }
+
                 CCSProjectFolderUtility.CreateDefaultCcsFolderStructure();
 
                 string destRoot = Path.Combine(Application.dataPath, "CCS", "CharacterController");

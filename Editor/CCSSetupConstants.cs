@@ -27,6 +27,9 @@ namespace CCS.Hub.Editor
         /// <summary>Session flag: pending queue is the hub's automatic required-dependency pass (survives domain reload).</summary>
         public const string SessionStateAutoRequiredPassActive = "CCS.Hub.AutoRequiredPassActive";
 
+        /// <summary>Session flag: before Character Controller asset bootstrap, copy Demigiant DOTween into <c>Assets/Plugins</c> and <c>Assets/Resources</c>.</summary>
+        public const string SessionStateDotweenCopyPending = "CCS.Hub.DotweenCopyPending";
+
         /// <summary>Registry row id for Universal RP in <see cref="CCS.Hub.CCSPackageRegistry"/>.</summary>
         public const string UnityUrpDefinitionId = "unity-urp";
 
@@ -44,6 +47,9 @@ namespace CCS.Hub.Editor
 
         /// <summary>EditorPrefs: human-readable summary of required packages (auto or already present).</summary>
         public const string EditorPrefsRequiredAutoDepsSummaryKey = "RequiredAutoDepsSummary";
+
+        /// <summary>EditorPrefs: optional Demigiant DOTween copy from the Character Controller bundle (per project).</summary>
+        public const string EditorPrefsIncludeDotweenOptionalKey = "IncludeDotweenOptional";
 
         /// <summary>Hub scaffold for Character Controller: only Assets/CCS and the controller root (no empty sibling template folders).</summary>
         public static readonly string[] DefaultCcsProjectFolders =
