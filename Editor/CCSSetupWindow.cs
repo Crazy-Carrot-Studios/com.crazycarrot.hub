@@ -120,8 +120,6 @@ namespace CCS.Hub.Editor
                 DrawRequiredAutoSummary();
                 EditorGUILayout.Space(8f);
                 DrawOptionalToolsSection();
-                EditorGUILayout.Space(8f);
-                DrawAssetsExplanation();
                 EditorGUILayout.EndScrollView();
                 EditorGUILayout.Space(6f);
                 DrawToolbar();
@@ -250,9 +248,6 @@ namespace CCS.Hub.Editor
         private void DrawOptionalToolsSection()
         {
             CCSHubBrandingUi.TryDrawSectionLabel("Available CCS tools");
-            EditorGUILayout.LabelField(
-                "Optional CCS Git packages install via Package Manager. Character Controller uses a two-step flow: Package Manager fetches the Git package under Packages/, then CCS Hub imports that source into Assets/CCS/CharacterController (like importing a .unitypackage).",
-                EditorStyles.miniLabel);
             EditorGUILayout.Space(4f);
 
             foreach (CCSPackageDefinition definition in CCSPackageRegistry.EnumerateOptionalToolsForHub())
@@ -265,7 +260,6 @@ namespace CCS.Hub.Editor
         {
             EditorGUILayout.BeginVertical(GUI.skin.box);
             EditorGUILayout.LabelField(definition.DisplayName, EditorStyles.boldLabel);
-            EditorGUILayout.LabelField(definition.Description, EditorStyles.wordWrappedMiniLabel);
 
             bool selected = optionalSelectionByDefinitionId.TryGetValue(definition.Id, out bool value) && value;
             bool newValue = EditorGUILayout.ToggleLeft("Include when installing", selected);
@@ -274,20 +268,8 @@ namespace CCS.Hub.Editor
             CCSPackageInstallStatus rowStatus = GetOptionalRowStatus(definition);
             EditorGUILayout.LabelField($"Status: {FormatStatus(rowStatus)}", EditorStyles.miniLabel);
 
-            if (!string.IsNullOrEmpty(definition.InstallNotes))
-            {
-                EditorGUILayout.HelpBox(definition.InstallNotes, MessageType.None);
-            }
-
             EditorGUILayout.EndVertical();
             EditorGUILayout.Space(4f);
-        }
-
-        private static void DrawAssetsExplanation()
-        {
-            EditorGUILayout.HelpBox(
-                "Character Controller: UPM installs the Git checkout under Packages/ first; the Hub then copies/bootstraps into Assets/CCS so content is visible and editable in the Project window. The Hub removes the package dependency after copy to avoid compiling duplicate scripts.",
-                MessageType.None);
         }
 
         private void DrawToolbar()

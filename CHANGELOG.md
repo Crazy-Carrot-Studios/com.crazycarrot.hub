@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.14] - 2025-03-27
+
+### Changed
+
+- **CCS Hub (optional tools):** Rows show **title** (display name), **Include when installing**, and **status** only—no long descriptions, install notes, or extra “Character Controller” explainer block.
+- **Optional install progress window:** Closes automatically when installs finish; idle detection no longer treats post-reload indeterminate progress as “still active,” which could block auto-close.
+
 ## [0.1.13] - 2025-03-27
 
 ### Changed

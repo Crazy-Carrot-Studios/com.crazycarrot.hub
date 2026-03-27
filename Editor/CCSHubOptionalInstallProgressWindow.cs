@@ -125,9 +125,10 @@ namespace CCS.Hub.Editor
 
         private void OnEditorUpdate()
         {
+            // Do not use GetInstallBatchProgressNormalized() < 0 here: "indeterminate after reload" can stay true
+            // briefly after work finishes and would block auto-close. Idle = PM queue empty and bootstrap not running.
             bool active = CCSPackageInstallService.IsBusy()
-                || CCSCharacterControllerAssetsBootstrap.IsBootstrapBusy
-                || CCSPackageInstallService.GetInstallBatchProgressNormalized() < 0f;
+                || CCSCharacterControllerAssetsBootstrap.IsBootstrapBusy;
 
             if (active)
             {
