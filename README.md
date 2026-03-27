@@ -1,12 +1,12 @@
 # CCS Hub (`com.crazycarrot.hub`)
 
-**Version: 0.1.12**
+**Version: 0.1.13**
 
 First-run **bootstrap installer** and package hub for **Crazy Carrot Studios** Unity projects. After you add this package by Git URL, Unity runs a **CCS Setup Wizard** (once per project until you complete, skip, or reset) that can install required Unity packages and optional CCS Git packages **sequentially** via Package Manager, and scaffold **`Assets/CCS`** content folders.
 
 ## Standalone Git / UPM repository
 
-This package is maintained in its **own** Git repository. **`package.json` lives at the repository root** (not under another project’s `Packages/` folder). Unity’s **Add package from Git URL** clones that repo and treats the root as the UPM package, so installs stay clean. Optional: pin a release with `#v0.1.12` (or another tag) on the URL.
+This package is maintained in its **own** Git repository. **`package.json` lives at the repository root** (not under another project’s `Packages/` folder). Unity’s **Add package from Git URL** clones that repo and treats the root as the UPM package, so installs stay clean. Optional: pin a release with `#v0.1.13` (or another tag) on the URL.
 
 ## Requirements
 
@@ -46,10 +46,9 @@ Unity Package Manager **never** writes optional CCS tools straight into `Assets/
 
 **Limitations / next steps:** Re-install overwrites that folder (destructive). If **`Client.Remove`** fails after copy, remove the package manually in Package Manager to avoid duplicate assemblies. The **`com.crazycarrot.charactercontroller`** Git repo should **not** ship a full sample project inside the package; keep template scenes/settings only in the **consumer** project’s **`Assets/`** (not under **`Assets/CCS`**). Updating Character Controller later may require a documented “replace from package” or Git workflow—the Hub does not diff-merge versions yet.
 
-Manual menus:
+Manual menu:
 
 - **CCS → CCS Hub**
-- **CCS → Developer → Reset Setup State** (testing)
 
 ## Hybrid dependency model
 
@@ -67,4 +66,4 @@ https://github.com/Crazy-Carrot-Studios/com.crazycarrot.hub
 
 ---
 
-**Version 0.1.12** (same value as `package.json` `"version"`).
+**Version 0.1.13** (same value as `package.json` `"version"`).

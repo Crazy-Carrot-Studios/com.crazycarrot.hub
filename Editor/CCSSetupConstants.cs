@@ -17,8 +17,6 @@ namespace CCS.Hub.Editor
         /// <summary>Top-level Unity menu: CCS (not under Tools).</summary>
         public const string MenuPathSetupWizard = "CCS/CCS Hub";
 
-        public const string MenuPathResetSetupState = "CCS/Developer/Reset Setup State";
-
         public const string EditorPrefsKeyPrefix = "CCS.Hub.";
         public const string EditorPrefsSetupCompleted = "CCS.Hub.SetupCompleted";
         public const string EditorPrefsSetupSkipped = "CCS.Hub.SetupSkipped";

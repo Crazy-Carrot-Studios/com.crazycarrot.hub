@@ -487,17 +487,4 @@ namespace CCS.Hub.Editor
 
         #endregion
     }
-
-    public static class CCSSetupDeveloperMenu
-    {
-        #region Public Methods
-
-        [MenuItem(CCSSetupConstants.MenuPathResetSetupState, priority = 120)]
-        public static void ResetSetupStateForDevelopment()
-        {
-            CCSSetupState.ResetAllSetupFlagsForDevelopment();
-        }
-
-        #endregion
-    }
 }
