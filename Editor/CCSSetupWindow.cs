@@ -516,6 +516,11 @@ namespace CCS.Hub.Editor
 
             if (packageManagerBatch.Count > 0)
             {
+                bool ccChecked = optionalSelectionByDefinitionId.TryGetValue(
+                    CCSSetupConstants.CharacterControllerDefinitionId,
+                    out bool ccSel)
+                    && ccSel;
+                CCSHubOptionalInstallContext.BeginOptionalUserTracking(ccChecked, includeDotweenOptional);
                 CCSPackageInstallService.EnqueueOptionalWithRequiredPrerequisites(packageManagerBatch);
                 CCSHubOptionalInstallProgressWindow.ShowAfterOptionalInstallEnqueue();
                 Close();

@@ -271,6 +271,7 @@ namespace CCS.Hub.Editor
                 Directory.CreateDirectory(destRoot);
                 CopyCharacterControllerPackageIntoAssets(sourceRoot, destRoot);
                 AssetDatabase.Refresh();
+                ReimportArmatureModelBeforeTestingRobotPrefab();
                 TryMaterializeSamplesBasicSetupIfNeeded();
                 EditorUtility.ClearProgressBar();
 
@@ -292,6 +293,24 @@ namespace CCS.Hub.Editor
                     bootstrapBusy = false;
                     RaiseStateChanged();
                 }
+            }
+        }
+
+        /// <summary>
+        /// Imports the armature model before the testing robot prefab so nested PrefabInstance references resolve (avoids missing guid / variant parent errors on first import).
+        /// </summary>
+        private static void ReimportArmatureModelBeforeTestingRobotPrefab()
+        {
+            const string armatureFbx = "Assets/CCS/CharacterController/Content/ThirdPersonArmature/Models/Armature.fbx";
+            const string testingRobotPrefab = "Assets/CCS/CharacterController/Content/Prefabs/Characters/CCS_Player_TestingRobot.prefab";
+            if (AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(armatureFbx) != null)
+            {
+                AssetDatabase.ImportAsset(armatureFbx, ImportAssetOptions.ForceUpdate);
+            }
+
+            if (AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(testingRobotPrefab) != null)
+            {
+                AssetDatabase.ImportAsset(testingRobotPrefab, ImportAssetOptions.ForceUpdate);
             }
         }
 

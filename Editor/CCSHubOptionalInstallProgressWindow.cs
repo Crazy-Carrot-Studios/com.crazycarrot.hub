@@ -27,6 +27,7 @@ namespace CCS.Hub.Editor
         private bool sawInstallActivity;
         private bool closeScheduled;
 
+        private bool stylesInitialized;
         private GUIStyle pleaseWaitTitleStyle;
         private GUIStyle installingSubtitleStyle;
 
@@ -47,17 +48,6 @@ namespace CCS.Hub.Editor
         private void OnEnable()
         {
             titleContent = new GUIContent("CCS Hub — Installing");
-            pleaseWaitTitleStyle = new GUIStyle(EditorStyles.boldLabel)
-            {
-                fontSize = 18,
-                alignment = TextAnchor.MiddleCenter,
-                wordWrap = true,
-            };
-            installingSubtitleStyle = new GUIStyle(EditorStyles.label)
-            {
-                alignment = TextAnchor.MiddleCenter,
-                wordWrap = true,
-            };
             SubscribeEvents();
             SubscribeEditorUpdate();
         }
@@ -66,6 +56,7 @@ namespace CCS.Hub.Editor
         {
             UnsubscribeEvents();
             UnsubscribeEditorUpdate();
+            CCSHubOptionalInstallContext.ClearOptionalUserTracking();
             if (instance == this)
             {
                 instance = null;
@@ -157,11 +148,37 @@ namespace CCS.Hub.Editor
             }
 
             CCSSetupState.SetSetupCompleted(true);
+            CCSHubOptionalInstallContext.ClearOptionalUserTracking();
             Close();
+        }
+
+        private void EnsureGuiStyles()
+        {
+            if (stylesInitialized && pleaseWaitTitleStyle != null && installingSubtitleStyle != null)
+            {
+                return;
+            }
+
+            // EditorStyles is not safe in OnEnable on some Unity versions / reload orders; build styles on first GUI pass.
+            GUIStyle boldBase = EditorStyles.boldLabel;
+            GUIStyle labelBase = EditorStyles.label;
+            pleaseWaitTitleStyle = new GUIStyle(boldBase)
+            {
+                fontSize = 18,
+                alignment = TextAnchor.MiddleCenter,
+                wordWrap = true,
+            };
+            installingSubtitleStyle = new GUIStyle(labelBase)
+            {
+                alignment = TextAnchor.MiddleCenter,
+                wordWrap = true,
+            };
+            stylesInitialized = true;
         }
 
         private void OnGUI()
         {
+            EnsureGuiStyles();
             CCSHubBrandingUi.TryBeginBody();
             try
             {
@@ -193,6 +210,13 @@ namespace CCS.Hub.Editor
 
         private void DrawStatusLine()
         {
+            string phase = CCSHubOptionalInstallContext.GetCurrentPhaseLabel();
+            if (!string.IsNullOrEmpty(phase))
+            {
+                EditorGUILayout.HelpBox(phase, MessageType.None);
+                return;
+            }
+
             if (CCSCharacterControllerAssetsBootstrap.IsBootstrapBusy)
             {
                 EditorGUILayout.HelpBox(

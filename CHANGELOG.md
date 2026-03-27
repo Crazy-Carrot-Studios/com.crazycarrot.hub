@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.24] - 2026-03-27
+
+### Fixed
+
+- **Optional install progress:** `CCSHubOptionalInstallProgressWindow` no longer builds `GUIStyle` from `EditorStyles` in `OnEnable` (fixes `NullReferenceException` on `EditorStyles.boldLabel` in some editor load orders). User-facing step counts (**Optional setup 0 / 2**) now reflect Character Controller + DOTween selections; status text shows the active phase (Package Manager vs import). Character Controller bootstrap **reimports** `Armature.fbx` before `CCS_Player_TestingRobot.prefab` so nested prefab references resolve after copy.
+
 ## [0.1.23] - 2026-03-27
 
 ### Fixed

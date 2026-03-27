@@ -30,6 +30,15 @@ namespace CCS.Hub.Editor
         /// <summary>Session flag: before Character Controller asset bootstrap, copy Demigiant DOTween into <c>Assets/Plugins</c> and <c>Assets/Resources</c>.</summary>
         public const string SessionStateDotweenCopyPending = "CCS.Hub.DotweenCopyPending";
 
+        /// <summary>Hub optional install UI: user checked Character Controller (0 or 1).</summary>
+        public const string SessionStateOptionalUserCcSelected = "CCS.Hub.OptionalUserCcSelected";
+
+        /// <summary>Hub optional install UI: user checked DOTween (0 or 1).</summary>
+        public const string SessionStateOptionalUserDotweenSelected = "CCS.Hub.OptionalUserDotweenSelected";
+
+        /// <summary>Hub optional install UI: sum of user selections (1–2) for step counts on the progress window.</summary>
+        public const string SessionStateOptionalUserStepTotal = "CCS.Hub.OptionalUserStepTotal";
+
         /// <summary>Registry row id for Universal RP in <see cref="CCS.Hub.CCSPackageRegistry"/>.</summary>
         public const string UnityUrpDefinitionId = "unity-urp";
 
