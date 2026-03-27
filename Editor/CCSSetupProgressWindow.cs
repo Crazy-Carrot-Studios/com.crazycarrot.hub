@@ -296,7 +296,7 @@ namespace CCS.Hub.Editor
             return "Waiting for required dependency installs…";
         }
 
-        private static string BuildOptionalStageText()
+        private string BuildOptionalStageText()
         {
             string phase = CCSHubOptionalInstallContext.GetCurrentPhaseLabel();
             if (!string.IsNullOrEmpty(phase))
