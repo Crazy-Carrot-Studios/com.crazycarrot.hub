@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.8] - 2025-03-27
+
+### Added
+
+- **Optional tools install UX:** choosing **Install selected** in CCS Hub closes the setup window and opens a **CCS Hub — Installing** utility window with progress feedback and copy such as **Installing {package display names}** until Package Manager work and Character Controller bootstrap (when applicable) finish.
+
 ## [0.1.7] - 2025-03-26
 
 ### Changed
