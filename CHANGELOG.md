@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.11] - 2025-03-27
+
+### Fixed
+
+- **Character Controller bootstrap (embedded tree):** The copy whitelist no longer includes top-level **`Runtime`** or **`Editor`** under `Assets/CCS/CharacterController`. Only **`Scripts`**, **`Content`**, **`Animations`**, and **`Samples~`** are copied from the embedded package layout, so **`Scripts/Runtime`** and **`Scripts/Editor`** are not duplicated by a second `Runtime/` / `Editor/` tree with the same asmdef names.
+
 ## [0.1.10] - 2025-03-27
 
 ### Fixed

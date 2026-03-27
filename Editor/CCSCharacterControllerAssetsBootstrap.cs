@@ -31,13 +31,17 @@ namespace CCS.Hub.Editor
         /// When the Git repo embeds a dev project under Assets/CCS/CharacterController, only these folders are copied
         /// (excludes nested Assets/Starter Assets, Packages/, ProjectSettings/, Docs/, etc.).
         /// </summary>
+        /// <summary>
+        /// Top-level folders under <c>Assets/CCS/CharacterController</c> in the package.
+        /// Do not list parallel <c>Runtime</c> or <c>Editor</c> here: assemblies live only under
+        /// <c>Scripts/Runtime</c> and <c>Scripts/Editor</c>. Copying both <c>Scripts</c> and root
+        /// <c>Runtime</c>/<c>Editor</c> duplicates the same <c>CCS.CharacterController.Runtime</c> / <c>CCS.CharacterController.Editor</c> assembly definitions.
+        /// </summary>
         private static readonly string[] EmbeddedCcsCharacterControllerFolders =
         {
             "Scripts",
             "Content",
             "Animations",
-            "Editor",
-            "Runtime",
             "Samples~",
         };
 
