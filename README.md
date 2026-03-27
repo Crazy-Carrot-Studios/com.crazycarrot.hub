@@ -64,3 +64,7 @@ Only **one** `Client.Add` runs at a time. A queue persists pending definition id
 ## Repository
 
 https://github.com/Crazy-Carrot-Studios/com.crazycarrot.hub
+
+---
+
+**Version 0.1.5** (same value as `package.json` `"version"`).
