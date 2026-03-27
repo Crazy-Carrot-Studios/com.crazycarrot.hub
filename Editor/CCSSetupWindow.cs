@@ -152,6 +152,12 @@ namespace CCS.Hub.Editor
                 DrawPostReloadBanner();
                 scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
                 DrawRequiredAutoSummary();
+                if (CCSHubInstallProgressBar.ShouldShow())
+                {
+                    EditorGUILayout.Space(6f);
+                    CCSHubInstallProgressBar.Draw();
+                }
+
                 EditorGUILayout.Space(8f);
                 DrawOptionalToolsSection();
                 DrawDotweenOptionalSection();
@@ -228,7 +234,7 @@ namespace CCS.Hub.Editor
             CCSHubBrandingUi.TryDrawTitleBanner("CCS Hub");
             CCSHubBrandingUi.TryDrawSectionLabel("Crazy Carrot Studios");
             EditorGUILayout.HelpBox(
-                "Required CCS dependencies (Branding, Input System, Cinemachine) install automatically when the Hub loads. Choose optional Character Controller and/or DOTween below, then click Install. When everything you selected is finished, setup is marked complete.",
+                "Required CCS dependencies (Branding, Input System, Cinemachine) install automatically when the Hub loads. Choose optional Character Controller and/or DOTween below, then click Install. Progress appears below; when your selections finish, setup completes and windows close automatically.",
                 MessageType.Info);
         }
 
@@ -252,7 +258,12 @@ namespace CCS.Hub.Editor
 
             if (!satisfied && busy)
             {
-                EditorGUILayout.HelpBox("Installing required CCS dependencies automatically…", MessageType.None);
+                string active = CCSPackageInstallService.GetActiveInstallDisplayName();
+                EditorGUILayout.HelpBox(
+                    string.IsNullOrEmpty(active)
+                        ? "Installing required CCS dependencies (Branding, Input System, Cinemachine)…"
+                        : $"Installing required: {active}",
+                    MessageType.None);
                 return;
             }
 
@@ -344,19 +355,7 @@ namespace CCS.Hub.Editor
                     Close();
                 }
 
-                if (GUILayout.Button("Mark setup complete", GUILayout.Height(24f)))
-                {
-                    CCSSetupState.SetSetupCompleted(true);
-                    statusLine = "Marked complete for this project.";
-                }
-
                 EditorGUILayout.EndHorizontal();
-            }
-
-            if (CCSHubInstallProgressBar.ShouldShow())
-            {
-                EditorGUILayout.Space(4f);
-                CCSHubInstallProgressBar.Draw();
             }
 
             if (CCSCharacterControllerAssetsBootstrap.IsBootstrapBusy)

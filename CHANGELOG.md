@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.26] - 2026-03-27
+
+### Changed
+
+- **First-run flow:** After adding the Hub via Git URL, **required** packages (CCS Branding, Input System, Cinemachine) still **queue and install automatically** on load. The **main CCS Hub** window now opens **on the next editor tick** (no blocking “required packages only” modal first), so optional Character Controller / DOTween choices are visible **while** required installs run. Progress for required packages appears in the Hub (active package name + bar). **Mark setup complete** was removed; completion still happens automatically when your optional install pass finishes (or via **Skip for now**).
+
 ## [0.1.25] - 2026-03-27
 
 ### Fixed
