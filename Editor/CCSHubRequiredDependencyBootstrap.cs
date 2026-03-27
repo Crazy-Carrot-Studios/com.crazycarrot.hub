@@ -30,11 +30,6 @@ namespace CCS.Hub.Editor
         /// </summary>
         public static void TryScheduleAutoInstall()
         {
-            if (CCSSetupState.AreRequiredAutoDependenciesSatisfied())
-            {
-                return;
-            }
-
             if (!CCSPackageStatusService.IsListReady())
             {
                 EditorApplication.delayCall += TryScheduleAutoInstall;
@@ -57,6 +52,13 @@ namespace CCS.Hub.Editor
                 CCSEditorLog.Info("CCS Hub: all required dependencies already present; skipping auto-install queue.");
                 ScheduleRequiredAutoInstallCompletedNotification();
                 return;
+            }
+
+            if (CCSSetupState.AreRequiredAutoDependenciesSatisfied())
+            {
+                CCSSetupState.ClearRequiredAutoDependenciesSatisfied();
+                CCSEditorLog.Info(
+                    "CCS Hub: required dependency list is not fully installed (e.g. CCS Branding); clearing stale satisfied flag and queueing installs.");
             }
 
             CCSEditorLog.Info($"CCS Hub: queueing {missing.Count} required package install(s).");

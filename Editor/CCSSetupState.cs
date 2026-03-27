@@ -54,6 +54,16 @@ namespace CCS.Hub.Editor
             EditorPrefs.SetString(ProjectEditorPrefsKey(CCSSetupConstants.EditorPrefsRequiredAutoDepsSummaryKey), summary ?? string.Empty);
         }
 
+        /// <summary>
+        /// Clears the "required auto-deps satisfied" flag so the next bootstrap pass re-evaluates Package Manager
+        /// (e.g. CCS Branding added to the required set after a prior successful pass).
+        /// </summary>
+        public static void ClearRequiredAutoDependenciesSatisfied()
+        {
+            EditorPrefs.DeleteKey(ProjectEditorPrefsKey(CCSSetupConstants.EditorPrefsRequiredAutoDepsSatisfiedKey));
+            EditorPrefs.DeleteKey(ProjectEditorPrefsKey(CCSSetupConstants.EditorPrefsRequiredAutoDepsSummaryKey));
+        }
+
         public static bool ShouldAutoOpenSetupWizard()
         {
             if (IsSetupCompleted() || IsSetupSkipped())

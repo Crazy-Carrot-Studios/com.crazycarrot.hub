@@ -481,7 +481,7 @@ namespace CCS.Hub.Editor
             }
 
             CCSPackageInstallService.EnqueueDefinitions(packageManagerBatch);
-            CCSHubOptionalInstallProgressWindow.ShowAfterOptionalInstallEnqueue(packageManagerBatch);
+            CCSHubOptionalInstallProgressWindow.ShowAfterOptionalInstallEnqueue();
             Close();
         }
 

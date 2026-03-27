@@ -347,13 +347,28 @@ namespace CCS.Hub.Editor
 
         /// <summary>
         /// If the embedded tree used Scripts/ but Runtime/ lives only at package root, merge missing standard folders.
+        /// Skips supplementing package-root <c>Runtime</c> / <c>Editor</c> when the embedded layout already uses
+        /// <c>Scripts/Runtime</c> / <c>Scripts/Editor</c> (otherwise both trees compile the same assembly names).
         /// </summary>
         private static void SupplementPackageRootFoldersIfMissing(string packageRoot, string destRoot)
         {
+            bool embeddedUsesScriptsRuntime = Directory.Exists(Path.Combine(destRoot, "Scripts", "Runtime"));
+            bool embeddedUsesScriptsEditor = Directory.Exists(Path.Combine(destRoot, "Scripts", "Editor"));
+
             for (int index = 0; index < SupplementFromRootIfMissingInDest.Length; index++)
             {
                 string name = SupplementFromRootIfMissingInDest[index];
                 if (Directory.Exists(Path.Combine(destRoot, name)))
+                {
+                    continue;
+                }
+
+                if (string.Equals(name, "Runtime", StringComparison.Ordinal) && embeddedUsesScriptsRuntime)
+                {
+                    continue;
+                }
+
+                if (string.Equals(name, "Editor", StringComparison.Ordinal) && embeddedUsesScriptsEditor)
                 {
                     continue;
                 }

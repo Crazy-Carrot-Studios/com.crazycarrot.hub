@@ -4,13 +4,11 @@
 // GameObject: N/A (Editor Utility)
 // Author: James Schilz (Developer)
 // Created: March 26, 2025
-// Summary: Modal-style progress window after the user chooses Install selected in CCS Hub; shows until Package Manager and Character Controller bootstrap finish.
+// Summary: Modal-style progress window after the user chooses Install selected in CCS Hub; centered title and subtitle until Package Manager and Character Controller bootstrap finish.
 // Required Components: None
 // Where to Place: Packages/com.crazycarrot.hub/Editor/
 // ============================================================================
 
-using System.Collections.Generic;
-using System.Text;
 using CCS.Hub;
 using UnityEditor;
 using UnityEngine;
@@ -28,57 +26,38 @@ namespace CCS.Hub.Editor
         private bool subscribedToEditorUpdate;
         private bool sawInstallActivity;
         private bool closeScheduled;
-        private string queuedItemsDisplayLine;
+
+        private GUIStyle pleaseWaitTitleStyle;
+        private GUIStyle installingSubtitleStyle;
 
         /// <summary>
-        /// Opens the progress window after optional packages are enqueued; <paramref name="queuedDefinitions"/> drives the “installing …” copy.
+        /// Opens the progress window after optional packages are enqueued from CCS Hub.
         /// </summary>
-        public static void ShowAfterOptionalInstallEnqueue(IReadOnlyList<CCSPackageDefinition> queuedDefinitions)
+        public static void ShowAfterOptionalInstallEnqueue()
         {
             CCSHubOptionalInstallProgressWindow window = GetWindow<CCSHubOptionalInstallProgressWindow>(true, "CCS Hub — Installing", true);
-            window.minSize = new Vector2(420f, 180f);
-            window.maxSize = new Vector2(560f, 320f);
+            window.minSize = new Vector2(420f, 160f);
+            window.maxSize = new Vector2(560f, 300f);
             window.sawInstallActivity = false;
             window.closeScheduled = false;
-            window.queuedItemsDisplayLine = FormatQueuedDisplayNames(queuedDefinitions);
             instance = window;
             window.Focus();
-        }
-
-        private static string FormatQueuedDisplayNames(IReadOnlyList<CCSPackageDefinition> definitions)
-        {
-            if (definitions == null || definitions.Count == 0)
-            {
-                return "the selected content";
-            }
-
-            if (definitions.Count == 1)
-            {
-                return definitions[0].DisplayName;
-            }
-
-            if (definitions.Count == 2)
-            {
-                return $"{definitions[0].DisplayName} and {definitions[1].DisplayName}";
-            }
-
-            var builder = new StringBuilder();
-            for (int index = 0; index < definitions.Count; index++)
-            {
-                if (index > 0)
-                {
-                    builder.Append(index == definitions.Count - 1 ? ", and " : ", ");
-                }
-
-                builder.Append(definitions[index].DisplayName);
-            }
-
-            return builder.ToString();
         }
 
         private void OnEnable()
         {
             titleContent = new GUIContent("CCS Hub — Installing");
+            pleaseWaitTitleStyle = new GUIStyle(EditorStyles.boldLabel)
+            {
+                fontSize = 18,
+                alignment = TextAnchor.MiddleCenter,
+                wordWrap = true,
+            };
+            installingSubtitleStyle = new GUIStyle(EditorStyles.label)
+            {
+                alignment = TextAnchor.MiddleCenter,
+                wordWrap = true,
+            };
             SubscribeEvents();
             SubscribeEditorUpdate();
         }
@@ -184,13 +163,12 @@ namespace CCS.Hub.Editor
             CCSHubBrandingUi.TryBeginBody();
             try
             {
-                EditorGUILayout.Space(10f);
-                EditorGUILayout.LabelField("Please wait", EditorStyles.boldLabel);
-                EditorGUILayout.LabelField(
-                    "Installing the selected content. Package Manager may take a while; Character Controller also imports into Assets/CCS when applicable.",
-                    EditorStyles.wordWrappedLabel);
+                EditorGUILayout.Space(12f);
+                GUILayout.Label("Please Wait", pleaseWaitTitleStyle, GUILayout.ExpandWidth(true));
+                EditorGUILayout.Space(6f);
+                GUILayout.Label("Installing selected Content", installingSubtitleStyle, GUILayout.ExpandWidth(true));
 
-                EditorGUILayout.Space(10f);
+                EditorGUILayout.Space(14f);
                 if (CCSHubInstallProgressBar.ShouldShow())
                 {
                     CCSHubInstallProgressBar.Draw();
