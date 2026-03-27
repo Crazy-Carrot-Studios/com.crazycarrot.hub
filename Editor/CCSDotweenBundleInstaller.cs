@@ -26,6 +26,15 @@ namespace CCS.Hub.Editor
         public const string BundleFolderName = "DemigiantDOTweenBundle~";
 
         /// <summary>
+        /// True when Demigiant DOTween appears to already be merged under <c>Assets/Plugins</c> (avoids redundant copy).
+        /// </summary>
+        public static bool IsDemigiantDotweenPresentInProject()
+        {
+            string demigiant = Path.Combine(Application.dataPath, "Plugins", "Demigiant");
+            return Directory.Exists(demiant);
+        }
+
+        /// <summary>
         /// Merges <c>Plugins</c> and <c>Resources</c> from the bundle into <c>Assets/Plugins</c> and <c>Assets/Resources</c>.
         /// </summary>
         public static bool TryCopyDemigiantIntoProject(out string errorMessage)

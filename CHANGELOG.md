@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.21] - 2026-03-27
+
+### Changed
+
+- **Release:** Version bump for UPM testing alongside **CCS Character Controller 0.1.7** (no functional change from 0.1.20).
+
+## [0.1.20] - 2026-03-27
+
+### Fixed
+
+- **Required installs on Hub load:** `CCSHubRequiredDependencyBootstrap.TryScheduleAutoInstall()` runs after Package Manager list refresh **even when the first-run wizard does not open**, so Branding / Input System / Cinemachine still queue whenever `com.crazycarrot.hub` is present.
+- **Hub UI:** The main Hub again shows **Character Controller** and **DOTween** sections (`DrawDotweenOptionalSection` wired). **Install** with no Package Manager work (already imported CC, DOTween-only copy, or nothing left to do) now **marks setup complete and closes** the Hub; closing the Hub alone no longer marks setup complete.
+- **Character Controller import:** Package bootstrap **no longer copies** a top-level **`Tests`** folder from the UPM package into `Assets/CCS/CharacterController`.
+
 ## [0.1.19] - 2026-03-27
 
 ### Changed

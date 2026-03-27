@@ -4,7 +4,8 @@
 // GameObject: N/A (Editor Utility)
 // Author: James Schilz (Developer)
 // Created: March 25, 2025
-// Summary: Minimal CCS Hub window: required dependencies auto-installed by bootstrap; optional tools (Character Controller) and one install action.
+// Last Modified: March 27, 2026
+// Summary: CCS Hub window after required deps: two optional choices — Character Controller (UPM + import) and Demigiant DOTween (bundle copy). Install completes setup and closes; optional progress window marks complete when PM/bootstrap finish.
 // Required Components: None
 // Where to Place: Packages/com.crazycarrot.hub/Editor/
 // ============================================================================
@@ -88,13 +89,10 @@ namespace CCS.Hub.Editor
 
         private void OnDestroy()
         {
-            if (!openedFromFirstRunAuto)
+            if (openedFromFirstRunAuto)
             {
-                return;
+                openedFromFirstRunAuto = false;
             }
-
-            openedFromFirstRunAuto = false;
-            CCSSetupState.SetSetupCompleted(true);
         }
 
         private void SubscribeEditorUpdateRepaint()
@@ -141,6 +139,7 @@ namespace CCS.Hub.Editor
                 DrawRequiredAutoSummary();
                 EditorGUILayout.Space(8f);
                 DrawOptionalToolsSection();
+                DrawDotweenOptionalSection();
                 EditorGUILayout.EndScrollView();
                 EditorGUILayout.Space(6f);
                 DrawToolbar();
@@ -214,7 +213,7 @@ namespace CCS.Hub.Editor
             CCSHubBrandingUi.TryDrawTitleBanner("CCS Hub");
             CCSHubBrandingUi.TryDrawSectionLabel("Crazy Carrot Studios");
             EditorGUILayout.HelpBox(
-                "Required CCS dependencies (Branding, Input System, Cinemachine) are installed automatically in the background. You only choose optional CCS tools here.",
+                "Required CCS dependencies (Branding, Input System, Cinemachine) install automatically when the Hub loads. Choose optional Character Controller and/or DOTween below, then click Install. When everything you selected is finished, setup is marked complete.",
                 MessageType.Info);
         }
 
@@ -268,7 +267,7 @@ namespace CCS.Hub.Editor
 
         private void DrawOptionalToolsSection()
         {
-            CCSHubBrandingUi.TryDrawSectionLabel("Available CCS tools");
+            CCSHubBrandingUi.TryDrawSectionLabel("Character Controller");
             EditorGUILayout.Space(4f);
 
             foreach (CCSPackageDefinition definition in CCSPackageRegistry.EnumerateOptionalToolsForHub())
@@ -280,11 +279,11 @@ namespace CCS.Hub.Editor
         private void DrawDotweenOptionalSection()
         {
             EditorGUILayout.Space(8f);
-            CCSHubBrandingUi.TryDrawSectionLabel("Optional DOTween");
+            CCSHubBrandingUi.TryDrawSectionLabel("DOTween (Demigiant)");
             EditorGUILayout.Space(4f);
             EditorGUI.BeginChangeCheck();
             includeDotweenOptional = EditorGUILayout.ToggleLeft(
-                "Include Demigiant DOTween (merges into Assets/Plugins and Assets/Resources)",
+                "Include Demigiant DOTween (copies into Assets/Plugins and Assets/Resources)",
                 includeDotweenOptional);
             if (EditorGUI.EndChangeCheck())
             {
@@ -505,29 +504,46 @@ namespace CCS.Hub.Editor
             }
             else if (wantsDotween && !batchContainsCc)
             {
-                if (!CCSDotweenBundleInstaller.TryCopyDemigiantIntoProject(out string dotweenErr))
+                if (!CCSDotweenBundleInstaller.IsDemigiantDotweenPresentInProject())
                 {
-                    statusLine = dotweenErr;
-                    return;
+                    if (!CCSDotweenBundleInstaller.TryCopyDemigiantIntoProject(out string dotweenErr))
+                    {
+                        statusLine = dotweenErr;
+                        return;
+                    }
                 }
             }
 
-            if (packageManagerBatch.Count == 0)
+            if (packageManagerBatch.Count > 0)
             {
-                if (wantsDotween && !batchContainsCc)
-                {
-                    statusLine = "DOTween (Demigiant) copied into Assets/Plugins and Assets/Resources.";
-                    return;
-                }
-
-                statusLine = skippedAlreadyImported > 0
-                    ? "Character Controller is already imported under Assets/CCS/CharacterController. Select another tool or mark setup complete."
-                    : "Select at least one optional tool, or mark setup complete.";
+                CCSPackageInstallService.EnqueueOptionalWithRequiredPrerequisites(packageManagerBatch);
+                CCSHubOptionalInstallProgressWindow.ShowAfterOptionalInstallEnqueue();
+                Close();
                 return;
             }
 
-            CCSPackageInstallService.EnqueueOptionalWithRequiredPrerequisites(packageManagerBatch);
-            CCSHubOptionalInstallProgressWindow.ShowAfterOptionalInstallEnqueue();
+            CCSSetupState.SetSetupCompleted(true);
+            string doneMessage;
+            if (skippedAlreadyImported > 0 && wantsDotween)
+            {
+                doneMessage =
+                    "Character Controller was already in the project; DOTween (Demigiant) is ready. Setup complete.";
+            }
+            else if (skippedAlreadyImported > 0)
+            {
+                doneMessage =
+                    "Character Controller is already imported under Assets/CCS/CharacterController. Setup complete.";
+            }
+            else if (wantsDotween)
+            {
+                doneMessage = "DOTween (Demigiant) is ready. Setup complete.";
+            }
+            else
+            {
+                doneMessage = "Setup complete.";
+            }
+
+            CCSEditorLog.Info($"CCS Hub: {doneMessage}");
             Close();
         }
 

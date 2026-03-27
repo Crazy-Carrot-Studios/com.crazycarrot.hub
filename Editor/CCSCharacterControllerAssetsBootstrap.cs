@@ -53,7 +53,6 @@ namespace CCS.Hub.Editor
             "Content",
             "Animations",
             "Samples~",
-            "Tests",
         };
 
         /// <summary>
@@ -66,7 +65,6 @@ namespace CCS.Hub.Editor
             "Content",
             "Animations",
             "Samples~",
-            "Tests",
         };
 
         private static readonly HashSet<string> BootstrapFailedDefinitionIds = new HashSet<string>();

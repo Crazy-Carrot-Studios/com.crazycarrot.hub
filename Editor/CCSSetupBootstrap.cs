@@ -4,8 +4,8 @@
 // GameObject: N/A (Editor Utility)
 // Author: James Schilz (Developer)
 // Created: March 25, 2025
-// Last Modified: March 27, 2025
-// Summary: On import, shows required-install progress UI, runs auto-installs, then opens the main CCS Hub when complete (after a short defer so CCS Branding can show its UI first).
+// Last Modified: March 27, 2026
+// Summary: On import, always queues required UPM installs (Branding, Input System, Cinemachine). When first-run applies, shows required-install progress, then opens CCS Hub with optional Character Controller + DOTween after a short defer so CCS Branding can run first.
 // Required Components: None
 // Where to Place: Packages/com.crazycarrot.hub/Editor/
 // ============================================================================
@@ -32,6 +32,8 @@ namespace CCS.Hub.Editor
         {
             CCSPackageStatusService.RefreshInstalledPackages(() =>
             {
+                CCSHubRequiredDependencyBootstrap.TryScheduleAutoInstall();
+
                 if (!CCSSetupState.ShouldAutoOpenSetupWizard())
                 {
                     return;
@@ -41,8 +43,6 @@ namespace CCS.Hub.Editor
 
                 CCSHubRequiredDependencyBootstrap.RequiredAutoInstallCompleted -= OnRequiredAutoInstallCompletedForFirstRun;
                 CCSHubRequiredDependencyBootstrap.RequiredAutoInstallCompleted += OnRequiredAutoInstallCompletedForFirstRun;
-
-                CCSHubRequiredDependencyBootstrap.TryScheduleAutoInstall();
 
                 if (!CCSSetupState.ShouldAutoOpenSetupWizard())
                 {
