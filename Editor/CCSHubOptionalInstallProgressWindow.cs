@@ -150,6 +150,7 @@ namespace CCS.Hub.Editor
             CCSSetupState.SetSetupCompleted(true);
             CCSHubOptionalInstallContext.ClearOptionalUserTracking();
             Close();
+            EditorApplication.delayCall += CCSSetupWindow.CloseAllInstances;
         }
 
         private void EnsureGuiStyles()

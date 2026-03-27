@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.25] - 2026-03-27
+
+### Fixed
+
+- **Hub window:** After optional installs finish (or when setup completes with no Package Manager batch), any remaining **CCS Hub** editor windows are closed via `CCSSetupWindow.CloseAllInstances()` so the Hub does not stay open in the background.
+- **Character Controller bootstrap:** After copy, reimport order is **Armature.fbx** → **`Armature.prefab`** (non-nested prefab) → optional **`CCS_Player_TestingRobot.prefab`** when present.
+
 ## [0.1.24] - 2026-03-27
 
 ### Fixed

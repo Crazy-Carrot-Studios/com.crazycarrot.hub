@@ -58,6 +58,21 @@ namespace CCS.Hub.Editor
             };
         }
 
+        /// <summary>
+        /// Closes every CCS Hub <see cref="CCSSetupWindow"/> instance (e.g. after optional installs finish while a stray window stayed open).
+        /// </summary>
+        public static void CloseAllInstances()
+        {
+            CCSSetupWindow[] windows = Resources.FindObjectsOfTypeAll<CCSSetupWindow>();
+            for (int index = 0; index < windows.Length; index++)
+            {
+                if (windows[index] != null)
+                {
+                    windows[index].Close();
+                }
+            }
+        }
+
         public static void ShowFirstRunAuto()
         {
             openedFromFirstRunAuto = true;
@@ -550,6 +565,7 @@ namespace CCS.Hub.Editor
 
             CCSEditorLog.Info($"CCS Hub: {doneMessage}");
             Close();
+            EditorApplication.delayCall += CloseAllInstances;
         }
 
         #endregion

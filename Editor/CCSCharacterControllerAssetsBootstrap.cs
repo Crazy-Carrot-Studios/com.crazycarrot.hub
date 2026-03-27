@@ -271,7 +271,7 @@ namespace CCS.Hub.Editor
                 Directory.CreateDirectory(destRoot);
                 CopyCharacterControllerPackageIntoAssets(sourceRoot, destRoot);
                 AssetDatabase.Refresh();
-                ReimportArmatureModelBeforeTestingRobotPrefab();
+                ReimportArmatureModelAndPrefabsAfterCopy();
                 TryMaterializeSamplesBasicSetupIfNeeded();
                 EditorUtility.ClearProgressBar();
 
@@ -297,15 +297,21 @@ namespace CCS.Hub.Editor
         }
 
         /// <summary>
-        /// Imports the armature model before the testing robot prefab so nested PrefabInstance references resolve (avoids missing guid / variant parent errors on first import).
+        /// Imports the FBX first, then prefabs under <c>Content/Prefabs</c> (non-nested <c>Armature.prefab</c>, optional <c>CCS_Player_TestingRobot.prefab</c>) so references resolve on first import.
         /// </summary>
-        private static void ReimportArmatureModelBeforeTestingRobotPrefab()
+        private static void ReimportArmatureModelAndPrefabsAfterCopy()
         {
             const string armatureFbx = "Assets/CCS/CharacterController/Content/ThirdPersonArmature/Models/Armature.fbx";
+            const string armaturePrefab = "Assets/CCS/CharacterController/Content/Prefabs/Characters/Armature.prefab";
             const string testingRobotPrefab = "Assets/CCS/CharacterController/Content/Prefabs/Characters/CCS_Player_TestingRobot.prefab";
             if (AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(armatureFbx) != null)
             {
                 AssetDatabase.ImportAsset(armatureFbx, ImportAssetOptions.ForceUpdate);
+            }
+
+            if (AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(armaturePrefab) != null)
+            {
+                AssetDatabase.ImportAsset(armaturePrefab, ImportAssetOptions.ForceUpdate);
             }
 
             if (AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(testingRobotPrefab) != null)
