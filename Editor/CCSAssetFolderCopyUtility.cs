@@ -48,6 +48,52 @@ namespace CCS.Hub.Editor
             }
         }
 
+        /// <summary>
+        /// Copies only named top-level folders that exist under <paramref name="sourceRoot"/> into <paramref name="destinationRoot"/> with the same folder names.
+        /// </summary>
+        /// <returns>Number of folders that were copied.</returns>
+        public static int CopyExistingTopLevelFolders(
+            string sourceRoot,
+            string destinationRoot,
+            string[] topLevelFolderNames,
+            bool skipUpmPackageManifest)
+        {
+            if (topLevelFolderNames == null || topLevelFolderNames.Length == 0)
+            {
+                return 0;
+            }
+
+            sourceRoot = Path.GetFullPath(sourceRoot.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+            destinationRoot = Path.GetFullPath(destinationRoot.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+
+            if (!Directory.Exists(sourceRoot))
+            {
+                return 0;
+            }
+
+            int copied = 0;
+            for (int index = 0; index < topLevelFolderNames.Length; index++)
+            {
+                string name = topLevelFolderNames[index];
+                if (string.IsNullOrEmpty(name))
+                {
+                    continue;
+                }
+
+                string src = Path.Combine(sourceRoot, name);
+                if (!Directory.Exists(src))
+                {
+                    continue;
+                }
+
+                string dst = Path.Combine(destinationRoot, name);
+                CopyFilesOnlySkipEmptyDirectories(src, dst, skipUpmPackageManifest);
+                copied++;
+            }
+
+            return copied;
+        }
+
         /// <summary>Skips repository-root UPM manifest so copied content under Assets is not treated as an installable package.</summary>
         private static bool ShouldSkipUpmPackageManifestFile(string relativePath)
         {

@@ -481,24 +481,8 @@ namespace CCS.Hub.Editor
             }
 
             CCSPackageInstallService.EnqueueDefinitions(packageManagerBatch);
-
-            bool batchIncludesCharacterController = packageManagerBatch.Any(
-                definition => definition.Id == CCSSetupConstants.CharacterControllerDefinitionId);
-
-            if (skippedAlreadyImported > 0)
-            {
-                statusLine =
-                    $"Queued {packageManagerBatch.Count} install(s). Character Controller was already present under Assets/CCS.";
-            }
-            else if (batchIncludesCharacterController)
-            {
-                statusLine =
-                    $"Queued {packageManagerBatch.Count} install(s). After Package Manager adds Character Controller under Packages/, the Hub will import it into Assets/CCS/CharacterController.";
-            }
-            else
-            {
-                statusLine = $"Queued {packageManagerBatch.Count} optional package install(s).";
-            }
+            CCSHubOptionalInstallProgressWindow.ShowAfterOptionalInstallEnqueue(packageManagerBatch);
+            Close();
         }
 
         #endregion

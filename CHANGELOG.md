@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.7] - 2025-03-26
+
+### Changed
+
+- Character Controller bootstrap merges **`Plugins`** and **`Resources`** from the package into **`Assets/Plugins`** and **`Assets/Resources`** (siblings of **`Assets/CCS`**), not under **`Assets/CCS/CharacterController`**. CCS content stays only under **`Assets/CCS/CharacterController`**.
+
+## [0.1.6] - 2025-03-26
+
+### Fixed
+
+- Character Controller bootstrap **no longer copies the entire Git package** into `Assets/CCS/CharacterController`. Repos that embed a dev project (Starter Assets, nested `Assets/`, `Packages/`, `ProjectSettings/`, etc.) were causing GUID conflicts, duplicate assemblies, and template folders under CCS. The Hub now copies **whitelisted** folders only—prefer **`Assets/CCS/CharacterController/{Scripts,Content,…}`** when present, otherwise **package-root** `Runtime`/`Editor`/`Content`/…—and **supplements** missing folders from the package root when the embedded tree omits them.
+
 ## [0.1.5] - 2025-03-26
 
 ### Changed

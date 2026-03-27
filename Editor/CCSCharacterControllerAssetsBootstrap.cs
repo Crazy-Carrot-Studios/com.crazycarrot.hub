@@ -27,6 +27,44 @@ namespace CCS.Hub.Editor
     [InitializeOnLoad]
     public static class CCSCharacterControllerAssetsBootstrap
     {
+        /// <summary>
+        /// When the Git repo embeds a dev project under Assets/CCS/CharacterController, only these folders are copied
+        /// (excludes nested Assets/Starter Assets, Packages/, ProjectSettings/, Docs/, etc.).
+        /// </summary>
+        private static readonly string[] EmbeddedCcsCharacterControllerFolders =
+        {
+            "Scripts",
+            "Content",
+            "Animations",
+            "Editor",
+            "Runtime",
+            "Samples~",
+        };
+
+        /// <summary>Standard UPM layout at package root when no embedded Assets/CCS tree exists.</summary>
+        private static readonly string[] RootUpmPackageFolders =
+        {
+            "Runtime",
+            "Editor",
+            "Content",
+            "Animations",
+            "Samples~",
+            "Tests",
+        };
+
+        /// <summary>
+        /// Folders merged from package root when embedded layout was used but omits a standard UPM folder (e.g. Runtime at root only).
+        /// </summary>
+        private static readonly string[] SupplementFromRootIfMissingInDest =
+        {
+            "Runtime",
+            "Editor",
+            "Content",
+            "Animations",
+            "Samples~",
+            "Tests",
+        };
+
         private static readonly HashSet<string> BootstrapFailedDefinitionIds = new HashSet<string>();
 
         private static bool bootstrapBusy;
@@ -206,7 +244,7 @@ namespace CCS.Hub.Editor
                 }
 
                 Directory.CreateDirectory(destRoot);
-                CCSAssetFolderCopyUtility.CopyFilesOnlySkipEmptyDirectories(sourceRoot, destRoot, skipUpmPackageManifest: true);
+                CopyCharacterControllerPackageIntoAssets(sourceRoot, destRoot);
                 AssetDatabase.Refresh();
                 TryMaterializeSamplesBasicSetupIfNeeded();
                 EditorUtility.ClearProgressBar();
@@ -229,6 +267,106 @@ namespace CCS.Hub.Editor
                     bootstrapBusy = false;
                     RaiseStateChanged();
                 }
+            }
+        }
+
+        /// <summary>
+        /// Does not copy the entire package tree: dev repos often contain Assets/Starter Assets, ProjectSettings, nested Packages/, etc.
+        /// Those must stay out of Assets/CCS/CharacterController to avoid GUID conflicts and duplicate assemblies.
+        /// </summary>
+        private static void CopyCharacterControllerPackageIntoAssets(string packageRoot, string destRoot)
+        {
+            string embeddedCcs = Path.Combine(packageRoot, "Assets", "CCS", "CharacterController");
+            if (Directory.Exists(embeddedCcs))
+            {
+                int copied = CCSAssetFolderCopyUtility.CopyExistingTopLevelFolders(
+                    embeddedCcs,
+                    destRoot,
+                    EmbeddedCcsCharacterControllerFolders,
+                    skipUpmPackageManifest: true);
+                if (copied > 0)
+                {
+                    CCSEditorLog.Info(
+                        "CCS Hub: Copied Character Controller from package path Assets/CCS/CharacterController (Starter Assets, template Scenes/Settings, and other project folders are excluded).");
+                    SupplementPackageRootFoldersIfMissing(packageRoot, destRoot);
+                    CopyPluginsAndResourcesToAssetsRoot(packageRoot, embeddedCcs);
+                    return;
+                }
+
+                CCSEditorLog.Warning(
+                    "CCS Hub: Package contains Assets/CCS/CharacterController but no expected subfolders (Scripts, Content, …). Falling back to package-root UPM layout.");
+            }
+
+            int rootCopied = CCSAssetFolderCopyUtility.CopyExistingTopLevelFolders(
+                packageRoot,
+                destRoot,
+                RootUpmPackageFolders,
+                skipUpmPackageManifest: true);
+            if (rootCopied == 0)
+            {
+                CCSEditorLog.Error(
+                    "CCS Hub: Character Controller package has no bootstrappable folders. Expected either Assets/CCS/CharacterController/{Scripts|Content|…} or package-root {Runtime|Editor|Content|…}.");
+            }
+            else
+            {
+                CCSEditorLog.Info("CCS Hub: Copied Character Controller from package root (Runtime/Editor/Content/…).");
+            }
+
+            CopyPluginsAndResourcesToAssetsRoot(packageRoot, embeddedCcs);
+        }
+
+        /// <summary>
+        /// Merges <c>Plugins</c> and <c>Resources</c> to <c>Assets/Plugins</c> and <c>Assets/Resources</c> (siblings of <c>Assets/CCS</c>),
+        /// not under <c>Assets/CCS/CharacterController</c>, matching Unity’s expected layout.
+        /// </summary>
+        private static void CopyPluginsAndResourcesToAssetsRoot(string packageRoot, string embeddedCcsPath)
+        {
+            string assetsDataPath = Application.dataPath;
+
+            void MergeIfExists(string sourceDir, string destName)
+            {
+                if (string.IsNullOrEmpty(sourceDir) || !Directory.Exists(sourceDir))
+                {
+                    return;
+                }
+
+                string destPath = Path.Combine(assetsDataPath, destName);
+                CCSAssetFolderCopyUtility.CopyFilesOnlySkipEmptyDirectories(sourceDir, destPath, skipUpmPackageManifest: true);
+                CCSEditorLog.Info($"CCS Hub: Merged '{destName}' into Assets/{destName}/ (project root, not under CCS).");
+            }
+
+            if (!string.IsNullOrEmpty(embeddedCcsPath) && Directory.Exists(embeddedCcsPath))
+            {
+                MergeIfExists(Path.Combine(embeddedCcsPath, "Plugins"), "Plugins");
+                MergeIfExists(Path.Combine(embeddedCcsPath, "Resources"), "Resources");
+            }
+
+            MergeIfExists(Path.Combine(packageRoot, "Plugins"), "Plugins");
+            MergeIfExists(Path.Combine(packageRoot, "Resources"), "Resources");
+        }
+
+        /// <summary>
+        /// If the embedded tree used Scripts/ but Runtime/ lives only at package root, merge missing standard folders.
+        /// </summary>
+        private static void SupplementPackageRootFoldersIfMissing(string packageRoot, string destRoot)
+        {
+            for (int index = 0; index < SupplementFromRootIfMissingInDest.Length; index++)
+            {
+                string name = SupplementFromRootIfMissingInDest[index];
+                if (Directory.Exists(Path.Combine(destRoot, name)))
+                {
+                    continue;
+                }
+
+                string src = Path.Combine(packageRoot, name);
+                if (!Directory.Exists(src))
+                {
+                    continue;
+                }
+
+                string dst = Path.Combine(destRoot, name);
+                CCSAssetFolderCopyUtility.CopyFilesOnlySkipEmptyDirectories(src, dst, skipUpmPackageManifest: true);
+                CCSEditorLog.Info($"CCS Hub: Supplemented '{name}' from package root (not present under embedded Assets/CCS/CharacterController).");
             }
         }
 
