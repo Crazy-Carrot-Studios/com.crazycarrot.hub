@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.22] - 2026-03-27
+
+### Documentation
+
+- **README:** Version banner and tag examples aligned with `package.json` (was still showing 0.1.19 on GitHub).
+
 ## [0.1.21] - 2026-03-27
 
 ### Changed
