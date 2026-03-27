@@ -33,6 +33,12 @@ namespace CCS.Hub.Editor
         private bool subscribedToInstallEvents;
         private bool subscribedToEditorUpdate;
 
+        /// <summary>
+        /// True when this window was opened by <see cref="ShowFirstRunAuto"/> (bootstrap after required deps).
+        /// On close, we persist setup completion so the Hub does not auto-open on every future project load.
+        /// </summary>
+        private static bool openedFromFirstRunAuto;
+
         #endregion
 
         #region Unity Callbacks
@@ -40,6 +46,7 @@ namespace CCS.Hub.Editor
         [MenuItem(CCSSetupConstants.MenuPathSetupWizard, priority = 10)]
         public static void OpenSetupWizardFromMenu()
         {
+            openedFromFirstRunAuto = false;
             CCSSetupWindow window = GetWindow<CCSSetupWindow>(true, "CCS Hub", true);
             window.minSize = new Vector2(460f, 420f);
             window.Show();
@@ -52,6 +59,7 @@ namespace CCS.Hub.Editor
 
         public static void ShowFirstRunAuto()
         {
+            openedFromFirstRunAuto = true;
             CCSSetupWindow window = GetWindow<CCSSetupWindow>(true, "CCS Hub", true);
             window.minSize = new Vector2(460f, 420f);
             window.Show();
@@ -76,6 +84,17 @@ namespace CCS.Hub.Editor
         {
             UnsubscribeInstallEvents();
             UnsubscribeEditorUpdateRepaint();
+        }
+
+        private void OnDestroy()
+        {
+            if (!openedFromFirstRunAuto)
+            {
+                return;
+            }
+
+            openedFromFirstRunAuto = false;
+            CCSSetupState.SetSetupCompleted(true);
         }
 
         private void SubscribeEditorUpdateRepaint()
@@ -273,7 +292,7 @@ namespace CCS.Hub.Editor
             }
 
             EditorGUILayout.HelpBox(
-                "Shipped inside the Character Controller package as DemigiantDOTweenBundle. You are responsible for complying with Demigiant / DOTween license terms.",
+                "Shipped inside the Character Controller package as DemigiantDOTweenBundle~ (not imported by Unity; copied to Assets/Plugins when selected). You are responsible for complying with Demigiant / DOTween license terms.",
                 MessageType.None);
         }
 

@@ -5,11 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.17] - 2026-03-27
+
+### Fixed
+
+- **DOTween bundle path:** The Demigiant bundle folder is now **`DemigiantDOTweenBundle~`** (trailing tilde). Unity **does not import** paths ending in `~`, so the bundle can live in the project **alongside** `Assets/Plugins/Demigiant` after the Hub copies files—no duplicate `DOTweenModule*` / `DOTweenCYInstruction` types.
+
+## [0.1.16] - 2026-03-27
+
+### Fixed
+
+- **First-run Hub:** Closing the Hub after bootstrap (including after **Install selected**, which closes the window while optional installs run) now **persists “setup completed”** so the Hub **does not auto-open on every project load**. The optional install progress window also marks setup complete when it auto-closes after work finishes.
+
 ## [0.1.15] - 2026-03-27
 
 ### Added
 
-- **Optional DOTween (Demigiant):** CCS Hub can merge **`DemigiantDOTweenBundle`** from `com.crazycarrot.charactercontroller` (or `Assets/CCS/CharacterController/DemigiantDOTweenBundle` in the project) into **`Assets/Plugins`** and **`Assets/Resources`**. When Character Controller is part of the install batch, the copy runs during bootstrap **before** `Assets/CCS/CharacterController` is replaced; otherwise the copy runs immediately when you click **Install selected**. License compliance remains the user's responsibility.
+- **Optional DOTween (Demigiant):** CCS Hub can merge **`DemigiantDOTweenBundle~`** from `com.crazycarrot.charactercontroller` (or `Assets/CCS/CharacterController/DemigiantDOTweenBundle~` in the project) into **`Assets/Plugins`** and **`Assets/Resources`**. When Character Controller is part of the install batch, the copy runs during bootstrap **before** `Assets/CCS/CharacterController` is replaced; otherwise the copy runs immediately when you click **Install selected**. License compliance remains the user's responsibility.
 
 ## [0.1.14] - 2025-03-27
 

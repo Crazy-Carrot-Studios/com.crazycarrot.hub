@@ -11,18 +11,19 @@
 
 using System.IO;
 using UnityEditor;
-using UnityEditor.PackageManager;
+using UnityEngine;
 
 namespace CCS.Hub.Editor
 {
     /// <summary>
     /// Optional Asset Store–style DOTween files shipped under
-    /// <c>Assets/CCS/CharacterController/DemigiantDOTweenBundle</c> in <c>com.crazycarrot.charactercontroller</c> (not copied into Assets/CCS by bootstrap).
+    /// <c>Assets/CCS/CharacterController/DemigiantDOTweenBundle~</c> in <c>com.crazycarrot.charactercontroller</c> (not copied into Assets/CCS by bootstrap).
+    /// The folder name ends with <c>~</c> so Unity does not import it as assets (avoids duplicate types when <c>Assets/Plugins/Demigiant</c> already exists).
     /// </summary>
     public static class CCSDotweenBundleInstaller
     {
         /// <summary>Folder under package or project <c>Assets/CCS/CharacterController</c> containing <c>Plugins</c> and <c>Resources</c> trees.</summary>
-        public const string BundleFolderName = "DemigiantDOTweenBundle";
+        public const string BundleFolderName = "DemigiantDOTweenBundle~";
 
         /// <summary>
         /// Merges <c>Plugins</c> and <c>Resources</c> from the bundle into <c>Assets/Plugins</c> and <c>Assets/Resources</c>.
@@ -56,7 +57,7 @@ namespace CCS.Hub.Editor
                 return false;
             }
 
-            string dataPath = Application.dataPath;
+            string dataPath = UnityEngine.Application.dataPath;
             CCSAssetFolderCopyUtility.CopyFilesOnlySkipEmptyDirectories(
                 pluginsSrc,
                 Path.Combine(dataPath, "Plugins"),
@@ -89,7 +90,7 @@ namespace CCS.Hub.Editor
                 return true;
             }
 
-            string projectAssets = Path.Combine(Application.dataPath, "CCS", "CharacterController", BundleFolderName);
+            string projectAssets = Path.Combine(UnityEngine.Application.dataPath, "CCS", "CharacterController", BundleFolderName);
             if (Directory.Exists(projectAssets))
             {
                 bundleRoot = projectAssets;
@@ -99,14 +100,15 @@ namespace CCS.Hub.Editor
 
             bundleRoot = null;
             errorMessage =
-                "DOTween bundle not found. Add the CCS Character Controller package (com.crazycarrot.charactercontroller) or ensure Assets/CCS/CharacterController/DemigiantDOTweenBundle exists.";
+                "DOTween bundle not found. Add the CCS Character Controller package (com.crazycarrot.charactercontroller) or ensure Assets/CCS/CharacterController/DemigiantDOTweenBundle~ exists (tilde keeps the bundle off the import pipeline).";
             return false;
         }
 
         private static string TryGetBundleFromPackage()
         {
             string packageJsonPath = $"Packages/{CCSSetupConstants.CharacterControllerPackageId}/package.json";
-            PackageInfo info = PackageInfo.FindForAssetPath(packageJsonPath);
+            UnityEditor.PackageManager.PackageInfo info =
+                UnityEditor.PackageManager.PackageInfo.FindForAssetPath(packageJsonPath);
             if (info == null || string.IsNullOrEmpty(info.resolvedPath))
             {
                 return null;
