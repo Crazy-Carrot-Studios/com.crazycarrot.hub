@@ -54,7 +54,7 @@ namespace CCS.Hub.Editor
         /// </summary>
         private static void OnBrandingPackageInstallSucceeded(CCSPackageDefinition definition)
         {
-            if (definition == null || definition.Id != CCSSetupConstants.BrandingDefinitionId)
+            if (string.IsNullOrEmpty(definition.Id) || definition.Id != CCSSetupConstants.BrandingDefinitionId)
             {
                 return;
             }
