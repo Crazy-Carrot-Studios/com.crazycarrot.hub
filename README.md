@@ -1,12 +1,12 @@
 # CCS Hub (`com.crazycarrot.hub`)
 
-**Version: 0.2.13**
+**Version: 0.2.14**
 
 First-run **bootstrap installer** and package hub for **Crazy Carrot Studios** Unity projects. After you add this package by Git URL, Unity runs a **CCS Setup Wizard** flow: required packages queue automatically; the **main CCS Hub** can open once per editor session after that pass when the first-run gate allows (use **CCS → CCS Hub → Open CCS Hub** anytime). Optional CCS Git packages install **sequentially** via Package Manager, and the Hub can scaffold **`Assets/CCS`** content folders.
 
 ## Standalone Git / UPM repository
 
-This package is maintained in its **own** Git repository. **`package.json` lives at the repository root** (not under another project’s `Packages/` folder). Unity’s **Add package from Git URL** clones that repo and treats the root as the UPM package, so installs stay clean. Optional: pin a release with `#v0.2.13` (or another tag) on the URL.
+This package is maintained in its **own** Git repository. **`package.json` lives at the repository root** (not under another project’s `Packages/` folder). Unity’s **Add package from Git URL** clones that repo and treats the root as the UPM package, so installs stay clean. Optional: pin a release with `#v0.2.14` (or another tag) on the URL.
 
 ## Requirements
 
@@ -65,6 +65,6 @@ https://github.com/Crazy-Carrot-Studios/com.crazycarrot.hub
 
 ---
 
-**Version 0.2.13** (same value as `package.json` `"version"`).
+**Version 0.2.14** (same value as `package.json` `"version"`).
 
 After you **complete** optional setup or choose **Skip for now**, the Hub does **not** auto-open on the next editor launch; use **Open CCS Hub** when you need the window again.

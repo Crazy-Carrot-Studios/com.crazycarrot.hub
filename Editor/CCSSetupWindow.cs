@@ -5,7 +5,7 @@
 // Author: James Schilz (Developer)
 // Created: March 25, 2025
 // Last Modified: March 27, 2026
-// Summary: CCS Hub window after required deps: two optional choices — Character Controller (UPM + import) and Demigiant DOTween (bundle copy). Install closes Hub and progress when PM/bootstrap finish.
+// Summary: Single CCS Hub EditorWindow: manual and first-run auto-open reuse one instance (focus/bring forward). Optional installs and progress close behavior unchanged.
 // Required Components: None
 // Where to Place: Packages/com.crazycarrot.hub/Editor/
 // ============================================================================
@@ -35,7 +35,7 @@ namespace CCS.Hub.Editor
         private bool subscribedToEditorUpdate;
 
         /// <summary>
-        /// True when this window was opened by <see cref="ShowFirstRunAuto"/> (bootstrap after required deps).
+        /// True when the window was last shown via <see cref="ShowOrFocusFirstRunAuto"/> (orchestrated path after required deps).
         /// </summary>
         private static bool openedFromFirstRunAuto;
 
@@ -43,19 +43,11 @@ namespace CCS.Hub.Editor
 
         #region Unity Callbacks
 
-        /// <summary>Opens the main CCS Hub window from the menu. Does not set the first-run auto-open session flag (that flag is only set by the orchestrated automatic open path).</summary>
+        /// <summary>Menu entry: opens or focuses the single Hub window. Does not set the first-run auto-open session flag.</summary>
         [MenuItem(CCSSetupConstants.MenuPathOpenHub, false, 0)]
         public static void OpenHubFromMenu()
         {
-            openedFromFirstRunAuto = false;
-            CCSSetupWindow window = GetWindow<CCSSetupWindow>(true, "CCS Hub", true);
-            window.minSize = new Vector2(460f, 420f);
-            window.Show();
-            EditorApplication.delayCall += () =>
-            {
-                window.Focus();
-                window.Repaint();
-            };
+            ShowOrFocusFromMenu();
         }
 
         /// <summary>
@@ -73,19 +65,89 @@ namespace CCS.Hub.Editor
             }
         }
 
-        public static void ShowFirstRunAuto()
+        #endregion
+
+        #region Window lifecycle (single instance)
+
+        /// <summary>Returns a live Hub window if one exists, otherwise null (does not create).</summary>
+        public static CCSSetupWindow GetExistingInstance()
+        {
+            CCSSetupWindow[] found = Resources.FindObjectsOfTypeAll<CCSSetupWindow>();
+            for (int index = 0; index < found.Length; index++)
+            {
+                if (found[index] != null)
+                {
+                    return found[index];
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>Manual menu path: reuse/focus existing Hub or create one. Does not set <see cref="CCSSetupState.MarkAutoOpenedThisSession"/>.</summary>
+        public static void ShowOrFocusFromMenu()
+        {
+            openedFromFirstRunAuto = false;
+            CCSSetupWindow window = AcquireHubWindowForReuse();
+            ApplyHubWindowLayoutAndFocus(window);
+        }
+
+        /// <summary>Orchestrated first-run path: reuse/focus existing Hub or create one; clears pending auto-open flag here for safety.</summary>
+        public static void ShowOrFocusFirstRunAuto()
         {
             CCSSetupState.ClearPendingHubAutoOpenAfterRequiredPhase();
             openedFromFirstRunAuto = true;
-            CCSSetupWindow window = GetWindow<CCSSetupWindow>(true, "CCS Hub", true);
+            CCSSetupWindow window = AcquireHubWindowForReuse();
+            ApplyHubWindowLayoutAndFocus(window);
+        }
+
+        private static CCSSetupWindow AcquireHubWindowForReuse()
+        {
+            CCSSetupWindow[] found = Resources.FindObjectsOfTypeAll<CCSSetupWindow>();
+            CCSSetupWindow keep = null;
+            for (int index = 0; index < found.Length; index++)
+            {
+                CCSSetupWindow candidate = found[index];
+                if (candidate == null)
+                {
+                    continue;
+                }
+
+                if (keep == null)
+                {
+                    keep = candidate;
+                }
+                else
+                {
+                    candidate.Close();
+                }
+            }
+
+            if (keep != null)
+            {
+                return keep;
+            }
+
+            return GetWindow<CCSSetupWindow>(true, "CCS Hub", true);
+        }
+
+        private static void ApplyHubWindowLayoutAndFocus(CCSSetupWindow window)
+        {
             window.minSize = new Vector2(460f, 420f);
             window.Show();
             EditorApplication.delayCall += () =>
             {
-                window.Focus();
-                window.Repaint();
+                if (window != null)
+                {
+                    window.Focus();
+                    window.Repaint();
+                }
             };
         }
+
+        #endregion
+
+        #region Unity EditorWindow
 
         private void OnEnable()
         {

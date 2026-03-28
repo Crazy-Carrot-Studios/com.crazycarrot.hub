@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.14] - 2026-03-27
+
+### Fixed
+
+- **Duplicate Hub windows:** Manual **Open CCS Hub** and orchestrated **first-run auto-open** now share **`AcquireHubWindowForReuse()`** — focus/bring forward an existing `CCSSetupWindow`, or create one; stray duplicate instances are closed. **`ShowOrFocusFromMenu()`** / **`ShowOrFocusFirstRunAuto()`** replace always calling **`GetWindow`** for a second dockable instance.
+
 ## [0.2.13] - 2026-03-27
 
 ### Fixed
@@ -27,7 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **Deterministic first-run auto-open:** **`ShouldAutoOpenMainHubAfterRequiredPhase`** — blocks when **`setupCompleted`**, **`setupSkipped`**, or **`autoOpenedThisSession`** (EditorPrefs + SessionState as documented). **`SessionStatePendingHubAutoOpenAfterRequiredPhase`** is set when scheduling the post-required Hub open and cleared when the window is shown.
-- **`CCSSetupOrchestrator`:** structured logs before/after gate, **`RequiredAutoInstallCompleted`** invocation log, stable-editor wait log, **`ShowFirstRunAuto`** confirmation dump.
+- **`CCSSetupOrchestrator`:** structured logs before/after gate, **`RequiredAutoInstallCompleted`** invocation log, stable-editor wait log, Hub show confirmation dump.
 - **`CCSHubRequiredDependencyBootstrap`:** logs missing required count, queue vs already-present, and delayCall before invoking subscribers.
 - **`CCSSetupBootstrap`:** logs delayCall start, **`RunFirstRunPipelineNow`**, package list ready, and gate line.
 - **Restore `SetupCompleted` / `SetupSkipped`** persistence for production: optional flow and **Skip for now** set flags again; later editor sessions do not auto-open the Hub once setup is finished or skipped (use **Reset** to test again).

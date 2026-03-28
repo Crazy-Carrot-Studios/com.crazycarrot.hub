@@ -90,8 +90,8 @@ namespace CCS.Hub.Editor
             CCSSetupState.MarkAutoOpenedThisSession();
             CCSEditorLog.Info("CCS Hub: Opening main CCS Hub window (first-run auto, required phase done).");
             CCSSetupProgressWindow.CloseForFirstRunTransition();
-            CCSSetupWindow.ShowFirstRunAuto();
-            CCSEditorLog.Info(CCSSetupState.BuildFirstRunStateDump("orchestrator: after ShowFirstRunAuto").TrimEnd());
+            CCSSetupWindow.ShowOrFocusFirstRunAuto();
+            CCSEditorLog.Info(CCSSetupState.BuildFirstRunStateDump("orchestrator: after ShowOrFocusFirstRunAuto").TrimEnd());
         }
     }
 }
