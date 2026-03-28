@@ -41,7 +41,7 @@ namespace CCS.Hub.Editor
                 {
                     CCSEditorLog.Warning(
                         $"CCS Hub: Auto setup UI skipped (setupCompleted={CCSSetupState.IsSetupCompleted()}, setupSkipped={CCSSetupState.IsSetupSkipped()}, "
-                        + $"autoOpenedThisSession={UnityEngine.SessionState.GetBool(CCSSetupConstants.SessionStateAutoOpenedThisSession, false)}). "
+                        + $"autoOpenedThisSession={SessionState.GetBool(CCSSetupConstants.SessionStateAutoOpenedThisSession, false)}). "
                         + "Use CCS menu to open CCS Hub or clear Hub EditorPrefs / ResetAllSetupFlagsForDevelopment if testing first-run.");
                 }
 
