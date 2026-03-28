@@ -112,6 +112,9 @@ namespace CCS.Hub.Editor
             CCSEditorLog.Info($"Setup skipped flag set to {value} for this project.");
         }
 
+        /// <summary>
+        /// Clears setup-completed/skip and Hub session markers for <b>this project</b> so first-run bootstrap can run again after an editor restart.
+        /// </summary>
         public static void ResetAllSetupFlagsForDevelopment()
         {
             EditorPrefs.DeleteKey(ProjectEditorPrefsKey("SetupCompleted"));
@@ -121,7 +124,8 @@ namespace CCS.Hub.Editor
             SessionState.SetBool(CCSSetupConstants.SessionStateAutoOpenedThisSession, false);
             SessionState.SetString(CCSSetupConstants.SessionStatePendingInstallQueueIds, string.Empty);
             SessionState.SetBool(CCSSetupConstants.SessionStateAutoRequiredPassActive, false);
-            CCSEditorLog.Warning("CCS Hub setup flags and session install queue markers were cleared for development.");
+            CCSEditorLog.Info(
+                "CCS Hub: First-run setup flags and session queue markers cleared for this project. Restart the Unity Editor so auto-setup can run again.");
         }
 
         #endregion

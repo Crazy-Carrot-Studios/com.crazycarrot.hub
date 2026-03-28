@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.7] - 2026-03-27
+
+### Added
+
+- **Menu:** `CCS / CCS Hub / Reset first-run setup state (this project)` clears Hub EditorPrefs + session markers so you can test first-run again after **restarting Unity** (when `setupCompleted` was blocking auto UI).
+
+### Changed
+
+- **Bootstrap warning** when auto UI is skipped: explains that `setupCompleted=True` is normal after finishing setup once and points to the new reset menu command.
+
 ## [0.2.6] - 2026-03-27
 
 ### Fixed

@@ -42,7 +42,8 @@ namespace CCS.Hub.Editor
                     CCSEditorLog.Warning(
                         $"CCS Hub: Auto setup UI skipped (setupCompleted={CCSSetupState.IsSetupCompleted()}, setupSkipped={CCSSetupState.IsSetupSkipped()}, "
                         + $"autoOpenedThisSession={SessionState.GetBool(CCSSetupConstants.SessionStateAutoOpenedThisSession, false)}). "
-                        + "Use CCS menu to open CCS Hub or clear Hub EditorPrefs / ResetAllSetupFlagsForDevelopment if testing first-run.");
+                        + "Expected after you finished setup once. Open CCS Hub from the menu anytime. To test first-run again: "
+                        + $"{CCSSetupConstants.MenuPathResetFirstRunSetup}, then restart Unity.");
                 }
 
                 CCSHubRequiredDependencyBootstrap.TryScheduleAutoInstall();
