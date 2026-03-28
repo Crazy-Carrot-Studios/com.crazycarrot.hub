@@ -21,6 +21,7 @@ namespace CCS.Hub.Editor
 
         static CCSSetupBootstrap()
         {
+            CCSSetupOrchestrator.EnsureInitialized();
             EditorApplication.delayCall += OnEditorDelayCall;
         }
 
@@ -48,6 +49,7 @@ namespace CCS.Hub.Editor
 
         private static void ExecuteFirstRunPipelineAfterListReady()
         {
+            CCSSetupOrchestrator.EnsureInitialized();
             if (CCSSetupState.ShouldAutoOpenSetupWizard())
             {
                 CCSEditorLog.Info(

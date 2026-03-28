@@ -30,6 +30,8 @@ namespace CCS.Hub.Editor
         /// </summary>
         public static void TryScheduleAutoInstall()
         {
+            CCSSetupOrchestrator.EnsureInitialized();
+
             if (!CCSPackageStatusService.IsListReady())
             {
                 EditorApplication.delayCall += TryScheduleAutoInstall;

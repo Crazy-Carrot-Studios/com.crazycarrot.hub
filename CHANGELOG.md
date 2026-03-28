@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.10] - 2026-03-27
+
+### Fixed
+
+- **Hub never opened / no Console logs:** `RequiredAutoInstallCompleted` could fire before `CCSSetupOrchestrator` subscribed (static ctor order). **CCSSetupOrchestrator.EnsureInitialized()** now runs from `CCSSetupBootstrap` (first) and from `CCSHubRequiredDependencyBootstrap.TryScheduleAutoInstall` before any install scheduling, so the handler is always registered.
+- **Diagnostics:** Every completion invokes **CCSEditorLog.Info** (`RequiredAutoInstallCompleted received.`). Blocked auto-open uses **Debug.LogWarning** so it appears even when only Warnings are visible.
+
 ## [0.2.9] - 2026-03-27
 
 ### Changed

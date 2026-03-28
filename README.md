@@ -1,12 +1,12 @@
 # CCS Hub (`com.crazycarrot.hub`)
 
-**Version: 0.2.9**
+**Version: 0.2.10**
 
 First-run **bootstrap installer** and package hub for **Crazy Carrot Studios** Unity projects. After you add this package by Git URL, Unity runs a **CCS Setup Wizard** (once per project until you complete, skip, or reset) that can install required Unity packages and optional CCS Git packages **sequentially** via Package Manager, and scaffold **`Assets/CCS`** content folders.
 
 ## Standalone Git / UPM repository
 
-This package is maintained in its **own** Git repository. **`package.json` lives at the repository root** (not under another project’s `Packages/` folder). Unity’s **Add package from Git URL** clones that repo and treats the root as the UPM package, so installs stay clean. Optional: pin a release with `#v0.2.9` (or another tag) on the URL.
+This package is maintained in its **own** Git repository. **`package.json` lives at the repository root** (not under another project’s `Packages/` folder). Unity’s **Add package from Git URL** clones that repo and treats the root as the UPM package, so installs stay clean. Optional: pin a release with `#v0.2.10` (or another tag) on the URL.
 
 ## Requirements
 
@@ -67,6 +67,6 @@ https://github.com/Crazy-Carrot-Studios/com.crazycarrot.hub
 
 ---
 
-**Version 0.2.9** (same value as `package.json` `"version"`).
+**Version 0.2.10** (same value as `package.json` `"version"`).
 
 To **test first-run auto-setup again** in the same project: **CCS → CCS Hub → Reset first-run setup state (this project)** and confirm the dialog — the Hub runs the setup pipeline again **without restarting Unity** (clears `setupCompleted` for this project).
