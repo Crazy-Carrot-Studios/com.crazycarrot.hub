@@ -5,7 +5,7 @@
 // Author: James Schilz (Developer)
 // Created: March 25, 2025
 // Last Modified: March 27, 2026
-// Summary: On import, shows first-run progress UI and queues manifest-driven required UPM installs. CCSSetupOrchestrator opens the CCS Hub optional UI after required installs finish and the editor is stable.
+// Summary: On import, queues manifest-driven required UPM installs. CCSSetupOrchestrator opens the main CCS Hub window after required installs complete (no separate required progress window).
 // Required Components: None
 // Where to Place: Packages/com.crazycarrot.hub/Editor/
 // ============================================================================
@@ -29,7 +29,7 @@ namespace CCS.Hub.Editor
         #region Public Methods
 
         /// <summary>
-        /// Re-runs the same first-run path as editor load: refresh Package Manager list, optionally show progress, queue required installs.
+        /// Re-runs the same first-run path as editor load: refresh Package Manager list and queue required installs (main Hub opens when the pass completes).
         /// Call after <see cref="CCSSetupState.ResetAllSetupFlagsForDevelopment"/> so a Unity restart is not required.
         /// </summary>
         public static void RunFirstRunPipelineNow()
@@ -50,8 +50,8 @@ namespace CCS.Hub.Editor
         {
             if (CCSSetupState.ShouldAutoOpenSetupWizard())
             {
-                CCSEditorLog.Info("CCS Hub: First-run bootstrap — showing setup progress and queueing required packages.");
-                CCSSetupProgressWindow.ShowRequiredPhase();
+                CCSEditorLog.Info(
+                    "CCS Hub: First-run bootstrap — queueing required packages. Main CCS Hub will open automatically when that pass finishes.");
             }
             else
             {

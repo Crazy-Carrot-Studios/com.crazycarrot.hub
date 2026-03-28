@@ -5,19 +5,18 @@
 // Author: James Schilz (Developer)
 // Created: March 27, 2026
 // Last Modified: March 27, 2026
-// Summary: Opens the CCS Hub optional UI on first run after CCS Branding installs (or when all required are already present / queue finishes). Waits only for compilation to finish — do not wait on CCSPackageInstallService.IsBusy() or the Hub would not open until the entire PM queue drains.
+// Summary: Opens the main CCS Hub window on first run after all automatic required Package Manager installs complete (single window; no separate required-phase progress window).
 // Required Components: None
 // Where to Place: Packages/com.crazycarrot.hub/Editor/
 // ============================================================================
 
-using CCS.Hub;
 using UnityEditor;
 using UnityEngine;
 
 namespace CCS.Hub.Editor
 {
     /// <summary>
-    /// Listens for CCS Branding Package Manager success and for completion of the automatic required-dependency batch, then opens the CCS Hub window when appropriate.
+    /// Opens <see cref="CCSSetupWindow"/> when the required-dependency auto-install pass finishes and first-run auto-open is allowed.
     /// </summary>
     [InitializeOnLoad]
     public static class CCSSetupOrchestrator
@@ -27,7 +26,6 @@ namespace CCS.Hub.Editor
         static CCSSetupOrchestrator()
         {
             CCSHubRequiredDependencyBootstrap.RequiredAutoInstallCompleted += OnRequiredAutoInstallCompleted;
-            CCSPackageInstallService.PackageInstallSucceeded += OnBrandingPackageInstallSucceeded;
         }
 
         #endregion
@@ -46,36 +44,12 @@ namespace CCS.Hub.Editor
                 return;
             }
 
-            EditorApplication.delayCall += WaitForStableEditorThenOpenHub;
-        }
-
-        /// <summary>
-        /// Opens the Hub as soon as Branding’s Client.Add succeeds so optional UI is available while Cinemachine / Input System continue (manifest order after Branding).
-        /// </summary>
-        private static void OnBrandingPackageInstallSucceeded(CCSPackageDefinition definition)
-        {
-            if (string.IsNullOrEmpty(definition.Id) || definition.Id != CCSSetupConstants.BrandingDefinitionId)
-            {
-                return;
-            }
-
-            if (!CCSSetupState.ShouldAutoOpenSetupWizard())
-            {
-                if (!SessionState.GetBool(CCSSetupConstants.SessionStateAutoOpenedThisSession, false))
-                {
-                    LogAutoOpenBlocked("After CCS Branding Client.Add");
-                }
-
-                return;
-            }
-
-            CCSEditorLog.Info("CCS Hub: CCS Branding Client.Add succeeded — scheduling first-run Hub open (other required packages may still be installing).");
+            CCSEditorLog.Info("CCS Hub: Required packages pass finished — scheduling main CCS Hub window.");
             EditorApplication.delayCall += WaitForStableEditorThenOpenHub;
         }
 
         /// <summary>
         /// Waits until script compilation finishes so EditorWindows open cleanly.
-        /// Intentionally does not wait for <see cref="CCSPackageInstallService.IsBusy()"/> — that stays true while the queue has items and would block the Hub until every required package finished.
         /// </summary>
         private static void WaitForStableEditorThenOpenHub()
         {
@@ -101,7 +75,7 @@ namespace CCS.Hub.Editor
             }
 
             CCSSetupState.MarkAutoOpenedThisSession();
-            CCSEditorLog.Info("CCS Hub: Opening CCS Hub window (first-run auto).");
+            CCSEditorLog.Info("CCS Hub: Opening CCS Hub window (first-run auto, after required installs).");
             CCSSetupProgressWindow.CloseForFirstRunTransition();
             CCSSetupWindow.ShowFirstRunAuto();
         }
@@ -112,7 +86,7 @@ namespace CCS.Hub.Editor
             CCSEditorLog.Info(
                 $"CCS Hub: {context} — auto-open skipped "
                 + $"(setupCompleted={CCSSetupState.IsSetupCompleted()}, setupSkipped={CCSSetupState.IsSetupSkipped()}, autoOpenedThisSession={sessionOpened}). "
-                + "SetupCompleted and SetupSkipped default to false; clear them in EditorPrefs or use CCS Hub dev reset if stuck.");
+                + "Use CCS → CCS Hub or Reset first-run setup state if testing.");
         }
 
         #endregion

@@ -23,7 +23,7 @@ namespace CCS.Hub.Editor
             EditorUtility.DisplayDialog(
                 "CCS Hub",
                 "First-run flags were cleared for this project.\n\n"
-                + "Click OK to run the Hub setup pipeline now (progress window + required installs). "
+                + "Click OK to queue required installs again; the main CCS Hub will open when that pass finishes. "
                 + "You do not need to restart Unity.",
                 "OK");
             CCSSetupBootstrap.RunFirstRunPipelineNow();

@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.9] - 2026-03-27
+
+### Changed
+
+- **First-run UX:** The separate **CCS Hub — Setup** required-phase window is no longer shown on bootstrap. Required packages still queue automatically; the **main CCS Hub** window opens by itself after **all** required Package Manager installs for that pass complete. Optional installs still use the setup progress window when started from the Hub.
+
 ## [0.2.8] - 2026-03-27
 
 ### Fixed
