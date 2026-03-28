@@ -121,11 +121,13 @@ namespace CCS.Hub.Editor
             EditorPrefs.DeleteKey(ProjectEditorPrefsKey("SetupSkipped"));
             EditorPrefs.DeleteKey(ProjectEditorPrefsKey(CCSSetupConstants.EditorPrefsRequiredAutoDepsSatisfiedKey));
             EditorPrefs.DeleteKey(ProjectEditorPrefsKey(CCSSetupConstants.EditorPrefsRequiredAutoDepsSummaryKey));
+            SetSetupCompleted(false);
+            SetSetupSkipped(false);
             SessionState.SetBool(CCSSetupConstants.SessionStateAutoOpenedThisSession, false);
             SessionState.SetString(CCSSetupConstants.SessionStatePendingInstallQueueIds, string.Empty);
             SessionState.SetBool(CCSSetupConstants.SessionStateAutoRequiredPassActive, false);
             CCSEditorLog.Info(
-                "CCS Hub: First-run setup flags and session queue markers cleared for this project. Restart the Unity Editor so auto-setup can run again.");
+                "CCS Hub: First-run setup flags and session queue markers cleared for this project.");
         }
 
         #endregion

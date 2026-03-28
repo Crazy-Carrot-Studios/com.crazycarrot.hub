@@ -22,9 +22,11 @@ namespace CCS.Hub.Editor
             CCSSetupState.ResetAllSetupFlagsForDevelopment();
             EditorUtility.DisplayDialog(
                 "CCS Hub",
-                "First-run setup flags were cleared for this project.\n\n"
-                + "Restart the Unity Editor so the Hub can show auto-setup again on load.",
+                "First-run flags were cleared for this project.\n\n"
+                + "Click OK to run the Hub setup pipeline now (progress window + required installs). "
+                + "You do not need to restart Unity.",
                 "OK");
+            CCSSetupBootstrap.RunFirstRunPipelineNow();
         }
     }
 }
