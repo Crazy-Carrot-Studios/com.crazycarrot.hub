@@ -1,12 +1,12 @@
 # CCS Hub (`com.crazycarrot.hub`)
 
-**Version: 0.2.12**
+**Version: 0.2.13**
 
 First-run **bootstrap installer** and package hub for **Crazy Carrot Studios** Unity projects. After you add this package by Git URL, Unity runs a **CCS Setup Wizard** flow: required packages queue automatically; the **main CCS Hub** can open once per editor session after that pass when the first-run gate allows (use **CCS → CCS Hub → Open CCS Hub** anytime). Optional CCS Git packages install **sequentially** via Package Manager, and the Hub can scaffold **`Assets/CCS`** content folders.
 
 ## Standalone Git / UPM repository
 
-This package is maintained in its **own** Git repository. **`package.json` lives at the repository root** (not under another project’s `Packages/` folder). Unity’s **Add package from Git URL** clones that repo and treats the root as the UPM package, so installs stay clean. Optional: pin a release with `#v0.2.12` (or another tag) on the URL.
+This package is maintained in its **own** Git repository. **`package.json` lives at the repository root** (not under another project’s `Packages/` folder). Unity’s **Add package from Git URL** clones that repo and treats the root as the UPM package, so installs stay clean. Optional: pin a release with `#v0.2.13` (or another tag) on the URL.
 
 ## Requirements
 
@@ -32,8 +32,8 @@ This package is maintained in its **own** Git repository. **`package.json` lives
 
    Save the file and return to Unity so it resolves the package.
 
-3. After compile, required packages queue automatically; when that pass finishes, the **main CCS Hub** window opens for optional tools unless first-run auto-open is blocked (e.g. you already finished or skipped setup for this project, or you already opened the Hub this session via **Open CCS Hub**). There is no separate required-only progress window—status appears in the Hub once it opens.
-4. Use **CCS → CCS Hub → Open CCS Hub** for optional tools; choose **CCS Character Controller** and **Install selected**. Use **Reset first-run setup state** to clear all Hub first-run state for this project and rerun the same pipeline as a fresh load (no Unity restart).
+3. After compile, required packages queue automatically; when that pass finishes, the **main CCS Hub** window opens for optional tools unless first-run auto-open is blocked (e.g. you already finished or skipped setup for this project, or the Hub already **auto-opened** once this session after the required phase). There is no separate required-only progress window—status appears in the Hub once it opens.
+4. Use **CCS → CCS Hub → Open CCS Hub** for optional tools; choose **CCS Character Controller** and **Install selected**.
 
 ## Character Controller (UPM source → Assets/CCS)
 
@@ -46,12 +46,7 @@ Unity Package Manager **never** writes optional CCS tools straight into `Assets/
 
 **Limitations / next steps:** Re-install overwrites that folder (destructive). If **`Client.Remove`** fails after copy, remove the package manually in Package Manager to avoid duplicate assemblies. The **`com.crazycarrot.charactercontroller`** Git repo should **not** ship a full sample project inside the package; keep template scenes/settings only in the **consumer** project’s **`Assets/`** (not under **`Assets/CCS`**). Updating Character Controller later may require a documented “replace from package” or Git workflow—the Hub does not diff-merge versions yet.
 
-**CCS → CCS Hub** submenu:
-
-- **Open CCS Hub**
-- **Reset first-run setup state (this project)** — full blank slate + immediate **`RunFirstRunPipelineNow`** (same as editor load)
-- **Force run first-run pipeline now** — refresh list and required-deps evaluation without clearing prefs
-- **Dump setup state to Console** — EditorPrefs + SessionState + gate + queue busy
+**Menu:** **CCS → CCS Hub → Open CCS Hub**
 
 ## Hybrid dependency model
 
@@ -70,6 +65,6 @@ https://github.com/Crazy-Carrot-Studios/com.crazycarrot.hub
 
 ---
 
-**Version 0.2.12** (same value as `package.json` `"version"`).
+**Version 0.2.13** (same value as `package.json` `"version"`).
 
-After you **complete** optional setup or choose **Skip for now**, the Hub does **not** auto-open on the next editor launch; use **Open CCS Hub** or **Reset first-run setup state** when testing.
+After you **complete** optional setup or choose **Skip for now**, the Hub does **not** auto-open on the next editor launch; use **Open CCS Hub** when you need the window again.

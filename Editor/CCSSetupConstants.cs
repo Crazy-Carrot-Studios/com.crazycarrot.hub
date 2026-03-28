@@ -16,13 +16,6 @@ namespace CCS.Hub.Editor
     {
         public const string MenuPathOpenHub = "CCS/CCS Hub/Open CCS Hub";
 
-        public const string MenuPathResetFirstRunSetup =
-            "CCS/CCS Hub/Reset first-run setup state (this project)";
-
-        public const string MenuPathForceFirstRunPipeline = "CCS/CCS Hub/Force run first-run pipeline now";
-
-        public const string MenuPathDumpSetupState = "CCS/CCS Hub/Dump setup state to Console";
-
         public const string EditorPrefsKeyPrefix = "CCS.Hub.";
 
         /// <summary>EditorPrefs suffix (per project hash): user finished optional Hub setup; blocks first-run auto-open on later sessions.</summary>

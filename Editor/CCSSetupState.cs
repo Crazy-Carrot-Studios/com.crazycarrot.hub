@@ -114,6 +114,10 @@ namespace CCS.Hub.Editor
             return true;
         }
 
+        /// <summary>
+        /// Call only from the orchestrated first-run auto-open path after the required phase
+        /// (<see cref="CCSSetupOrchestrator"/>). Do not call from manual <c>Open CCS Hub</c> menu open.
+        /// </summary>
         public static void MarkAutoOpenedThisSession()
         {
             SessionState.SetBool(CCSSetupConstants.SessionStateAutoOpenedThisSession, true);

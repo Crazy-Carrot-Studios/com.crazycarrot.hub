@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.13] - 2026-03-27
+
+### Fixed
+
+- **Manual Open CCS Hub** no longer calls **`MarkAutoOpenedThisSession()`**. That session flag is only set by the **orchestrated first-run auto-open** path (`CCSSetupOrchestrator`), so opening the Hub from the menu no longer blocks automatic first-run open later in the same session.
+
+### Removed
+
+- **Debug / test menu items** under **CCS → CCS Hub** (**Reset first-run setup state**, **Force run first-run pipeline now**, **Dump setup state to Console**). The public menu now exposes only **Open CCS Hub**; **`ResetAllFirstRunStateForThisProject`**, **`RunFirstRunPipelineNow`**, and **`LogFirstRunStateSnapshot`** remain available from code for internal tooling if needed.
+
 ## [0.2.12] - 2026-03-27
 
 ### Added

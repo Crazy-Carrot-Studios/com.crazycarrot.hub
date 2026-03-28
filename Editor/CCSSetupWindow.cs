@@ -43,11 +43,11 @@ namespace CCS.Hub.Editor
 
         #region Unity Callbacks
 
-        /// <summary>Opens the main CCS Hub window; marks session so a parallel auto-open will not spawn a second window.</summary>
+        /// <summary>Opens the main CCS Hub window from the menu. Does not set the first-run auto-open session flag (that flag is only set by the orchestrated automatic open path).</summary>
+        [MenuItem(CCSSetupConstants.MenuPathOpenHub, false, 0)]
         public static void OpenHubFromMenu()
         {
             openedFromFirstRunAuto = false;
-            CCSSetupState.MarkAutoOpenedThisSession();
             CCSSetupWindow window = GetWindow<CCSSetupWindow>(true, "CCS Hub", true);
             window.minSize = new Vector2(460f, 420f);
             window.Show();
