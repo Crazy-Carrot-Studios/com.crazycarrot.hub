@@ -5,7 +5,7 @@
 // Author: James Schilz (Developer)
 // Created: March 27, 2026
 // Last Modified: March 27, 2026
-// Summary: Opens the CCS Hub optional UI on first run after CCS Branding installs (or when all required are already present / queue finishes). Does not use EditorApplication.isUpdating — it can stay true during normal editor frames and block delayCall indefinitely.
+// Summary: Opens the CCS Hub optional UI on first run after CCS Branding installs (or when all required are already present / queue finishes). Waits only for compilation to finish — do not wait on CCSPackageInstallService.IsBusy() or the Hub would not open until the entire PM queue drains.
 // Required Components: None
 // Where to Place: Packages/com.crazycarrot.hub/Editor/
 // ============================================================================
@@ -69,22 +69,17 @@ namespace CCS.Hub.Editor
                 return;
             }
 
+            CCSEditorLog.Info("CCS Hub: CCS Branding Client.Add succeeded — scheduling first-run Hub open (other required packages may still be installing).");
             EditorApplication.delayCall += WaitForStableEditorThenOpenHub;
         }
 
         /// <summary>
-        /// Waits until assemblies are not compiling and the PM queue is idle for this callback chain.
-        /// Do not gate on <see cref="EditorApplication.isUpdating"/> — it is often true during normal editor updates and will reschedule forever.
+        /// Waits until script compilation finishes so EditorWindows open cleanly.
+        /// Intentionally does not wait for <see cref="CCSPackageInstallService.IsBusy()"/> — that stays true while the queue has items and would block the Hub until every required package finished.
         /// </summary>
         private static void WaitForStableEditorThenOpenHub()
         {
             if (EditorApplication.isCompiling)
-            {
-                EditorApplication.delayCall += WaitForStableEditorThenOpenHub;
-                return;
-            }
-
-            if (CCSPackageInstallService.IsBusy())
             {
                 EditorApplication.delayCall += WaitForStableEditorThenOpenHub;
                 return;
@@ -106,6 +101,7 @@ namespace CCS.Hub.Editor
             }
 
             CCSSetupState.MarkAutoOpenedThisSession();
+            CCSEditorLog.Info("CCS Hub: Opening CCS Hub window (first-run auto).");
             CCSSetupProgressWindow.CloseForFirstRunTransition();
             CCSSetupWindow.ShowFirstRunAuto();
         }
