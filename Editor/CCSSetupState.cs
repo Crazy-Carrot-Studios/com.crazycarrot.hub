@@ -121,11 +121,13 @@ namespace CCS.Hub.Editor
         public static void MarkAutoOpenedThisSession()
         {
             SessionState.SetBool(CCSSetupConstants.SessionStateAutoOpenedThisSession, true);
+            Debug.LogWarning($"{CCSSetupConstants.HubFlowDiagnosticPrefix}MarkAutoOpenedThisSession SET");
         }
 
         public static void SetPendingHubAutoOpenAfterRequiredPhase(bool value)
         {
             SessionState.SetBool(CCSSetupConstants.SessionStatePendingHubAutoOpenAfterRequiredPhase, value);
+            Debug.LogWarning($"{CCSSetupConstants.HubFlowDiagnosticPrefix}PendingHubAutoOpenAfterRequiredPhase = {value}");
         }
 
         public static bool IsPendingHubAutoOpenAfterRequiredPhase()

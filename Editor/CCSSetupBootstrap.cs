@@ -11,6 +11,7 @@
 // ============================================================================
 
 using UnityEditor;
+using UnityEngine;
 
 namespace CCS.Hub.Editor
 {
@@ -35,6 +36,7 @@ namespace CCS.Hub.Editor
         /// </summary>
         public static void RunFirstRunPipelineNow()
         {
+            Debug.LogWarning($"{CCSSetupConstants.HubFlowDiagnosticPrefix}Bootstrap RunFirstRunPipelineNow — refreshing package list…");
             CCSEditorLog.Info("CCS Hub: RunFirstRunPipelineNow — refreshing installed package list…");
             CCSPackageStatusService.RefreshInstalledPackages(ExecuteFirstRunPipelineAfterListReady);
         }
@@ -45,12 +47,15 @@ namespace CCS.Hub.Editor
 
         private static void OnEditorDelayCall()
         {
+            Debug.LogWarning($"{CCSSetupConstants.HubFlowDiagnosticPrefix}Bootstrap started (InitializeOnLoad delayCall).");
             CCSEditorLog.Info("CCS Hub: Bootstrap — editor delayCall (InitializeOnLoad first-run pipeline).");
             RunFirstRunPipelineNow();
         }
 
         private static void ExecuteFirstRunPipelineAfterListReady()
         {
+            Debug.LogWarning(
+                $"{CCSSetupConstants.HubFlowDiagnosticPrefix}Package list ready: {CCSPackageStatusService.IsListReady()}");
             CCSSetupOrchestrator.EnsureInitialized();
             CCSEditorLog.Info("CCS Hub: Bootstrap — package list ready.");
 

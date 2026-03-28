@@ -95,6 +95,7 @@ namespace CCS.Hub.Editor
         /// <summary>Orchestrated first-run path: reuse/focus existing Hub or create one; clears pending auto-open flag here for safety.</summary>
         public static void ShowOrFocusFirstRunAuto()
         {
+            Debug.LogWarning($"{CCSSetupConstants.HubFlowDiagnosticPrefix}ShowOrFocusFirstRunAuto CALLED");
             CCSSetupState.ClearPendingHubAutoOpenAfterRequiredPhase();
             openedFromFirstRunAuto = true;
             CCSSetupWindow window = AcquireHubWindowForReuse();
@@ -103,6 +104,7 @@ namespace CCS.Hub.Editor
 
         private static CCSSetupWindow AcquireHubWindowForReuse()
         {
+            Debug.LogWarning($"{CCSSetupConstants.HubFlowDiagnosticPrefix}Acquiring Hub window instance (reuse or create)");
             CCSSetupWindow[] found = Resources.FindObjectsOfTypeAll<CCSSetupWindow>();
             CCSSetupWindow keep = null;
             for (int index = 0; index < found.Length; index++)
@@ -119,6 +121,7 @@ namespace CCS.Hub.Editor
                 }
                 else
                 {
+                    Debug.LogWarning($"{CCSSetupConstants.HubFlowDiagnosticPrefix}Closing duplicate Hub window instance.");
                     candidate.Close();
                 }
             }

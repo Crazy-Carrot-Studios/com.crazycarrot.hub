@@ -14,6 +14,9 @@ namespace CCS.Hub.Editor
 {
     public static class CCSSetupConstants
     {
+        /// <summary>Console prefix for first-run pipeline diagnostics (use with <c>Debug.LogWarning</c> so messages stay visible).</summary>
+        public const string HubFlowDiagnosticPrefix = "CCS HUB FLOW >>> ";
+
         public const string MenuPathOpenHub = "CCS/CCS Hub/Open CCS Hub";
 
         public const string EditorPrefsKeyPrefix = "CCS.Hub.";

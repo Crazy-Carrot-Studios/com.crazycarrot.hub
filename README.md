@@ -1,12 +1,12 @@
 # CCS Hub (`com.crazycarrot.hub`)
 
-**Version: 0.2.14**
+**Version: 0.2.15**
 
 First-run **bootstrap installer** and package hub for **Crazy Carrot Studios** Unity projects. After you add this package by Git URL, Unity runs a **CCS Setup Wizard** flow: required packages queue automatically; the **main CCS Hub** can open once per editor session after that pass when the first-run gate allows (use **CCS → CCS Hub → Open CCS Hub** anytime). Optional CCS Git packages install **sequentially** via Package Manager, and the Hub can scaffold **`Assets/CCS`** content folders.
 
 ## Standalone Git / UPM repository
 
-This package is maintained in its **own** Git repository. **`package.json` lives at the repository root** (not under another project’s `Packages/` folder). Unity’s **Add package from Git URL** clones that repo and treats the root as the UPM package, so installs stay clean. Optional: pin a release with `#v0.2.14` (or another tag) on the URL.
+This package is maintained in its **own** Git repository. **`package.json` lives at the repository root** (not under another project’s `Packages/` folder). Unity’s **Add package from Git URL** clones that repo and treats the root as the UPM package, so installs stay clean. Optional: pin a release with `#v0.2.15` (or another tag) on the URL.
 
 ## Requirements
 
@@ -32,7 +32,7 @@ This package is maintained in its **own** Git repository. **`package.json` lives
 
    Save the file and return to Unity so it resolves the package.
 
-3. After compile, required packages queue automatically; when that pass finishes, the **main CCS Hub** window opens for optional tools unless first-run auto-open is blocked (e.g. you already finished or skipped setup for this project, or the Hub already **auto-opened** once this session after the required phase). There is no separate required-only progress window—status appears in the Hub once it opens.
+3. After compile, required packages queue automatically. The **main CCS Hub** auto-opens **as soon as CCS Branding finishes installing** (other required packages may still be installing). If Branding was already present, the Hub opens when the first-run pipeline completes that evaluation (same gate as full required-pass completion). Auto-open is skipped if you already finished/skipped setup for the project or the Hub already auto-opened this session. There is no separate required-only progress window—status appears in the Hub once it opens.
 4. Use **CCS → CCS Hub → Open CCS Hub** for optional tools; choose **CCS Character Controller** and **Install selected**.
 
 ## Character Controller (UPM source → Assets/CCS)
@@ -65,6 +65,6 @@ https://github.com/Crazy-Carrot-Studios/com.crazycarrot.hub
 
 ---
 
-**Version 0.2.14** (same value as `package.json` `"version"`).
+**Version 0.2.15** (same value as `package.json` `"version"`).
 
 After you **complete** optional setup or choose **Skip for now**, the Hub does **not** auto-open on the next editor launch; use **Open CCS Hub** when you need the window again.

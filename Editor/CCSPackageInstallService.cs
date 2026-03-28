@@ -423,6 +423,8 @@ namespace CCS.Hub.Editor
 
             if (autoRequiredPassActive)
             {
+                Debug.LogWarning(
+                    $"{CCSSetupConstants.HubFlowDiagnosticPrefix}Install queue is now EMPTY (auto-required batch) — notifying required pass complete.");
                 CCSHubRequiredDependencyBootstrap.NotifyAutoRequiredBatchFinished(LastBatchSuccessDisplayNames);
                 autoRequiredPassActive = false;
                 SessionState.SetBool(CCSSetupConstants.SessionStateAutoRequiredPassActive, false);
@@ -522,6 +524,8 @@ namespace CCS.Hub.Editor
             {
                 CCSEditorLog.Info($"Client.Add succeeded for '{finished.DisplayName}'.");
                 LastBatchSuccessDisplayNames.Add(finished.DisplayName);
+                Debug.LogWarning(
+                    $"{CCSSetupConstants.HubFlowDiagnosticPrefix}Package install SUCCESS: {finished.PackageId} (definitionId={finished.Id})");
                 PackageInstallSucceeded?.Invoke(finished);
             }
             else

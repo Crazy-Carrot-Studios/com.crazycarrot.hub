@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.15] - 2026-03-27
+
+### Fixed
+
+- **First-run Hub auto-open:** Opens **as soon as CCS Branding’s** `Client.Add` **succeeds** (`PackageInstallSucceeded`), while Input System / Cinemachine can keep installing. **Fallback:** the same scheduling path runs when **`RequiredAutoInstallCompleted`** fires (all required already present, or queue fully drained). **Idempotent:** if Branding already scheduled the open, the later required-pass completion **does not** open a second Hub (`autoOpenedThisSession` / pending flag / single window reuse unchanged).
+
+### Added
+
+- **Diagnostics:** `CCSSetupConstants.HubFlowDiagnosticPrefix` (`CCS HUB FLOW >>>`) — `Debug.LogWarning` lines across bootstrap, required-deps bootstrap, install success / queue empty, orchestrator (gate, schedule, open), `MarkAutoOpenedThisSession` / pending flag, and `ShowOrFocusFirstRunAuto` / duplicate close — so the pipeline is visible in the Console without filtering Info.
+
 ## [0.2.14] - 2026-03-27
 
 ### Fixed

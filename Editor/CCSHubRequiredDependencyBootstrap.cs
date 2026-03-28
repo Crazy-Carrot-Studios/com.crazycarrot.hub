@@ -16,6 +16,7 @@ using System.Linq;
 using System.Text;
 using CCS.Hub;
 using UnityEditor;
+using UnityEngine;
 
 namespace CCS.Hub.Editor
 {
@@ -31,6 +32,7 @@ namespace CCS.Hub.Editor
         /// </summary>
         public static void TryScheduleAutoInstall()
         {
+            Debug.LogWarning($"{CCSSetupConstants.HubFlowDiagnosticPrefix}Checking required dependencies (TryScheduleAutoInstall).");
             CCSSetupOrchestrator.EnsureInitialized();
 
             if (!CCSPackageStatusService.IsListReady())
@@ -50,11 +52,14 @@ namespace CCS.Hub.Editor
             }
 
             CCSEditorLog.Info($"CCS Hub: Required-deps — missing required package count = {missing.Count}.");
+            Debug.LogWarning($"{CCSSetupConstants.HubFlowDiagnosticPrefix}Missing required count: {missing.Count}");
 
             if (missing.Count == 0)
             {
                 string summary = BuildAlreadyPresentSummary();
                 CCSSetupState.SetRequiredAutoDependenciesSatisfied(summary);
+                Debug.LogWarning(
+                    $"{CCSSetupConstants.HubFlowDiagnosticPrefix}All required dependencies already satisfied → scheduling RequiredAutoInstallCompleted.");
                 CCSEditorLog.Info("CCS Hub: Required-deps — all present; no Client.Add queue. Scheduling RequiredAutoInstallCompleted.");
                 ScheduleRequiredAutoInstallCompletedNotification();
                 return;
@@ -67,6 +72,7 @@ namespace CCS.Hub.Editor
                     "CCS Hub: Required-deps — satisfied flag was stale; cleared. Queueing missing packages.");
             }
 
+            Debug.LogWarning($"{CCSSetupConstants.HubFlowDiagnosticPrefix}Queueing required installs ({missing.Count}).");
             CCSEditorLog.Info($"CCS Hub: Required-deps — queueing {missing.Count} required package install(s). installQueueBusy will be true until the pass finishes.");
             CCSPackageInstallService.EnqueueAutoRequiredDefinitions(missing);
         }
@@ -125,6 +131,7 @@ namespace CCS.Hub.Editor
         {
             EditorApplication.delayCall += () =>
             {
+                Debug.LogWarning($"{CCSSetupConstants.HubFlowDiagnosticPrefix}RequiredAutoInstallCompleted INVOKED (delayCall).");
                 CCSEditorLog.Info("CCS Hub: Required-deps — invoking RequiredAutoInstallCompleted subscribers (delayCall).");
                 RequiredAutoInstallCompleted?.Invoke();
             };
