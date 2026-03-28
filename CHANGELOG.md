@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.16] - 2026-03-27
+
+### Fixed
+
+- **Stale / early `autoOpenedThisSession`:** `MarkAutoOpenedThisSession()` is no longer called from `CCSSetupOrchestrator.OpenMainHubAfterRequiredPhase` before the window is shown. It runs **only from `ShowOrFocusFirstRunAuto()` after `window.Show()`** succeeds, so a failed or skipped presentation cannot leave the session flag set without a real Hub show.
+- **Bootstrap recovery:** On first-run pipeline start (`ExecuteFirstRunPipelineAfterListReady`), if `autoOpenedThisSession` is true, **no** `CCSSetupWindow` exists, and setup is not completed/skipped, the flag is **cleared** as stale (e.g. leftover SessionState after a closed editor or aborted open).
+
+### Added
+
+- **`MarkAutoOpenedThisSession`:** `Debug.LogWarning` includes **`Environment.StackTrace`** (temporary diagnostic) to identify callers.
+- **Bootstrap:** `BOOTSTRAP STARTUP STATE` line logs `autoOpenedThisSession`, `pendingHubAutoOpen`, `setupCompleted`, `setupSkipped` before gate/required-deps work.
+- **`ShowOrFocusFirstRunAuto`:** Logs existing instance vs new, before/after `Show()`, and inside the delayed Focus/Repaint callback.
+
 ## [0.2.15] - 2026-03-27
 
 ### Fixed

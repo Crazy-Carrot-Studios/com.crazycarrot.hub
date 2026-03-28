@@ -139,7 +139,6 @@ namespace CCS.Hub.Editor
             }
 
             CCSSetupState.ClearPendingHubAutoOpenAfterRequiredPhase();
-            CCSSetupState.MarkAutoOpenedThisSession();
             CCSEditorLog.Info("CCS Hub: Opening main CCS Hub window (first-run auto — Branding and/or required pass).");
             CCSSetupProgressWindow.CloseForFirstRunTransition();
             CCSSetupWindow.ShowOrFocusFirstRunAuto();

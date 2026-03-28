@@ -10,6 +10,7 @@
 // Where to Place: Packages/com.crazycarrot.hub/Editor/
 // ============================================================================
 
+using System;
 using System.Text;
 using UnityEditor;
 using UnityEngine;
@@ -115,13 +116,41 @@ namespace CCS.Hub.Editor
         }
 
         /// <summary>
-        /// Call only from the orchestrated first-run auto-open path after the required phase
-        /// (<see cref="CCSSetupOrchestrator"/>). Do not call from manual <c>Open CCS Hub</c> menu open.
+        /// Sets SessionState after the Hub window has been shown (first-run auto path — see <see cref="CCSSetupWindow.ShowOrFocusFirstRunAuto"/>).
+        /// Do not call from manual <c>Open CCS Hub</c>.
         /// </summary>
         public static void MarkAutoOpenedThisSession()
         {
             SessionState.SetBool(CCSSetupConstants.SessionStateAutoOpenedThisSession, true);
-            Debug.LogWarning($"{CCSSetupConstants.HubFlowDiagnosticPrefix}MarkAutoOpenedThisSession SET");
+            Debug.LogWarning(
+                $"{CCSSetupConstants.HubFlowDiagnosticPrefix}MarkAutoOpenedThisSession SET (after Hub Show)\n{Environment.StackTrace}");
+        }
+
+        /// <summary>
+        /// First-run bootstrap only: if <c>autoOpenedThisSession</c> is stuck true from a prior attempt but no Hub window exists
+        /// and setup is not finished, clear the stale flag so auto-open can run.
+        /// </summary>
+        public static void TryRecoverStaleAutoOpenedSessionIfNoHubWindow()
+        {
+            if (!SessionState.GetBool(CCSSetupConstants.SessionStateAutoOpenedThisSession, false))
+            {
+                return;
+            }
+
+            if (IsSetupCompleted() || IsSetupSkipped())
+            {
+                return;
+            }
+
+            if (CCSSetupWindow.GetExistingInstance() != null)
+            {
+                return;
+            }
+
+            SessionState.EraseBool(CCSSetupConstants.SessionStateAutoOpenedThisSession);
+            Debug.LogWarning(
+                $"{CCSSetupConstants.HubFlowDiagnosticPrefix}Recovered stale autoOpenedThisSession "
+                + "(was true, no CCSSetupWindow, setup not completed/skipped) — cleared for first-run auto-open.");
         }
 
         public static void SetPendingHubAutoOpenAfterRequiredPhase(bool value)

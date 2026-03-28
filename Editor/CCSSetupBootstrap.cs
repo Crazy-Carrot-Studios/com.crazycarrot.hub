@@ -59,6 +59,14 @@ namespace CCS.Hub.Editor
             CCSSetupOrchestrator.EnsureInitialized();
             CCSEditorLog.Info("CCS Hub: Bootstrap — package list ready.");
 
+            Debug.LogWarning(
+                $"{CCSSetupConstants.HubFlowDiagnosticPrefix}BOOTSTRAP STARTUP STATE: "
+                + $"autoOpenedThisSession={SessionState.GetBool(CCSSetupConstants.SessionStateAutoOpenedThisSession, false)}, "
+                + $"pendingHubAutoOpen={SessionState.GetBool(CCSSetupConstants.SessionStatePendingHubAutoOpenAfterRequiredPhase, false)}, "
+                + $"setupCompleted={CCSSetupState.IsSetupCompleted()}, "
+                + $"setupSkipped={CCSSetupState.IsSetupSkipped()}");
+            CCSSetupState.TryRecoverStaleAutoOpenedSessionIfNoHubWindow();
+
             CCSSetupState.ShouldAutoOpenMainHubAfterRequiredPhase(out string gateReason);
             CCSEditorLog.Info(
                 $"CCS Hub: First-run auto-open gate (for next required pass): {(gateReason == null ? "ALLOW" : "BLOCK (" + gateReason + ")")}. "

@@ -88,22 +88,34 @@ namespace CCS.Hub.Editor
         public static void ShowOrFocusFromMenu()
         {
             openedFromFirstRunAuto = false;
-            CCSSetupWindow window = AcquireHubWindowForReuse();
-            ApplyHubWindowLayoutAndFocus(window);
+            CCSSetupWindow window = AcquireHubWindowForReuse(out _);
+            ApplyHubWindowLayoutAndFocus(window, firstRunAutoLifecycle: false);
         }
 
-        /// <summary>Orchestrated first-run path: reuse/focus existing Hub or create one; clears pending auto-open flag here for safety.</summary>
+        /// <summary>Orchestrated first-run path: reuse/focus existing Hub or create one; clears pending; calls <see cref="CCSSetupState.MarkAutoOpenedThisSession"/> only after <c>Show()</c>.</summary>
         public static void ShowOrFocusFirstRunAuto()
         {
-            Debug.LogWarning($"{CCSSetupConstants.HubFlowDiagnosticPrefix}ShowOrFocusFirstRunAuto CALLED");
+            Debug.LogWarning($"{CCSSetupConstants.HubFlowDiagnosticPrefix}ShowOrFocusFirstRunAuto ENTRY");
             CCSSetupState.ClearPendingHubAutoOpenAfterRequiredPhase();
             openedFromFirstRunAuto = true;
-            CCSSetupWindow window = AcquireHubWindowForReuse();
-            ApplyHubWindowLayoutAndFocus(window);
+
+            bool hadExistingBeforeAcquire = GetExistingInstance() != null;
+            Debug.LogWarning(
+                $"{CCSSetupConstants.HubFlowDiagnosticPrefix}ShowOrFocusFirstRunAuto: hadExistingInstance(before acquire)={hadExistingBeforeAcquire}");
+
+            CCSSetupWindow window = AcquireHubWindowForReuse(out bool createdNewInstance);
+            Debug.LogWarning(
+                $"{CCSSetupConstants.HubFlowDiagnosticPrefix}ShowOrFocusFirstRunAuto: acquire done — createdNewInstance={createdNewInstance}, reusedExisting={!createdNewInstance}");
+
+            ApplyHubWindowLayoutAndFocus(window, firstRunAutoLifecycle: true);
+
+            CCSSetupState.MarkAutoOpenedThisSession();
+            Debug.LogWarning($"{CCSSetupConstants.HubFlowDiagnosticPrefix}ShowOrFocusFirstRunAuto: MarkAutoOpenedThisSession completed after Show()");
         }
 
-        private static CCSSetupWindow AcquireHubWindowForReuse()
+        private static CCSSetupWindow AcquireHubWindowForReuse(out bool createdNewInstance)
         {
+            createdNewInstance = false;
             Debug.LogWarning($"{CCSSetupConstants.HubFlowDiagnosticPrefix}Acquiring Hub window instance (reuse or create)");
             CCSSetupWindow[] found = Resources.FindObjectsOfTypeAll<CCSSetupWindow>();
             CCSSetupWindow keep = null;
@@ -131,17 +143,34 @@ namespace CCS.Hub.Editor
                 return keep;
             }
 
+            createdNewInstance = true;
             return GetWindow<CCSSetupWindow>(true, "CCS Hub", true);
         }
 
-        private static void ApplyHubWindowLayoutAndFocus(CCSSetupWindow window)
+        private static void ApplyHubWindowLayoutAndFocus(CCSSetupWindow window, bool firstRunAutoLifecycle)
         {
             window.minSize = new Vector2(460f, 420f);
+            if (firstRunAutoLifecycle)
+            {
+                Debug.LogWarning($"{CCSSetupConstants.HubFlowDiagnosticPrefix}(first-run) BEFORE window.Show()");
+            }
+
             window.Show();
+
+            if (firstRunAutoLifecycle)
+            {
+                Debug.LogWarning($"{CCSSetupConstants.HubFlowDiagnosticPrefix}(first-run) AFTER window.Show()");
+            }
+
             EditorApplication.delayCall += () =>
             {
                 if (window != null)
                 {
+                    if (firstRunAutoLifecycle)
+                    {
+                        Debug.LogWarning($"{CCSSetupConstants.HubFlowDiagnosticPrefix}(first-run) delayCall: Focus + Repaint");
+                    }
+
                     window.Focus();
                     window.Repaint();
                 }
