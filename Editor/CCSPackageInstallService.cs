@@ -301,6 +301,39 @@ namespace CCS.Hub.Editor
             return batchProgressTotal > 0 && !batchProgressIndeterminate;
         }
 
+        /// <summary>
+        /// Clears queued installs and session-backed queue ids for a first-run state reset. Does not cancel an in-flight <c>Client.Add</c>;
+        /// if one is active, it is allowed to finish; the required-pass completion path will be driven by the next pipeline run.
+        /// </summary>
+        public static void ResetPipelineStateForFirstRunStateReset()
+        {
+            InstallQueue.Clear();
+            FailedDefinitionIds.Clear();
+            SkippedDefinitionIds.Clear();
+            LastBatchSuccessDisplayNames.Clear();
+            autoRequiredPassActive = false;
+            waitingForPackageListBeforeDequeue = false;
+            postReloadInstallQueueHint = false;
+            batchProgressTotal = 0;
+            batchProgressProcessed = 0;
+            batchProgressIndeterminate = false;
+            SessionState.SetBool(CCSSetupConstants.SessionStateAutoRequiredPassActive, false);
+            SessionState.EraseString(CCSSetupConstants.SessionStatePendingInstallQueueIds);
+
+            if (activeAddRequest != null)
+            {
+                CCSEditorLog.Warning(
+                    "First-run reset: a Package Manager Client.Add is still in progress; queue and session ids were cleared. "
+                    + "Wait for it to finish or use Force run first-run pipeline after it completes.");
+            }
+            else
+            {
+                UnregisterEditorUpdateIfIdle();
+            }
+
+            RaiseStateChanged();
+        }
+
         #endregion
 
         #region Private Methods

@@ -5,16 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.12] - 2026-03-27
+
+### Added
+
+- **`CCSSetupMenuCommands`:** **CCS → CCS Hub → Open CCS Hub**, **Reset first-run setup state (this project)**, **Force run first-run pipeline now**, **Dump setup state to Console**.
+- **`CCSPackageInstallService.ResetPipelineStateForFirstRunStateReset`:** clears queued installs and session queue markers (does not cancel an in-flight `Client.Add`; warns if one is active).
+- **`CCSSetupState.ResetAllFirstRunStateForThisProject`:** blank slate for this project — EditorPrefs (`SetupCompleted`, `SetupSkipped`, required-deps satisfied/summary, optional DOTween toggle), Hub SessionState (auto-open, pending auto-open, queue ids, auto-required pass, optional-install tracking, DOTween copy pending), optional-install context, then install pipeline reset. Logs a full snapshot after reset when invoked from the menu path before **`RunFirstRunPipelineNow`**.
+- **`CCSSetupState.BuildFirstRunStateDump` / `LogFirstRunStateSnapshot`:** one scan-friendly block listing all relevant EditorPrefs and SessionState plus package-list readiness, install-queue busy, and auto-open gate result.
+
+### Changed
+
+- **Deterministic first-run auto-open:** **`ShouldAutoOpenMainHubAfterRequiredPhase`** — blocks when **`setupCompleted`**, **`setupSkipped`**, or **`autoOpenedThisSession`** (EditorPrefs + SessionState as documented). **`SessionStatePendingHubAutoOpenAfterRequiredPhase`** is set when scheduling the post-required Hub open and cleared when the window is shown.
+- **`CCSSetupOrchestrator`:** structured logs before/after gate, **`RequiredAutoInstallCompleted`** invocation log, stable-editor wait log, **`ShowFirstRunAuto`** confirmation dump.
+- **`CCSHubRequiredDependencyBootstrap`:** logs missing required count, queue vs already-present, and delayCall before invoking subscribers.
+- **`CCSSetupBootstrap`:** logs delayCall start, **`RunFirstRunPipelineNow`**, package list ready, and gate line.
+- **Restore `SetupCompleted` / `SetupSkipped`** persistence for production: optional flow and **Skip for now** set flags again; later editor sessions do not auto-open the Hub once setup is finished or skipped (use **Reset** to test again).
+
+### Fixed
+
+- **First-run reset + immediate rerun** uses the **same** code path as editor load (**`CCSSetupBootstrap.RunFirstRunPipelineNow`**), not a separate test-only pipeline.
+
 ## [0.2.11] - 2026-03-27
 
 ### Removed
 
-- **CCS → CCS Hub → Reset first-run setup state** menu command and **`CCSSetupMenuItems`** (stale `EditorPrefs` “setup complete / skip” no longer used to gate behavior).
+- **`CCSSetupMenuItems`** and the **Reset first-run** menu entry (temporary simplification).
 
 ### Changed
 
-- **First-run auto-open** uses **only** `SessionState` (**one main Hub auto-open per editor session** after the required pass). Persistent **`SetupCompleted` / `SetupSkipped`** keys are removed so projects are not blocked by a wrongly set flag.
-- **CCS → CCS Hub** calls **`MarkAutoOpenedThisSession()`** so choosing the menu before the required pass finishes does not spawn a second Hub when the pass completes.
+- **First-run auto-open** used **only** `SessionState` (one main Hub auto-open per editor session). **`SetupCompleted` / `SetupSkipped`** EditorPrefs were removed from the auto-open gate.
+- **CCS → CCS Hub** called **`MarkAutoOpenedThisSession()`** when opening from the menu so a parallel auto-open did not spawn a second window.
 
 ## [0.2.10] - 2026-03-27
 

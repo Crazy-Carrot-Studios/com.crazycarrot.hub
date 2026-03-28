@@ -5,7 +5,7 @@
 // Author: James Schilz (Developer)
 // Created: March 25, 2025
 // Last Modified: March 27, 2026
-// Summary: On import, queues manifest-driven required UPM installs. CCSSetupOrchestrator opens the main CCS Hub window after required installs complete (no separate required progress window).
+// Summary: On import, same first-run path as after reset: refresh PM list → evaluate required deps → queue installs → orchestrator opens Hub when pass completes.
 // Required Components: None
 // Where to Place: Packages/com.crazycarrot.hub/Editor/
 // ============================================================================
@@ -30,10 +30,12 @@ namespace CCS.Hub.Editor
         #region Public Methods
 
         /// <summary>
-        /// Re-runs the same first-run path as editor load: refresh Package Manager list and queue required installs (main Hub opens when the pass completes if it has not been opened this session).
+        /// Same entry point as editor load: refresh Package Manager list, then <see cref="CCSHubRequiredDependencyBootstrap.TryScheduleAutoInstall"/>.
+        /// Use after <see cref="CCSSetupState.ResetAllFirstRunStateForThisProject"/> to rerun without restarting Unity.
         /// </summary>
         public static void RunFirstRunPipelineNow()
         {
+            CCSEditorLog.Info("CCS Hub: RunFirstRunPipelineNow — refreshing installed package list…");
             CCSPackageStatusService.RefreshInstalledPackages(ExecuteFirstRunPipelineAfterListReady);
         }
 
@@ -43,24 +45,19 @@ namespace CCS.Hub.Editor
 
         private static void OnEditorDelayCall()
         {
+            CCSEditorLog.Info("CCS Hub: Bootstrap — editor delayCall (InitializeOnLoad first-run pipeline).");
             RunFirstRunPipelineNow();
         }
 
         private static void ExecuteFirstRunPipelineAfterListReady()
         {
             CCSSetupOrchestrator.EnsureInitialized();
-            if (CCSSetupState.ShouldAutoOpenSetupWizard())
-            {
-                CCSEditorLog.Info(
-                    "CCS Hub: First-run bootstrap — queueing required packages. Main CCS Hub will open automatically when that pass finishes.");
-            }
-            else
-            {
-                CCSEditorLog.Info(
-                    "CCS Hub: Auto setup UI skipped (Hub already opened this session or marked). "
-                    + $"autoOpenedThisSession={SessionState.GetBool(CCSSetupConstants.SessionStateAutoOpenedThisSession, false)}. "
-                    + "Use CCS → CCS Hub to open the window manually.");
-            }
+            CCSEditorLog.Info("CCS Hub: Bootstrap — package list ready.");
+
+            CCSSetupState.ShouldAutoOpenMainHubAfterRequiredPhase(out string gateReason);
+            CCSEditorLog.Info(
+                $"CCS Hub: First-run auto-open gate (for next required pass): {(gateReason == null ? "ALLOW" : "BLOCK (" + gateReason + ")")}. "
+                + $"installQueueBusy={CCSPackageInstallService.IsBusy()}.");
 
             CCSHubRequiredDependencyBootstrap.TryScheduleAutoInstall();
         }

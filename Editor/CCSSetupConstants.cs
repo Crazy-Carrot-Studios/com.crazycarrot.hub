@@ -14,12 +14,29 @@ namespace CCS.Hub.Editor
 {
     public static class CCSSetupConstants
     {
-        /// <summary>Top-level Unity menu: CCS (not under Tools).</summary>
-        public const string MenuPathSetupWizard = "CCS/CCS Hub";
+        public const string MenuPathOpenHub = "CCS/CCS Hub/Open CCS Hub";
+
+        public const string MenuPathResetFirstRunSetup =
+            "CCS/CCS Hub/Reset first-run setup state (this project)";
+
+        public const string MenuPathForceFirstRunPipeline = "CCS/CCS Hub/Force run first-run pipeline now";
+
+        public const string MenuPathDumpSetupState = "CCS/CCS Hub/Dump setup state to Console";
 
         public const string EditorPrefsKeyPrefix = "CCS.Hub.";
 
+        /// <summary>EditorPrefs suffix (per project hash): user finished optional Hub setup; blocks first-run auto-open on later sessions.</summary>
+        public const string EditorPrefsSetupCompletedKey = "SetupCompleted";
+
+        /// <summary>EditorPrefs suffix: user chose Skip for now; blocks first-run auto-open on later sessions.</summary>
+        public const string EditorPrefsSetupSkippedKey = "SetupSkipped";
+
         public const string SessionStateAutoOpenedThisSession = "CCS.Hub.SetupAutoOpenedThisSession";
+
+        /// <summary>Set while a Hub auto-open is scheduled after the required pass; cleared when the Hub window is shown.</summary>
+        public const string SessionStatePendingHubAutoOpenAfterRequiredPhase =
+            "CCS.Hub.PendingHubAutoOpenAfterRequiredPhase";
+
         public const string SessionStatePendingInstallQueueIds = "CCS.Hub.PendingInstallQueueIds";
 
         /// <summary>Session flag: pending queue is the hub's automatic required-dependency pass (survives domain reload).</summary>

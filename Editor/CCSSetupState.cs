@@ -5,11 +5,12 @@
 // Author: James Schilz (Developer)
 // Created: March 25, 2025
 // Last Modified: March 27, 2026
-// Summary: Required-deps summary and optional prefs; coordinates one main-Hub auto-open per editor session (SessionState only — no persistent "setup finished" gate).
+// Summary: Single place for Hub first-run EditorPrefs + SessionState: auto-open gate after required pass, full reset, and Console diagnostics dumps.
 // Required Components: None
 // Where to Place: Packages/com.crazycarrot.hub/Editor/
 // ============================================================================
 
+using System.Text;
 using UnityEditor;
 using UnityEngine;
 
@@ -26,7 +27,29 @@ namespace CCS.Hub.Editor
 
         #endregion
 
-        #region Public Methods
+        #region Public Methods — EditorPrefs
+
+        public static bool IsSetupCompleted()
+        {
+            return EditorPrefs.GetBool(ProjectEditorPrefsKey(CCSSetupConstants.EditorPrefsSetupCompletedKey), false);
+        }
+
+        public static bool IsSetupSkipped()
+        {
+            return EditorPrefs.GetBool(ProjectEditorPrefsKey(CCSSetupConstants.EditorPrefsSetupSkippedKey), false);
+        }
+
+        public static void SetSetupCompleted(bool value)
+        {
+            EditorPrefs.SetBool(ProjectEditorPrefsKey(CCSSetupConstants.EditorPrefsSetupCompletedKey), value);
+            CCSEditorLog.Info($"First-run: EditorPrefs SetupCompleted = {value} (this project).");
+        }
+
+        public static void SetSetupSkipped(bool value)
+        {
+            EditorPrefs.SetBool(ProjectEditorPrefsKey(CCSSetupConstants.EditorPrefsSetupSkippedKey), value);
+            CCSEditorLog.Info($"First-run: EditorPrefs SetupSkipped = {value} (this project).");
+        }
 
         public static bool AreRequiredAutoDependenciesSatisfied()
         {
@@ -54,32 +77,125 @@ namespace CCS.Hub.Editor
             EditorPrefs.SetString(ProjectEditorPrefsKey(CCSSetupConstants.EditorPrefsRequiredAutoDepsSummaryKey), summary ?? string.Empty);
         }
 
-        /// <summary>
-        /// Clears the "required auto-deps satisfied" flag so the next bootstrap pass re-evaluates Package Manager
-        /// (e.g. CCS Branding added to the required set after a prior successful pass).
-        /// </summary>
         public static void ClearRequiredAutoDependenciesSatisfied()
         {
             EditorPrefs.DeleteKey(ProjectEditorPrefsKey(CCSSetupConstants.EditorPrefsRequiredAutoDepsSatisfiedKey));
             EditorPrefs.DeleteKey(ProjectEditorPrefsKey(CCSSetupConstants.EditorPrefsRequiredAutoDepsSummaryKey));
         }
 
+        #endregion
+
+        #region Public Methods — Auto-open gate
+
         /// <summary>
-        /// True when the main Hub may auto-open after the required pass: not yet opened (or not marked) this editor session.
+        /// After the required dependency pass completes, the main Hub may auto-open once per editor session if the user has not finished or skipped setup.
         /// </summary>
-        public static bool ShouldAutoOpenSetupWizard()
+        public static bool ShouldAutoOpenMainHubAfterRequiredPhase(out string blockReason)
         {
-            if (SessionState.GetBool(CCSSetupConstants.SessionStateAutoOpenedThisSession, false))
+            if (IsSetupCompleted())
             {
+                blockReason = "setupCompleted";
                 return false;
             }
 
+            if (IsSetupSkipped())
+            {
+                blockReason = "setupSkipped";
+                return false;
+            }
+
+            if (SessionState.GetBool(CCSSetupConstants.SessionStateAutoOpenedThisSession, false))
+            {
+                blockReason = "autoOpenedThisSession";
+                return false;
+            }
+
+            blockReason = null;
             return true;
         }
 
         public static void MarkAutoOpenedThisSession()
         {
             SessionState.SetBool(CCSSetupConstants.SessionStateAutoOpenedThisSession, true);
+        }
+
+        public static void SetPendingHubAutoOpenAfterRequiredPhase(bool value)
+        {
+            SessionState.SetBool(CCSSetupConstants.SessionStatePendingHubAutoOpenAfterRequiredPhase, value);
+        }
+
+        public static bool IsPendingHubAutoOpenAfterRequiredPhase()
+        {
+            return SessionState.GetBool(CCSSetupConstants.SessionStatePendingHubAutoOpenAfterRequiredPhase, false);
+        }
+
+        public static void ClearPendingHubAutoOpenAfterRequiredPhase()
+        {
+            SessionState.EraseBool(CCSSetupConstants.SessionStatePendingHubAutoOpenAfterRequiredPhase);
+        }
+
+        #endregion
+
+        #region Public Methods — Reset & diagnostics
+
+        /// <summary>
+        /// Blank slate for this project: Hub EditorPrefs, Hub SessionState, optional-install session, install queue session, then optional-install context.
+        /// Does not restart Unity. Call <see cref="CCSSetupBootstrap.RunFirstRunPipelineNow"/> immediately after to rerun the same path as a fresh load.
+        /// Order: pipeline reset first, then prefs/session clears, so nothing rewrites stale values mid-flow.
+        /// </summary>
+        public static void ResetAllFirstRunStateForThisProject()
+        {
+            CCSPackageInstallService.ResetPipelineStateForFirstRunStateReset();
+            CCSHubOptionalInstallContext.ClearOptionalUserTracking();
+
+            EditorPrefs.DeleteKey(ProjectEditorPrefsKey(CCSSetupConstants.EditorPrefsSetupCompletedKey));
+            EditorPrefs.DeleteKey(ProjectEditorPrefsKey(CCSSetupConstants.EditorPrefsSetupSkippedKey));
+            EditorPrefs.DeleteKey(ProjectEditorPrefsKey(CCSSetupConstants.EditorPrefsRequiredAutoDepsSatisfiedKey));
+            EditorPrefs.DeleteKey(ProjectEditorPrefsKey(CCSSetupConstants.EditorPrefsRequiredAutoDepsSummaryKey));
+            EditorPrefs.DeleteKey(ProjectEditorPrefsKey(CCSSetupConstants.EditorPrefsIncludeDotweenOptionalKey));
+
+            SessionState.EraseBool(CCSSetupConstants.SessionStateAutoOpenedThisSession);
+            SessionState.EraseBool(CCSSetupConstants.SessionStatePendingHubAutoOpenAfterRequiredPhase);
+            SessionState.EraseString(CCSSetupConstants.SessionStatePendingInstallQueueIds);
+            SessionState.EraseBool(CCSSetupConstants.SessionStateAutoRequiredPassActive);
+            SessionState.EraseBool(CCSSetupConstants.SessionStateDotweenCopyPending);
+            SessionState.EraseBool(CCSSetupConstants.SessionStateOptionalUserCcSelected);
+            SessionState.EraseBool(CCSSetupConstants.SessionStateOptionalUserDotweenSelected);
+            SessionState.EraseInt(CCSSetupConstants.SessionStateOptionalUserStepTotal);
+
+            CCSEditorLog.Info("First-run: full reset applied for this project (EditorPrefs + SessionState + install pipeline markers).");
+        }
+
+        /// <summary>Logs every Hub first-run related value for the current project (scan-friendly, consistent prefix).</summary>
+        public static void LogFirstRunStateSnapshot(string context)
+        {
+            CCSEditorLog.Info(BuildFirstRunStateDump(context));
+        }
+
+        public static string BuildFirstRunStateDump(string context)
+        {
+            StringBuilder builder = new StringBuilder(1024);
+            builder.AppendLine($"First-run state dump — {context}");
+            builder.AppendLine($"  projectEditorHash: {Application.dataPath.GetHashCode():X8}");
+            builder.AppendLine($"  EditorPrefs SetupCompleted: {IsSetupCompleted()}");
+            builder.AppendLine($"  EditorPrefs SetupSkipped: {IsSetupSkipped()}");
+            builder.AppendLine($"  EditorPrefs RequiredAutoDepsSatisfied: {AreRequiredAutoDependenciesSatisfied()}");
+            builder.AppendLine($"  EditorPrefs RequiredAutoDepsSummary: \"{GetRequiredAutoDependenciesSummary()}\"");
+            builder.AppendLine($"  EditorPrefs IncludeDotweenOptional: {GetIncludeDotweenOptional()}");
+            builder.AppendLine($"  Session autoOpenedThisSession: {SessionState.GetBool(CCSSetupConstants.SessionStateAutoOpenedThisSession, false)}");
+            builder.AppendLine($"  Session pendingHubAutoOpenAfterRequired: {SessionState.GetBool(CCSSetupConstants.SessionStatePendingHubAutoOpenAfterRequiredPhase, false)}");
+            builder.AppendLine($"  Session pendingInstallQueueIds: \"{SessionState.GetString(CCSSetupConstants.SessionStatePendingInstallQueueIds, string.Empty)}\"");
+            builder.AppendLine($"  Session autoRequiredPassActive: {SessionState.GetBool(CCSSetupConstants.SessionStateAutoRequiredPassActive, false)}");
+            builder.AppendLine($"  Session dotweenCopyPending: {SessionState.GetBool(CCSSetupConstants.SessionStateDotweenCopyPending, false)}");
+            builder.AppendLine($"  Session optionalUserCcSelected: {SessionState.GetBool(CCSSetupConstants.SessionStateOptionalUserCcSelected, false)}");
+            builder.AppendLine($"  Session optionalUserDotweenSelected: {SessionState.GetBool(CCSSetupConstants.SessionStateOptionalUserDotweenSelected, false)}");
+            builder.AppendLine($"  Session optionalUserStepTotal: {SessionState.GetInt(CCSSetupConstants.SessionStateOptionalUserStepTotal, 0)}");
+            builder.AppendLine($"  Package list ready: {CCSPackageStatusService.IsListReady()}");
+            builder.AppendLine($"  Install queue busy: {CCSPackageInstallService.IsBusy()}");
+            ShouldAutoOpenMainHubAfterRequiredPhase(out string blockReason);
+            builder.AppendLine(
+                $"  Auto-open gate: {(string.IsNullOrEmpty(blockReason) ? "ALLOW" : "BLOCK (" + blockReason + ")")}");
+            return builder.ToString();
         }
 
         #endregion

@@ -5,7 +5,7 @@
 // Author: James Schilz (Developer)
 // Created: March 27, 2026
 // Last Modified: March 27, 2026
-// Summary: Opens the main CCS Hub window after required Package Manager installs complete. Subscribe via EnsureInitialized() before any code can raise RequiredAutoInstallCompleted (avoid missing the event due to static ctor order).
+// Summary: Single subscriber to RequiredAutoInstallCompleted: stable-editor delayCall → main Hub auto-open with pending flag + gate. EnsureInitialized() before any event raise.
 // Required Components: None
 // Where to Place: Packages/com.crazycarrot.hub/Editor/
 // ============================================================================
@@ -16,7 +16,7 @@ using UnityEngine;
 namespace CCS.Hub.Editor
 {
     /// <summary>
-    /// Opens <see cref="CCSSetupWindow"/> when the required-dependency auto-install pass finishes and first-run auto-open is allowed.
+    /// Opens <see cref="CCSSetupWindow"/> when the required-dependency pass completes and the first-run auto-open gate allows it.
     /// </summary>
     public static class CCSSetupOrchestrator
     {
@@ -39,20 +39,22 @@ namespace CCS.Hub.Editor
 
         private static void OnRequiredAutoInstallCompleted()
         {
-            // Always log so "silent failure" is visible in the Console (Info filter on).
-            CCSEditorLog.Info("CCS Hub: RequiredAutoInstallCompleted received.");
+            CCSEditorLog.Info("CCS Hub: RequiredAutoInstallCompleted — event received.");
+            CCSEditorLog.Info(CCSSetupState.BuildFirstRunStateDump("orchestrator: before auto-open gate").TrimEnd());
 
-            if (!CCSSetupState.ShouldAutoOpenSetupWizard())
+            if (!CCSSetupState.ShouldAutoOpenMainHubAfterRequiredPhase(out string blockReason))
             {
-                if (!SessionState.GetBool(CCSSetupConstants.SessionStateAutoOpenedThisSession, false))
-                {
-                    LogAutoOpenBlocked("RequiredAutoInstallCompleted");
-                }
-
+                CCSEditorLog.Info(
+                    $"CCS Hub: Main Hub auto-open — BLOCKED (reason={blockReason}). "
+                    + "installQueueBusy="
+                    + CCSPackageInstallService.IsBusy()
+                    + ".");
                 return;
             }
 
-            CCSEditorLog.Info("CCS Hub: Scheduling main CCS Hub window (first-run).");
+            CCSSetupState.SetPendingHubAutoOpenAfterRequiredPhase(true);
+            CCSEditorLog.Info(
+                "CCS Hub: Main Hub auto-open — ALLOWED; pending flag set; scheduling open after editor is stable (not compiling).");
             EditorApplication.delayCall += WaitForStableEditorThenOpenHub;
         }
 
@@ -60,39 +62,36 @@ namespace CCS.Hub.Editor
         {
             if (EditorApplication.isCompiling)
             {
+                CCSEditorLog.Info("CCS Hub: Waiting for compilation to finish before opening main Hub.");
                 EditorApplication.delayCall += WaitForStableEditorThenOpenHub;
                 return;
             }
 
-            OpenFirstRunHubAfterRequiredPhase();
+            OpenMainHubAfterRequiredPhase();
         }
 
-        private static void OpenFirstRunHubAfterRequiredPhase()
+        private static void OpenMainHubAfterRequiredPhase()
         {
-            if (!CCSSetupState.ShouldAutoOpenSetupWizard())
+            if (!CCSSetupState.IsPendingHubAutoOpenAfterRequiredPhase())
             {
-                if (!SessionState.GetBool(CCSSetupConstants.SessionStateAutoOpenedThisSession, false))
-                {
-                    LogAutoOpenBlocked("OpenFirstRunHubAfterRequiredPhase");
-                }
-
+                CCSEditorLog.Warning(
+                    "CCS Hub: OpenMainHubAfterRequiredPhase — pending Hub auto-open flag was cleared; aborting (no duplicate open).");
                 return;
             }
 
+            if (!CCSSetupState.ShouldAutoOpenMainHubAfterRequiredPhase(out string blockReason))
+            {
+                CCSSetupState.ClearPendingHubAutoOpenAfterRequiredPhase();
+                CCSEditorLog.Info($"CCS Hub: Main Hub auto-open — cancelled before show (reason={blockReason}).");
+                return;
+            }
+
+            CCSSetupState.ClearPendingHubAutoOpenAfterRequiredPhase();
             CCSSetupState.MarkAutoOpenedThisSession();
-            CCSEditorLog.Info("CCS Hub: Opening CCS Hub window (first-run auto, after required installs).");
+            CCSEditorLog.Info("CCS Hub: Opening main CCS Hub window (first-run auto, required phase done).");
             CCSSetupProgressWindow.CloseForFirstRunTransition();
             CCSSetupWindow.ShowFirstRunAuto();
-        }
-
-        private static void LogAutoOpenBlocked(string context)
-        {
-            bool sessionOpened = SessionState.GetBool(CCSSetupConstants.SessionStateAutoOpenedThisSession, false);
-            string message =
-                $"CCS Hub: {context} — main Hub auto-open skipped "
-                + $"(autoOpenedThisSession={sessionOpened}). "
-                + "Open CCS Hub from the menu (CCS → CCS Hub) if you need it this session.";
-            Debug.LogWarning(message);
+            CCSEditorLog.Info(CCSSetupState.BuildFirstRunStateDump("orchestrator: after ShowFirstRunAuto").TrimEnd());
         }
     }
 }

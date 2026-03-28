@@ -4,7 +4,8 @@
 // GameObject: N/A (Editor Utility)
 // Author: James Schilz (Developer)
 // Created: March 25, 2025
-// Summary: After CCS Hub loads, ensures required UPM dependencies (Branding, Input System, Cinemachine) without user prompts.
+// Last Modified: March 27, 2026
+// Summary: Evaluates manifest required packages; queues missing installs or completes immediately; raises RequiredAutoInstallCompleted on delayCall (same path whether installs ran or all were present).
 // Required Components: None
 // Where to Place: Packages/com.crazycarrot.hub/Editor/
 // ============================================================================
@@ -26,7 +27,7 @@ namespace CCS.Hub.Editor
         public static event Action RequiredAutoInstallCompleted;
 
         /// <summary>
-        /// Called from <see cref="CCSSetupBootstrap"/> after Package Manager list refresh. Idempotent per project.
+        /// Called from <see cref="CCSSetupBootstrap"/> after Package Manager list refresh.
         /// </summary>
         public static void TryScheduleAutoInstall()
         {
@@ -34,6 +35,7 @@ namespace CCS.Hub.Editor
 
             if (!CCSPackageStatusService.IsListReady())
             {
+                CCSEditorLog.Info("CCS Hub: Required-deps — package list not ready yet; retrying on delayCall.");
                 EditorApplication.delayCall += TryScheduleAutoInstall;
                 return;
             }
@@ -47,11 +49,13 @@ namespace CCS.Hub.Editor
                 }
             }
 
+            CCSEditorLog.Info($"CCS Hub: Required-deps — missing required package count = {missing.Count}.");
+
             if (missing.Count == 0)
             {
                 string summary = BuildAlreadyPresentSummary();
                 CCSSetupState.SetRequiredAutoDependenciesSatisfied(summary);
-                CCSEditorLog.Info("CCS Hub: all required dependencies already present; skipping auto-install queue.");
+                CCSEditorLog.Info("CCS Hub: Required-deps — all present; no Client.Add queue. Scheduling RequiredAutoInstallCompleted.");
                 ScheduleRequiredAutoInstallCompletedNotification();
                 return;
             }
@@ -60,10 +64,10 @@ namespace CCS.Hub.Editor
             {
                 CCSSetupState.ClearRequiredAutoDependenciesSatisfied();
                 CCSEditorLog.Info(
-                    "CCS Hub: required dependency list is not fully installed (e.g. CCS Branding); clearing stale satisfied flag and queueing installs.");
+                    "CCS Hub: Required-deps — satisfied flag was stale; cleared. Queueing missing packages.");
             }
 
-            CCSEditorLog.Info($"CCS Hub: queueing {missing.Count} required package install(s).");
+            CCSEditorLog.Info($"CCS Hub: Required-deps — queueing {missing.Count} required package install(s). installQueueBusy will be true until the pass finishes.");
             CCSPackageInstallService.EnqueueAutoRequiredDefinitions(missing);
         }
 
@@ -113,13 +117,17 @@ namespace CCS.Hub.Editor
                 : "Required CCS packages (see Package Manager if this stays empty).";
 
             CCSSetupState.SetRequiredAutoDependenciesSatisfied(summary);
-            CCSEditorLog.Info("CCS Hub: required dependency auto-install pass finished.");
+            CCSEditorLog.Info("CCS Hub: Required-deps — Client.Add queue drained; pass finished. Scheduling RequiredAutoInstallCompleted.");
             ScheduleRequiredAutoInstallCompletedNotification();
         }
 
         private static void ScheduleRequiredAutoInstallCompletedNotification()
         {
-            EditorApplication.delayCall += () => RequiredAutoInstallCompleted?.Invoke();
+            EditorApplication.delayCall += () =>
+            {
+                CCSEditorLog.Info("CCS Hub: Required-deps — invoking RequiredAutoInstallCompleted subscribers (delayCall).");
+                RequiredAutoInstallCompleted?.Invoke();
+            };
         }
 
         private static string BuildAlreadyPresentSummary()

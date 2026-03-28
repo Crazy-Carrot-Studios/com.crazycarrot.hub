@@ -43,8 +43,8 @@ namespace CCS.Hub.Editor
 
         #region Unity Callbacks
 
-        [MenuItem(CCSSetupConstants.MenuPathSetupWizard, priority = 10)]
-        public static void OpenSetupWizardFromMenu()
+        /// <summary>Opens the main CCS Hub window; marks session so a parallel auto-open will not spawn a second window.</summary>
+        public static void OpenHubFromMenu()
         {
             openedFromFirstRunAuto = false;
             CCSSetupState.MarkAutoOpenedThisSession();
@@ -75,6 +75,7 @@ namespace CCS.Hub.Editor
 
         public static void ShowFirstRunAuto()
         {
+            CCSSetupState.ClearPendingHubAutoOpenAfterRequiredPhase();
             openedFromFirstRunAuto = true;
             CCSSetupWindow window = GetWindow<CCSSetupWindow>(true, "CCS Hub", true);
             window.minSize = new Vector2(460f, 420f);
@@ -350,6 +351,7 @@ namespace CCS.Hub.Editor
                 EditorGUILayout.BeginHorizontal();
                 if (GUILayout.Button("Skip for now", GUILayout.Height(24f)))
                 {
+                    CCSSetupState.SetSetupSkipped(true);
                     statusLine = "Skipped. Reopen from CCS → CCS Hub anytime.";
                     Close();
                 }
@@ -572,6 +574,7 @@ namespace CCS.Hub.Editor
                 doneMessage = "Setup complete.";
             }
 
+            CCSSetupState.SetSetupCompleted(true);
             CCSEditorLog.Info($"CCS Hub: {doneMessage}");
             Close();
             EditorApplication.delayCall += CloseAllInstances;
