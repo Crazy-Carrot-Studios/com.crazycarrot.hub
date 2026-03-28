@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.11] - 2026-03-27
+
+### Removed
+
+- **CCS → CCS Hub → Reset first-run setup state** menu command and **`CCSSetupMenuItems`** (stale `EditorPrefs` “setup complete / skip” no longer used to gate behavior).
+
+### Changed
+
+- **First-run auto-open** uses **only** `SessionState` (**one main Hub auto-open per editor session** after the required pass). Persistent **`SetupCompleted` / `SetupSkipped`** keys are removed so projects are not blocked by a wrongly set flag.
+- **CCS → CCS Hub** calls **`MarkAutoOpenedThisSession()`** so choosing the menu before the required pass finishes does not spawn a second Hub when the pass completes.
+
 ## [0.2.10] - 2026-03-27
 
 ### Fixed

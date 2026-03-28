@@ -17,12 +17,7 @@ namespace CCS.Hub.Editor
         /// <summary>Top-level Unity menu: CCS (not under Tools).</summary>
         public const string MenuPathSetupWizard = "CCS/CCS Hub";
 
-        /// <summary>Clears EditorPrefs / session so first-run auto-setup can run again (this project).</summary>
-        public const string MenuPathResetFirstRunSetup = "CCS/CCS Hub/Reset first-run setup state (this project)";
-
         public const string EditorPrefsKeyPrefix = "CCS.Hub.";
-        public const string EditorPrefsSetupCompleted = "CCS.Hub.SetupCompleted";
-        public const string EditorPrefsSetupSkipped = "CCS.Hub.SetupSkipped";
 
         public const string SessionStateAutoOpenedThisSession = "CCS.Hub.SetupAutoOpenedThisSession";
         public const string SessionStatePendingInstallQueueIds = "CCS.Hub.PendingInstallQueueIds";

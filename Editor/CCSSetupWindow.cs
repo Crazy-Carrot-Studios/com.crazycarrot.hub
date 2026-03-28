@@ -5,7 +5,7 @@
 // Author: James Schilz (Developer)
 // Created: March 25, 2025
 // Last Modified: March 27, 2026
-// Summary: CCS Hub window after required deps: two optional choices — Character Controller (UPM + import) and Demigiant DOTween (bundle copy). Install completes setup and closes; optional progress window marks complete when PM/bootstrap finish.
+// Summary: CCS Hub window after required deps: two optional choices — Character Controller (UPM + import) and Demigiant DOTween (bundle copy). Install closes Hub and progress when PM/bootstrap finish.
 // Required Components: None
 // Where to Place: Packages/com.crazycarrot.hub/Editor/
 // ============================================================================
@@ -36,7 +36,6 @@ namespace CCS.Hub.Editor
 
         /// <summary>
         /// True when this window was opened by <see cref="ShowFirstRunAuto"/> (bootstrap after required deps).
-        /// On close, we persist setup completion so the Hub does not auto-open on every future project load.
         /// </summary>
         private static bool openedFromFirstRunAuto;
 
@@ -48,6 +47,7 @@ namespace CCS.Hub.Editor
         public static void OpenSetupWizardFromMenu()
         {
             openedFromFirstRunAuto = false;
+            CCSSetupState.MarkAutoOpenedThisSession();
             CCSSetupWindow window = GetWindow<CCSSetupWindow>(true, "CCS Hub", true);
             window.minSize = new Vector2(460f, 420f);
             window.Show();
@@ -233,18 +233,9 @@ namespace CCS.Hub.Editor
             EditorGUILayout.Space(4f);
             CCSHubBrandingUi.TryDrawTitleBanner("CCS Hub");
             CCSHubBrandingUi.TryDrawSectionLabel("Crazy Carrot Studios");
-            if (CCSSetupState.IsSetupCompleted())
-            {
-                EditorGUILayout.HelpBox(
-                    "Setup complete for this project. You can install more CCS modules below or reopen this window anytime from CCS / CCS Hub.",
-                    MessageType.Info);
-            }
-            else
-            {
-                EditorGUILayout.HelpBox(
-                    "Required CCS dependencies are listed from the Hub manifest and install automatically on first run. Choose optional Character Controller and/or DOTween below, then click Install. Progress uses the CCS Hub setup window; when your selections finish, setup completes and windows close automatically.",
-                    MessageType.Info);
-            }
+            EditorGUILayout.HelpBox(
+                "Required CCS dependencies come from the Hub manifest and install automatically on load. Choose optional Character Controller and/or DOTween below, then click Install. Progress uses the CCS Hub setup window; when your selections finish, windows close automatically. Reopen anytime from CCS → CCS Hub.",
+                MessageType.Info);
         }
 
         private static void DrawPostReloadBanner()
@@ -359,8 +350,7 @@ namespace CCS.Hub.Editor
                 EditorGUILayout.BeginHorizontal();
                 if (GUILayout.Button("Skip for now", GUILayout.Height(24f)))
                 {
-                    CCSSetupState.SetSetupSkipped(true);
-                    statusLine = "Skipped. Reopen from CCS / CCS Hub anytime.";
+                    statusLine = "Skipped. Reopen from CCS → CCS Hub anytime.";
                     Close();
                 }
 
@@ -562,7 +552,6 @@ namespace CCS.Hub.Editor
                 return;
             }
 
-            CCSSetupState.SetSetupCompleted(true);
             string doneMessage;
             if (skippedAlreadyImported > 0 && wantsDotween)
             {

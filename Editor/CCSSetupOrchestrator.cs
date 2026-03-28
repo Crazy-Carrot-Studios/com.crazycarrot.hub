@@ -90,8 +90,8 @@ namespace CCS.Hub.Editor
             bool sessionOpened = SessionState.GetBool(CCSSetupConstants.SessionStateAutoOpenedThisSession, false);
             string message =
                 $"CCS Hub: {context} — main Hub auto-open skipped "
-                + $"(setupCompleted={CCSSetupState.IsSetupCompleted()}, setupSkipped={CCSSetupState.IsSetupSkipped()}, autoOpenedThisSession={sessionOpened}). "
-                + "Use CCS → CCS Hub, or CCS → CCS Hub → Reset first-run setup state (this project).";
+                + $"(autoOpenedThisSession={sessionOpened}). "
+                + "Open CCS Hub from the menu (CCS → CCS Hub) if you need it this session.";
             Debug.LogWarning(message);
         }
     }

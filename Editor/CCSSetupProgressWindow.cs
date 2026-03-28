@@ -244,7 +244,6 @@ namespace CCS.Hub.Editor
                 return;
             }
 
-            CCSSetupState.SetSetupCompleted(true);
             CCSHubOptionalInstallContext.ClearOptionalUserTracking();
             Close();
             EditorApplication.delayCall += CCSSetupWindow.CloseAllInstances;

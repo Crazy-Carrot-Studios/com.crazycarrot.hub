@@ -30,8 +30,7 @@ namespace CCS.Hub.Editor
         #region Public Methods
 
         /// <summary>
-        /// Re-runs the same first-run path as editor load: refresh Package Manager list and queue required installs (main Hub opens when the pass completes).
-        /// Call after <see cref="CCSSetupState.ResetAllSetupFlagsForDevelopment"/> so a Unity restart is not required.
+        /// Re-runs the same first-run path as editor load: refresh Package Manager list and queue required installs (main Hub opens when the pass completes if it has not been opened this session).
         /// </summary>
         public static void RunFirstRunPipelineNow()
         {
@@ -58,10 +57,9 @@ namespace CCS.Hub.Editor
             else
             {
                 CCSEditorLog.Info(
-                    $"CCS Hub: Auto setup UI skipped (setupCompleted={CCSSetupState.IsSetupCompleted()}, setupSkipped={CCSSetupState.IsSetupSkipped()}, "
-                    + $"autoOpenedThisSession={SessionState.GetBool(CCSSetupConstants.SessionStateAutoOpenedThisSession, false)}). "
-                    + "Expected after you finished setup once. Use CCS → CCS Hub to open manually, or "
-                    + $"{CCSSetupConstants.MenuPathResetFirstRunSetup} to clear flags and run the pipeline again without restarting.");
+                    "CCS Hub: Auto setup UI skipped (Hub already opened this session or marked). "
+                    + $"autoOpenedThisSession={SessionState.GetBool(CCSSetupConstants.SessionStateAutoOpenedThisSession, false)}. "
+                    + "Use CCS → CCS Hub to open the window manually.");
             }
 
             CCSHubRequiredDependencyBootstrap.TryScheduleAutoInstall();

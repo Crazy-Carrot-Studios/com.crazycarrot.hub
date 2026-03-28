@@ -4,8 +4,8 @@
 // GameObject: N/A (Editor Utility)
 // Author: James Schilz (Developer)
 // Created: March 25, 2025
-// Last Modified: March 25, 2025
-// Summary: Persists first-run setup completion and skip flags; coordinates one auto-open per editor session.
+// Last Modified: March 27, 2026
+// Summary: Required-deps summary and optional prefs; coordinates one main-Hub auto-open per editor session (SessionState only — no persistent "setup finished" gate).
 // Required Components: None
 // Where to Place: Packages/com.crazycarrot.hub/Editor/
 // ============================================================================
@@ -27,19 +27,6 @@ namespace CCS.Hub.Editor
         #endregion
 
         #region Public Methods
-
-        /// <summary>
-        /// Project EditorPrefs flag: user finished optional setup. Defaults to <c>false</c> when the key is missing.
-        /// </summary>
-        public static bool IsSetupCompleted()
-        {
-            return EditorPrefs.GetBool(ProjectEditorPrefsKey("SetupCompleted"), false);
-        }
-
-        public static bool IsSetupSkipped()
-        {
-            return EditorPrefs.GetBool(ProjectEditorPrefsKey("SetupSkipped"), false);
-        }
 
         public static bool AreRequiredAutoDependenciesSatisfied()
         {
@@ -78,15 +65,10 @@ namespace CCS.Hub.Editor
         }
 
         /// <summary>
-        /// True when the Hub may auto-open on load: setup not completed/skipped, and we have not already auto-opened this editor session.
+        /// True when the main Hub may auto-open after the required pass: not yet opened (or not marked) this editor session.
         /// </summary>
         public static bool ShouldAutoOpenSetupWizard()
         {
-            if (IsSetupCompleted() || IsSetupSkipped())
-            {
-                return false;
-            }
-
             if (SessionState.GetBool(CCSSetupConstants.SessionStateAutoOpenedThisSession, false))
             {
                 return false;
@@ -98,36 +80,6 @@ namespace CCS.Hub.Editor
         public static void MarkAutoOpenedThisSession()
         {
             SessionState.SetBool(CCSSetupConstants.SessionStateAutoOpenedThisSession, true);
-        }
-
-        public static void SetSetupCompleted(bool value)
-        {
-            EditorPrefs.SetBool(ProjectEditorPrefsKey("SetupCompleted"), value);
-            CCSEditorLog.Info($"Setup completed flag set to {value} for this project.");
-        }
-
-        public static void SetSetupSkipped(bool value)
-        {
-            EditorPrefs.SetBool(ProjectEditorPrefsKey("SetupSkipped"), value);
-            CCSEditorLog.Info($"Setup skipped flag set to {value} for this project.");
-        }
-
-        /// <summary>
-        /// Clears setup-completed/skip and Hub session markers for <b>this project</b> so first-run bootstrap can run again after an editor restart.
-        /// </summary>
-        public static void ResetAllSetupFlagsForDevelopment()
-        {
-            EditorPrefs.DeleteKey(ProjectEditorPrefsKey("SetupCompleted"));
-            EditorPrefs.DeleteKey(ProjectEditorPrefsKey("SetupSkipped"));
-            EditorPrefs.DeleteKey(ProjectEditorPrefsKey(CCSSetupConstants.EditorPrefsRequiredAutoDepsSatisfiedKey));
-            EditorPrefs.DeleteKey(ProjectEditorPrefsKey(CCSSetupConstants.EditorPrefsRequiredAutoDepsSummaryKey));
-            SetSetupCompleted(false);
-            SetSetupSkipped(false);
-            SessionState.SetBool(CCSSetupConstants.SessionStateAutoOpenedThisSession, false);
-            SessionState.SetString(CCSSetupConstants.SessionStatePendingInstallQueueIds, string.Empty);
-            SessionState.SetBool(CCSSetupConstants.SessionStateAutoRequiredPassActive, false);
-            CCSEditorLog.Info(
-                "CCS Hub: First-run setup flags and session queue markers cleared for this project.");
         }
 
         #endregion
