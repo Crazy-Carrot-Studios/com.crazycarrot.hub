@@ -28,6 +28,9 @@ namespace CCS.Hub.Editor
 
         #region Public Methods
 
+        /// <summary>
+        /// Project EditorPrefs flag: user finished optional setup. Defaults to <c>false</c> when the key is missing.
+        /// </summary>
         public static bool IsSetupCompleted()
         {
             return EditorPrefs.GetBool(ProjectEditorPrefsKey("SetupCompleted"), false);
@@ -74,6 +77,9 @@ namespace CCS.Hub.Editor
             EditorPrefs.DeleteKey(ProjectEditorPrefsKey(CCSSetupConstants.EditorPrefsRequiredAutoDepsSummaryKey));
         }
 
+        /// <summary>
+        /// True when the Hub may auto-open on load: setup not completed/skipped, and we have not already auto-opened this editor session.
+        /// </summary>
         public static bool ShouldAutoOpenSetupWizard()
         {
             if (IsSetupCompleted() || IsSetupSkipped())

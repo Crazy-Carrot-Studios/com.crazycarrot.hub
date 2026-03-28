@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.3] - 2026-03-27
+
+### Fixed
+
+- **First-run Hub not opening:** `CCSSetupOrchestrator` no longer waits on `EditorApplication.isUpdating` (it often stays true during normal editor frames and could reschedule `delayCall` forever). Only `isCompiling` and the Package Manager busy check gate the open.
+- **Hub after Branding:** Subscribes to `CCSPackageInstallService.PackageInstallSucceeded` for **ccs-branding** so the optional CCS Hub window can open as soon as Branding’s `Client.Add` succeeds (Cinemachine / Input System can continue in the background).
+
+### Changed
+
+- **Diagnostics:** When auto-open is skipped, the Console logs `setupCompleted`, `setupSkipped`, and `autoOpenedThisSession` (unless the hub already opened this session, to avoid noise). `IsSetupCompleted` / `ShouldAutoOpenSetupWizard` docstrings clarify defaults.
+
 ## [0.2.2] - 2026-03-27
 
 ### Fixed
