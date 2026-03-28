@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.17] - 2026-03-27
+
+### Fixed
+
+- **Stale `pendingHubAutoOpenAfterRequiredPhase`:** Bootstrap now calls **`TryRecoverStaleFirstRunAutoOpenSessionStateIfNoHubWindow()`**, which clears both **`autoOpenedThisSession`** and **`pendingHubAutoOpenAfterRequiredPhase`** when they are set but **no** `CCSSetupWindow` exists and setup is not completed/skipped — fixing blocks where `TryBeginFirstRunHubAutoOpen` reported “pending already scheduled” after a reload/interrupted delayCall.
+
+### Added
+
+- **`SetPendingHubAutoOpenAfterRequiredPhase(true)`:** temporary **`Environment.StackTrace`** log (same idea as `MarkAutoOpenedThisSession`).
+- **`ClearPendingHubAutoOpenAfterRequiredPhase()`:** warning log with **`hadPending`** so clears are visible in the Console.
+
 ## [0.2.16] - 2026-03-27
 
 ### Fixed

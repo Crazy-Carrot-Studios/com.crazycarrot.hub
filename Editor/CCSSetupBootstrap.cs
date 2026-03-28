@@ -65,7 +65,7 @@ namespace CCS.Hub.Editor
                 + $"pendingHubAutoOpen={SessionState.GetBool(CCSSetupConstants.SessionStatePendingHubAutoOpenAfterRequiredPhase, false)}, "
                 + $"setupCompleted={CCSSetupState.IsSetupCompleted()}, "
                 + $"setupSkipped={CCSSetupState.IsSetupSkipped()}");
-            CCSSetupState.TryRecoverStaleAutoOpenedSessionIfNoHubWindow();
+            CCSSetupState.TryRecoverStaleFirstRunAutoOpenSessionStateIfNoHubWindow();
 
             CCSSetupState.ShouldAutoOpenMainHubAfterRequiredPhase(out string gateReason);
             CCSEditorLog.Info(

@@ -127,16 +127,12 @@ namespace CCS.Hub.Editor
         }
 
         /// <summary>
-        /// First-run bootstrap only: if <c>autoOpenedThisSession</c> is stuck true from a prior attempt but no Hub window exists
-        /// and setup is not finished, clear the stale flag so auto-open can run.
+        /// First-run bootstrap only: clears stale <see cref="SessionStateAutoOpenedThisSession"/> and/or
+        /// <see cref="SessionStatePendingHubAutoOpenAfterRequiredPhase"/> when no Hub window exists and first-run setup
+        /// is not finished (e.g. domain reload or lost delayCall left SessionState inconsistent).
         /// </summary>
-        public static void TryRecoverStaleAutoOpenedSessionIfNoHubWindow()
+        public static void TryRecoverStaleFirstRunAutoOpenSessionStateIfNoHubWindow()
         {
-            if (!SessionState.GetBool(CCSSetupConstants.SessionStateAutoOpenedThisSession, false))
-            {
-                return;
-            }
-
             if (IsSetupCompleted() || IsSetupSkipped())
             {
                 return;
@@ -147,16 +143,35 @@ namespace CCS.Hub.Editor
                 return;
             }
 
-            SessionState.EraseBool(CCSSetupConstants.SessionStateAutoOpenedThisSession);
-            Debug.LogWarning(
-                $"{CCSSetupConstants.HubFlowDiagnosticPrefix}Recovered stale autoOpenedThisSession "
-                + "(was true, no CCSSetupWindow, setup not completed/skipped) — cleared for first-run auto-open.");
+            if (SessionState.GetBool(CCSSetupConstants.SessionStateAutoOpenedThisSession, false))
+            {
+                SessionState.EraseBool(CCSSetupConstants.SessionStateAutoOpenedThisSession);
+                Debug.LogWarning(
+                    $"{CCSSetupConstants.HubFlowDiagnosticPrefix}Recovered stale autoOpenedThisSession "
+                    + "(no CCSSetupWindow, setup not completed/skipped).");
+            }
+
+            if (SessionState.GetBool(CCSSetupConstants.SessionStatePendingHubAutoOpenAfterRequiredPhase, false))
+            {
+                SessionState.EraseBool(CCSSetupConstants.SessionStatePendingHubAutoOpenAfterRequiredPhase);
+                Debug.LogWarning(
+                    $"{CCSSetupConstants.HubFlowDiagnosticPrefix}Recovered stale pendingHubAutoOpenAfterRequiredPhase "
+                    + "(no Hub window exists).");
+            }
         }
 
         public static void SetPendingHubAutoOpenAfterRequiredPhase(bool value)
         {
             SessionState.SetBool(CCSSetupConstants.SessionStatePendingHubAutoOpenAfterRequiredPhase, value);
-            Debug.LogWarning($"{CCSSetupConstants.HubFlowDiagnosticPrefix}PendingHubAutoOpenAfterRequiredPhase = {value}");
+            if (value)
+            {
+                Debug.LogWarning(
+                    $"{CCSSetupConstants.HubFlowDiagnosticPrefix}PendingHubAutoOpenAfterRequiredPhase set = true\n{Environment.StackTrace}");
+            }
+            else
+            {
+                Debug.LogWarning($"{CCSSetupConstants.HubFlowDiagnosticPrefix}PendingHubAutoOpenAfterRequiredPhase = false");
+            }
         }
 
         public static bool IsPendingHubAutoOpenAfterRequiredPhase()
@@ -166,7 +181,10 @@ namespace CCS.Hub.Editor
 
         public static void ClearPendingHubAutoOpenAfterRequiredPhase()
         {
+            bool had = SessionState.GetBool(CCSSetupConstants.SessionStatePendingHubAutoOpenAfterRequiredPhase, false);
             SessionState.EraseBool(CCSSetupConstants.SessionStatePendingHubAutoOpenAfterRequiredPhase);
+            Debug.LogWarning(
+                $"{CCSSetupConstants.HubFlowDiagnosticPrefix}ClearPendingHubAutoOpenAfterRequiredPhase — cleared (hadPending={had}).");
         }
 
         #endregion
