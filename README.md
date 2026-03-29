@@ -12,9 +12,11 @@ In Unity:
 
 Window → Package Manager → Add package from Git URL
 
-Paste:
+Copy this URL:
 
+```
 https://github.com/Crazy-Carrot-Studios/com.crazycarrot.hub.git
+```
 
 ---
 
