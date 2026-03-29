@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.26] - 2026-03-28
+
+### Fixed
+
+- **Editor assembly reference:** `CCS.Hub.Editor.asmdef` now references **`CCS.Hub.Runtime` by assembly name** instead of a **GUID**. GUID-based references break when the runtime `.meta` GUID differs (mirrored repos, partial copies, reimport). A broken reference prevents the Editor assembly from compiling, which disables `[InitializeOnLoad]` bootstrap, **CCS** menu items, internal **Tools** menu, progress UI, and editor logs.
+
 ## [0.2.25] - 2026-03-27
 
 ### Fixed
