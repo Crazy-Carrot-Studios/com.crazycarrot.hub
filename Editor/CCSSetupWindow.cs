@@ -5,7 +5,7 @@
 // Author: James Schilz (Developer)
 // Created: March 25, 2025
 // Last Modified: March 27, 2026
-// Summary: Single CCS Hub EditorWindow: manual and first-run auto-open reuse one instance (focus/bring forward). Optional installs and progress close behavior unchanged.
+// Summary: Minimal optional-package picker: toggles, short descriptions, Install Selected / Skip. No install progress UI (handled by CCSSetupProgressWindow).
 // Required Components: None
 // Where to Place: Packages/com.crazycarrot.hub/Editor/
 // ============================================================================
@@ -25,14 +25,10 @@ namespace CCS.Hub.Editor
         [SerializeField]
         private Vector2 scrollPosition;
 
-        [SerializeField]
-        private bool foldoutAutoInstalled = true;
-
         private readonly Dictionary<string, bool> optionalSelectionByDefinitionId = new Dictionary<string, bool>();
         private bool includeDotweenOptional;
         private string statusLine = "Ready.";
         private bool subscribedToInstallEvents;
-        private bool subscribedToEditorUpdate;
 
         /// <summary>
         /// True when the window was last shown via <see cref="ShowOrFocusFirstRunAuto"/> (orchestrated path after required deps).
@@ -89,34 +85,30 @@ namespace CCS.Hub.Editor
         {
             openedFromFirstRunAuto = false;
             CCSSetupWindow window = AcquireHubWindowForReuse(out _);
-            ApplyHubWindowLayoutAndFocus(window, firstRunAutoLifecycle: false);
+            ApplyHubWindowLayoutAndFocus(window);
         }
 
         /// <summary>Orchestrated first-run path: reuse/focus existing Hub or create one; clears pending; calls <see cref="CCSSetupState.MarkAutoOpenedThisSession"/> only after <c>Show()</c>.</summary>
         public static void ShowOrFocusFirstRunAuto()
         {
-            Debug.LogWarning($"{CCSSetupConstants.HubFlowDiagnosticPrefix}ShowOrFocusFirstRunAuto ENTRY");
             CCSSetupState.ClearPendingHubAutoOpenAfterRequiredPhase();
             openedFromFirstRunAuto = true;
 
-            bool hadExistingBeforeAcquire = GetExistingInstance() != null;
-            Debug.LogWarning(
-                $"{CCSSetupConstants.HubFlowDiagnosticPrefix}ShowOrFocusFirstRunAuto: hadExistingInstance(before acquire)={hadExistingBeforeAcquire}");
+            CCSSetupWindow window = AcquireHubWindowForReuse(out _);
 
-            CCSSetupWindow window = AcquireHubWindowForReuse(out bool createdNewInstance);
-            Debug.LogWarning(
-                $"{CCSSetupConstants.HubFlowDiagnosticPrefix}ShowOrFocusFirstRunAuto: acquire done — createdNewInstance={createdNewInstance}, reusedExisting={!createdNewInstance}");
-
-            ApplyHubWindowLayoutAndFocus(window, firstRunAutoLifecycle: true);
+            ApplyHubWindowLayoutAndFocus(window);
 
             CCSSetupState.MarkAutoOpenedThisSession();
-            Debug.LogWarning($"{CCSSetupConstants.HubFlowDiagnosticPrefix}ShowOrFocusFirstRunAuto: MarkAutoOpenedThisSession completed after Show()");
+            if (!SessionState.GetBool(CCSSetupConstants.SessionStateLoggedFirstRunAutoOpenInfoThisSession, false))
+            {
+                SessionState.SetBool(CCSSetupConstants.SessionStateLoggedFirstRunAutoOpenInfoThisSession, true);
+                CCSEditorLog.Info("CCS Hub auto-open triggered (first-run).");
+            }
         }
 
         private static CCSSetupWindow AcquireHubWindowForReuse(out bool createdNewInstance)
         {
             createdNewInstance = false;
-            Debug.LogWarning($"{CCSSetupConstants.HubFlowDiagnosticPrefix}Acquiring Hub window instance (reuse or create)");
             CCSSetupWindow[] found = Resources.FindObjectsOfTypeAll<CCSSetupWindow>();
             CCSSetupWindow keep = null;
             for (int index = 0; index < found.Length; index++)
@@ -133,7 +125,6 @@ namespace CCS.Hub.Editor
                 }
                 else
                 {
-                    Debug.LogWarning($"{CCSSetupConstants.HubFlowDiagnosticPrefix}Closing duplicate Hub window instance.");
                     candidate.Close();
                 }
             }
@@ -147,30 +138,15 @@ namespace CCS.Hub.Editor
             return GetWindow<CCSSetupWindow>(true, "CCS Hub", true);
         }
 
-        private static void ApplyHubWindowLayoutAndFocus(CCSSetupWindow window, bool firstRunAutoLifecycle)
+        private static void ApplyHubWindowLayoutAndFocus(CCSSetupWindow window)
         {
-            window.minSize = new Vector2(460f, 420f);
-            if (firstRunAutoLifecycle)
-            {
-                Debug.LogWarning($"{CCSSetupConstants.HubFlowDiagnosticPrefix}(first-run) BEFORE window.Show()");
-            }
-
+            window.minSize = new Vector2(420f, 280f);
             window.Show();
-
-            if (firstRunAutoLifecycle)
-            {
-                Debug.LogWarning($"{CCSSetupConstants.HubFlowDiagnosticPrefix}(first-run) AFTER window.Show()");
-            }
 
             EditorApplication.delayCall += () =>
             {
                 if (window != null)
                 {
-                    if (firstRunAutoLifecycle)
-                    {
-                        Debug.LogWarning($"{CCSSetupConstants.HubFlowDiagnosticPrefix}(first-run) delayCall: Focus + Repaint");
-                    }
-
                     window.Focus();
                     window.Repaint();
                 }
@@ -188,13 +164,11 @@ namespace CCS.Hub.Editor
             InitializeOptionalSelection();
             CCSPackageStatusService.RefreshInstalledPackages(() => Repaint());
             SubscribeInstallEvents();
-            SubscribeEditorUpdateRepaint();
         }
 
         private void OnDisable()
         {
             UnsubscribeInstallEvents();
-            UnsubscribeEditorUpdateRepaint();
         }
 
         private void OnDestroy()
@@ -205,62 +179,26 @@ namespace CCS.Hub.Editor
             }
         }
 
-        private void SubscribeEditorUpdateRepaint()
-        {
-            if (subscribedToEditorUpdate)
-            {
-                return;
-            }
-
-            subscribedToEditorUpdate = true;
-            EditorApplication.update += OnEditorUpdateRepaint;
-        }
-
-        private void UnsubscribeEditorUpdateRepaint()
-        {
-            if (!subscribedToEditorUpdate)
-            {
-                return;
-            }
-
-            subscribedToEditorUpdate = false;
-            EditorApplication.update -= OnEditorUpdateRepaint;
-        }
-
-        private void OnEditorUpdateRepaint()
-        {
-            if (CCSPackageInstallService.IsBusy()
-                || CCSPackageInstallService.GetInstallBatchProgressNormalized() < 0f
-                || CCSCharacterControllerAssetsBootstrap.IsBootstrapBusy)
-            {
-                Repaint();
-            }
-        }
-
         private void OnGUI()
         {
             CCSHubBrandingUi.TryBeginBody();
             try
             {
-                DrawHeader();
                 EditorGUILayout.Space(6f);
-                DrawPostReloadBanner();
-                scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
-                DrawRequiredAutoSummary();
-                if (CCSHubInstallProgressBar.ShouldShow())
-                {
-                    EditorGUILayout.Space(6f);
-                    CCSHubInstallProgressBar.Draw();
-                }
-
+                CCSHubBrandingUi.TryDrawTitleBanner("CCS Hub");
+                EditorGUILayout.LabelField("Optional packages", EditorStyles.boldLabel);
                 EditorGUILayout.Space(8f);
-                DrawOptionalToolsSection();
-                DrawDotweenOptionalSection();
+                scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
+                DrawOptionalPackageRows();
+                DrawDotweenOptionalRow();
                 EditorGUILayout.EndScrollView();
-                EditorGUILayout.Space(6f);
-                DrawToolbar();
-                EditorGUILayout.Space(4f);
-                DrawStatusBar();
+                EditorGUILayout.Space(10f);
+                DrawMinimalToolbar();
+                if (!string.IsNullOrEmpty(statusLine) && statusLine != "Ready.")
+                {
+                    EditorGUILayout.Space(4f);
+                    EditorGUILayout.HelpBox(statusLine, MessageType.None);
+                }
             }
             finally
             {
@@ -323,263 +261,62 @@ namespace CCS.Hub.Editor
             }
         }
 
-        private void DrawHeader()
+        private void DrawOptionalPackageRows()
         {
-            EditorGUILayout.Space(4f);
-            CCSHubBrandingUi.TryDrawTitleBanner("CCS Hub");
-            CCSHubBrandingUi.TryDrawSectionLabel("Crazy Carrot Studios");
-            EditorGUILayout.HelpBox(
-                "Required CCS dependencies come from the Hub manifest and install automatically on load. Choose optional Character Controller and/or DOTween below, then click Install. Progress uses the CCS Hub setup window; when your selections finish, windows close automatically. Reopen anytime from CCS → CCS Hub.",
-                MessageType.Info);
-        }
-
-        private static void DrawPostReloadBanner()
-        {
-            if (!CCSPackageInstallService.ShouldShowPostReloadInstallBanner())
-            {
-                return;
-            }
-
-            EditorGUILayout.HelpBox(
-                "Installing after reload: Package Manager installs resume in order until the queue is empty.",
-                MessageType.Warning);
-        }
-
-        private void DrawRequiredAutoSummary()
-        {
-            string summary = CCSSetupState.GetRequiredAutoDependenciesSummary();
-            bool satisfied = CCSSetupState.AreRequiredAutoDependenciesSatisfied();
-            bool busy = CCSPackageInstallService.IsBusy();
-
-            if (!satisfied && busy)
-            {
-                string active = CCSPackageInstallService.GetActiveInstallDisplayName();
-                EditorGUILayout.HelpBox(
-                    string.IsNullOrEmpty(active)
-                        ? "Installing required CCS dependencies (Branding, Input System, Cinemachine)…"
-                        : $"Installing required: {active}",
-                    MessageType.None);
-                return;
-            }
-
-            if (!satisfied && !busy)
-            {
-                EditorGUILayout.HelpBox(
-                    "Required dependencies will install automatically. If this message persists, use Package Manager or check the Console.",
-                    MessageType.Warning);
-            }
-
-            foldoutAutoInstalled = EditorGUILayout.Foldout(foldoutAutoInstalled, "Installed automatically", true);
-            if (!foldoutAutoInstalled)
-            {
-                return;
-            }
-
-            if (string.IsNullOrWhiteSpace(summary))
-            {
-                EditorGUILayout.LabelField(
-                    satisfied ? "Summary not available yet." : "Waiting for required dependency installs…",
-                    EditorStyles.miniLabel);
-                return;
-            }
-
-            EditorGUILayout.LabelField(summary, EditorStyles.wordWrappedMiniLabel);
-        }
-
-        private void DrawOptionalToolsSection()
-        {
-            CCSHubBrandingUi.TryDrawSectionLabel("Character Controller");
-            EditorGUILayout.Space(4f);
-
             foreach (CCSPackageDefinition definition in CCSPackageRegistry.EnumerateOptionalToolsForHub())
             {
-                DrawOptionalToolRow(definition);
+                if (!definition.AutoInstallSupported || definition.SourceType == CCSPackageSourceType.Manual)
+                {
+                    continue;
+                }
+
+                EditorGUILayout.BeginVertical(GUI.skin.box);
+                bool selected = optionalSelectionByDefinitionId.TryGetValue(definition.Id, out bool value) && value;
+                bool newValue = EditorGUILayout.ToggleLeft(definition.DisplayName, selected);
+                optionalSelectionByDefinitionId[definition.Id] = newValue;
+                if (!string.IsNullOrWhiteSpace(definition.Description))
+                {
+                    EditorGUILayout.LabelField(definition.Description, EditorStyles.wordWrappedMiniLabel);
+                }
+
+                EditorGUILayout.EndVertical();
+                EditorGUILayout.Space(6f);
             }
         }
 
-        private void DrawDotweenOptionalSection()
+        private void DrawDotweenOptionalRow()
         {
-            EditorGUILayout.Space(8f);
-            CCSHubBrandingUi.TryDrawSectionLabel("DOTween (Demigiant)");
-            EditorGUILayout.Space(4f);
+            EditorGUILayout.BeginVertical(GUI.skin.box);
             EditorGUI.BeginChangeCheck();
-            includeDotweenOptional = EditorGUILayout.ToggleLeft(
-                "Include Demigiant DOTween (copies into Assets/Plugins and Assets/Resources)",
-                includeDotweenOptional);
+            includeDotweenOptional = EditorGUILayout.ToggleLeft("DOTween (Demigiant)", includeDotweenOptional);
             if (EditorGUI.EndChangeCheck())
             {
                 CCSSetupState.SetIncludeDotweenOptional(includeDotweenOptional);
             }
 
-            EditorGUILayout.HelpBox(
-                "Shipped inside the Character Controller package as DemigiantDOTweenBundle~ (not imported by Unity; copied to Assets/Plugins when selected). You are responsible for complying with Demigiant / DOTween license terms.",
-                MessageType.None);
-        }
-
-        private void DrawOptionalToolRow(CCSPackageDefinition definition)
-        {
-            EditorGUILayout.BeginVertical(GUI.skin.box);
-            EditorGUILayout.LabelField(definition.DisplayName, EditorStyles.boldLabel);
-
-            bool selected = optionalSelectionByDefinitionId.TryGetValue(definition.Id, out bool value) && value;
-            bool newValue = EditorGUILayout.ToggleLeft("Include when installing", selected);
-            optionalSelectionByDefinitionId[definition.Id] = newValue;
-
-            CCSPackageInstallStatus rowStatus = GetOptionalRowStatus(definition);
-            EditorGUILayout.LabelField($"Status: {FormatStatus(rowStatus)}", EditorStyles.miniLabel);
-
+            EditorGUILayout.LabelField(
+                "Optional bundle copy into Assets/Plugins and Resources (license terms apply).",
+                EditorStyles.wordWrappedMiniLabel);
             EditorGUILayout.EndVertical();
-            EditorGUILayout.Space(4f);
         }
 
-        private void DrawToolbar()
+        private void DrawMinimalToolbar()
         {
             bool busy = CCSPackageInstallService.IsBusy() || CCSCharacterControllerAssetsBootstrap.IsBootstrapBusy;
             using (new EditorGUI.DisabledScope(busy))
             {
-                if (GUILayout.Button("Install selected", GUILayout.Height(32f)))
+                if (GUILayout.Button("Install Selected", GUILayout.Height(32f)))
                 {
                     RunInstallSelectedOptional();
                 }
 
-                EditorGUILayout.BeginHorizontal();
                 if (GUILayout.Button("Skip for now", GUILayout.Height(24f)))
                 {
                     CCSSetupState.SetSetupSkipped(true);
                     statusLine = "Skipped. Reopen from CCS → CCS Hub anytime.";
                     Close();
                 }
-
-                EditorGUILayout.EndHorizontal();
             }
-
-            if (CCSCharacterControllerAssetsBootstrap.IsBootstrapBusy)
-            {
-                EditorGUILayout.HelpBox(
-                    "Importing Character Controller into Assets/CCS/CharacterController (copying from Packages/ or removing duplicate package entry)…",
-                    MessageType.Warning);
-            }
-            else if (CCSPackageInstallService.IsBusy())
-            {
-                string active = CCSPackageInstallService.GetActiveInstallDisplayName();
-                EditorGUILayout.HelpBox(
-                    string.IsNullOrEmpty(active)
-                        ? "Package Manager is busy."
-                        : $"Installing: {active}",
-                    MessageType.Warning);
-            }
-        }
-
-        private void DrawStatusBar()
-        {
-            EditorGUILayout.HelpBox(statusLine, MessageType.None);
-        }
-
-        private static string FormatStatus(CCSPackageInstallStatus status)
-        {
-            switch (status)
-            {
-                case CCSPackageInstallStatus.Unknown:
-                    return "Unknown";
-                case CCSPackageInstallStatus.NotInstalled:
-                    return "Not installed";
-                case CCSPackageInstallStatus.Installed:
-                    return "Installed";
-                case CCSPackageInstallStatus.Pending:
-                    return "Pending";
-                case CCSPackageInstallStatus.Installing:
-                    return "Installing";
-                case CCSPackageInstallStatus.Failed:
-                    return "Failed";
-                case CCSPackageInstallStatus.Manual:
-                    return "Manual";
-                case CCSPackageInstallStatus.Skipped:
-                    return "Skipped";
-                default:
-                    return status.ToString();
-            }
-        }
-
-        private CCSPackageInstallStatus GetOptionalRowStatus(CCSPackageDefinition definition)
-        {
-            if (definition.Id == CCSSetupConstants.CharacterControllerDefinitionId)
-            {
-                if (CCSCharacterControllerAssetsBootstrap.IsFailed(definition.Id))
-                {
-                    return CCSPackageInstallStatus.Failed;
-                }
-
-                if (CCSCharacterControllerAssetsBootstrap.IsBootstrapBusy)
-                {
-                    return CCSPackageInstallStatus.Installing;
-                }
-
-                if (CCSCharacterControllerAssetsBootstrap.IsCharacterControllerProjectImportComplete())
-                {
-                    return CCSPackageInstallStatus.Installed;
-                }
-
-                if (CCSPackageInstallService.IsFailed(definition.Id))
-                {
-                    return CCSPackageInstallStatus.Failed;
-                }
-
-                if (CCSPackageInstallService.IsSkipped(definition.Id))
-                {
-                    return CCSPackageInstallStatus.Skipped;
-                }
-
-                if (CCSPackageInstallService.IsInstalling(definition.Id) || CCSPackageInstallService.IsPending(definition.Id))
-                {
-                    return CCSPackageInstallService.IsPending(definition.Id)
-                        ? CCSPackageInstallStatus.Pending
-                        : CCSPackageInstallStatus.Installing;
-                }
-
-                if (!CCSPackageStatusService.IsListReady())
-                {
-                    return CCSPackageInstallStatus.Unknown;
-                }
-
-                if (CCSPackageStatusService.IsPackageInstalled(definition.PackageId))
-                {
-                    return CCSPackageInstallStatus.Installing;
-                }
-
-                return CCSPackageInstallStatus.NotInstalled;
-            }
-
-            if (CCSPackageInstallService.IsFailed(definition.Id))
-            {
-                return CCSPackageInstallStatus.Failed;
-            }
-
-            if (CCSPackageInstallService.IsSkipped(definition.Id))
-            {
-                return CCSPackageInstallStatus.Skipped;
-            }
-
-            if (CCSPackageInstallService.IsInstalling(definition.Id))
-            {
-                return CCSPackageInstallStatus.Installing;
-            }
-
-            if (CCSPackageInstallService.IsPending(definition.Id))
-            {
-                return CCSPackageInstallStatus.Pending;
-            }
-
-            if (!CCSPackageStatusService.IsListReady())
-            {
-                return CCSPackageInstallStatus.Unknown;
-            }
-
-            if (CCSPackageStatusService.IsPackageInstalled(definition.PackageId))
-            {
-                return CCSPackageInstallStatus.Installed;
-            }
-
-            return CCSPackageInstallStatus.NotInstalled;
         }
 
         private void RunInstallSelectedOptional()
@@ -641,7 +378,8 @@ namespace CCS.Hub.Editor
                     CCSSetupConstants.CharacterControllerDefinitionId,
                     out bool ccSel)
                     && ccSel;
-                CCSHubOptionalInstallContext.BeginOptionalUserTracking(ccChecked, includeDotweenOptional);
+                List<string> optionalBatchIds = packageManagerBatch.Select(d => d.Id).ToList();
+                CCSHubOptionalInstallContext.BeginOptionalUserTracking(ccChecked, includeDotweenOptional, optionalBatchIds);
                 CCSPackageInstallService.EnqueueOptionalWithRequiredPrerequisites(packageManagerBatch);
                 CCSSetupProgressWindow.ShowOptionalPhase();
                 Close();

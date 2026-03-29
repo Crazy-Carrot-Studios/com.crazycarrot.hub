@@ -122,13 +122,10 @@ namespace CCS.Hub.Editor
         public static void MarkAutoOpenedThisSession()
         {
             SessionState.SetBool(CCSSetupConstants.SessionStateAutoOpenedThisSession, true);
-            Debug.LogWarning(
-                $"{CCSSetupConstants.HubFlowDiagnosticPrefix}MarkAutoOpenedThisSession SET (after Hub Show)\n{Environment.StackTrace}");
         }
 
         /// <summary>
-        /// First-run bootstrap only: clears stale <see cref="SessionStateAutoOpenedThisSession"/> and/or
-        /// <see cref="SessionStatePendingHubAutoOpenAfterRequiredPhase"/> when no Hub window exists and first-run setup
+        /// First-run bootstrap only: clears stale auto-open SessionState flags when no Hub window exists and first-run setup
         /// is not finished (e.g. domain reload or lost delayCall left SessionState inconsistent).
         /// </summary>
         public static void TryRecoverStaleFirstRunAutoOpenSessionStateIfNoHubWindow()
@@ -146,32 +143,21 @@ namespace CCS.Hub.Editor
             if (SessionState.GetBool(CCSSetupConstants.SessionStateAutoOpenedThisSession, false))
             {
                 SessionState.EraseBool(CCSSetupConstants.SessionStateAutoOpenedThisSession);
-                Debug.LogWarning(
-                    $"{CCSSetupConstants.HubFlowDiagnosticPrefix}Recovered stale autoOpenedThisSession "
-                    + "(no CCSSetupWindow, setup not completed/skipped).");
+                CCSEditorLog.Info(
+                    "CCS Hub: Recovered stale autoOpenedThisSession (no Hub window, setup not completed/skipped).");
             }
 
             if (SessionState.GetBool(CCSSetupConstants.SessionStatePendingHubAutoOpenAfterRequiredPhase, false))
             {
                 SessionState.EraseBool(CCSSetupConstants.SessionStatePendingHubAutoOpenAfterRequiredPhase);
-                Debug.LogWarning(
-                    $"{CCSSetupConstants.HubFlowDiagnosticPrefix}Recovered stale pendingHubAutoOpenAfterRequiredPhase "
-                    + "(no Hub window exists).");
+                CCSEditorLog.Info(
+                    "CCS Hub: Recovered stale pendingHubAutoOpenAfterRequiredPhase (no Hub window exists).");
             }
         }
 
         public static void SetPendingHubAutoOpenAfterRequiredPhase(bool value)
         {
             SessionState.SetBool(CCSSetupConstants.SessionStatePendingHubAutoOpenAfterRequiredPhase, value);
-            if (value)
-            {
-                Debug.LogWarning(
-                    $"{CCSSetupConstants.HubFlowDiagnosticPrefix}PendingHubAutoOpenAfterRequiredPhase set = true\n{Environment.StackTrace}");
-            }
-            else
-            {
-                Debug.LogWarning($"{CCSSetupConstants.HubFlowDiagnosticPrefix}PendingHubAutoOpenAfterRequiredPhase = false");
-            }
         }
 
         public static bool IsPendingHubAutoOpenAfterRequiredPhase()
@@ -181,10 +167,7 @@ namespace CCS.Hub.Editor
 
         public static void ClearPendingHubAutoOpenAfterRequiredPhase()
         {
-            bool had = SessionState.GetBool(CCSSetupConstants.SessionStatePendingHubAutoOpenAfterRequiredPhase, false);
             SessionState.EraseBool(CCSSetupConstants.SessionStatePendingHubAutoOpenAfterRequiredPhase);
-            Debug.LogWarning(
-                $"{CCSSetupConstants.HubFlowDiagnosticPrefix}ClearPendingHubAutoOpenAfterRequiredPhase — cleared (hadPending={had}).");
         }
 
         #endregion
@@ -208,6 +191,7 @@ namespace CCS.Hub.Editor
             EditorPrefs.DeleteKey(ProjectEditorPrefsKey(CCSSetupConstants.EditorPrefsIncludeDotweenOptionalKey));
 
             SessionState.EraseBool(CCSSetupConstants.SessionStateAutoOpenedThisSession);
+            SessionState.EraseBool(CCSSetupConstants.SessionStateLoggedFirstRunAutoOpenInfoThisSession);
             SessionState.EraseBool(CCSSetupConstants.SessionStatePendingHubAutoOpenAfterRequiredPhase);
             SessionState.EraseString(CCSSetupConstants.SessionStatePendingInstallQueueIds);
             SessionState.EraseBool(CCSSetupConstants.SessionStateAutoRequiredPassActive);
@@ -215,6 +199,7 @@ namespace CCS.Hub.Editor
             SessionState.EraseBool(CCSSetupConstants.SessionStateOptionalUserCcSelected);
             SessionState.EraseBool(CCSSetupConstants.SessionStateOptionalUserDotweenSelected);
             SessionState.EraseInt(CCSSetupConstants.SessionStateOptionalUserStepTotal);
+            SessionState.EraseString(CCSSetupConstants.SessionStateOptionalBatchDefinitionIds);
 
             CCSEditorLog.Info("First-run: full reset applied for this project (EditorPrefs + SessionState + install pipeline markers).");
         }

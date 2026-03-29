@@ -5,6 +5,68 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.22] - 2026-03-27
+
+### Added
+
+- **Internal testing:** `Tools → CCS Hub (Internal) → Reset first-run state for testing…` — clears Hub EditorPrefs/SessionState/install pipeline markers and reruns bootstrap (not under the public CCS menu).
+
+### Changed
+
+- **CCSSetupWindow:** Minimal Hub UI — optional toggles, one-line manifest descriptions, DOTween row, **Install Selected** / **Skip for now** only; no install progress bar, required-summary foldouts, or long help boxes.
+- **CCSSetupProgressWindow:** Required completion copy **Finished installing required items** / **→ Opening CCS Hub…**; optional completion **✔ Finished** then **~1s** hold before close; installing rows show **batch %** when Package Manager reports progress; optional phase calls **`Show()`** explicitly.
+- **CCSSetupOrchestrator:** Reduced verbose **Info** dumps on the success path.
+
+## [0.2.21] - 2026-03-27
+
+### Fixed
+
+- **Required progress before Hub (0-missing case):** When all required packages are already installed, **`ShowRequiredPhase()`** runs first, then **`RequiredAutoInstallCompleted`** is scheduled on the **next** `delayCall` so the window is never in the same frame as Hub auto-open.
+- **Queue path:** **`ShowRequiredPhase()`** always runs immediately after **`EnqueueAutoRequiredDefinitions`** (not only when `IsBusy()`).
+
+### Changed
+
+- **Progress UI:** Row status column uses **[✔] / [●] / [ ] / [✖]** with labels; required completion shows **✔ Required installs complete** and **→ Opening CCS Hub…**; optional completion shows **✔ Optional installs complete**; optional completion uses a **two-step delayCall** before close (same idea as required).
+- **README:** Locked to minimal dev-facing copy only.
+
+## [0.2.20] - 2026-03-27
+
+### Fixed
+
+- **Required completion banner timing:** `NotifyRequiredPassCompleteThenRun` now uses **two** `EditorApplication.delayCall` steps (and `Show`/`Focus`/`Repaint` on the window) so **“Required installs complete” / “Opening CCS Hub…”** can render before the window closes and `RequiredAutoInstallCompleted` runs.
+
+### Changed
+
+- **README:** Minimal dev-facing text only (no repo URL line or extra detail).
+
+## [0.2.19] - 2026-03-27
+
+### Added
+
+- **Unified setup progress window:** `CCSSetupProgressWindow` is the single EditorWindow for **required** and **optional** installs (`SetupMode.RequiredSetup` / `SetupMode.OptionalSetup`). Required mode lists every manifest required package with **Installed / Pending / Installing / Failed**, determinate Package Manager batch bar when available (otherwise reload/indeterminate), highlights the active row, then shows **Required installs complete** / **Opening CCS Hub…** before closing and firing `RequiredAutoInstallCompleted`. Optional mode lists only the current batch (session-stored definition ids + DOTween row when selected), same statuses, then **Optional installs complete** before closing.
+
+### Removed
+
+- **`CCSRequiredInstallProgressWindow`:** behavior merged into `CCSSetupProgressWindow`.
+
+### Documentation
+
+- **README:** Short dev-facing version only (install URL, behavior, manual open, optional installs, requirements, notes).
+
+## [0.2.18] - 2026-03-27
+
+### Added
+
+- **`CCSRequiredInstallProgressWindow`:** Non-modal EditorWindow shown while the automatic required UPM queue runs; updates from `CCSPackageInstallService` state; closes on the same `delayCall` **before** `RequiredAutoInstallCompleted` is invoked (and again defensively before opening the main Hub). Re-shown after domain reload when the auto-required queue is restored from session state.
+
+### Changed
+
+- **Production logging:** Removed first-run `Debug.LogWarning` spam (`CCS HUB FLOW`); retained `CCSEditorLog` / errors / gate snapshots for real blocks. Removed stack traces from `MarkAutoOpenedThisSession` and `SetPendingHubAutoOpenAfterRequiredPhase`. One **Info** line per editor session when first-run Hub auto-open runs: `CCS Hub auto-open triggered (first-run).` Stale session recovery logs as **Info** (not Warning).
+
+### Documentation
+
+- **README:** Short onboarding version (install URL, flow, manual open, optional installs, requirements, notes).
+
 ## [0.2.17] - 2026-03-27
 
 ### Fixed

@@ -9,6 +9,8 @@
 // Where to Place: Packages/com.crazycarrot.hub/Editor/
 // ============================================================================
 
+using System.Collections.Generic;
+using CCS.Hub;
 using UnityEditor;
 using UnityEngine;
 
@@ -20,12 +22,26 @@ namespace CCS.Hub.Editor
     /// </summary>
     internal static class CCSHubOptionalInstallContext
     {
-        public static void BeginOptionalUserTracking(bool characterControllerChecked, bool dotweenChecked)
+        public static void BeginOptionalUserTracking(
+            bool characterControllerChecked,
+            bool dotweenChecked,
+            IReadOnlyList<string> selectedOptionalDefinitionIds)
         {
             SessionState.SetBool(CCSSetupConstants.SessionStateOptionalUserCcSelected, characterControllerChecked);
             SessionState.SetBool(CCSSetupConstants.SessionStateOptionalUserDotweenSelected, dotweenChecked);
             int total = (characterControllerChecked ? 1 : 0) + (dotweenChecked ? 1 : 0);
             SessionState.SetInt(CCSSetupConstants.SessionStateOptionalUserStepTotal, total);
+
+            if (selectedOptionalDefinitionIds != null && selectedOptionalDefinitionIds.Count > 0)
+            {
+                SessionState.SetString(
+                    CCSSetupConstants.SessionStateOptionalBatchDefinitionIds,
+                    string.Join(",", selectedOptionalDefinitionIds));
+            }
+            else
+            {
+                SessionState.EraseString(CCSSetupConstants.SessionStateOptionalBatchDefinitionIds);
+            }
         }
 
         public static void ClearOptionalUserTracking()
@@ -33,6 +49,27 @@ namespace CCS.Hub.Editor
             SessionState.EraseInt(CCSSetupConstants.SessionStateOptionalUserStepTotal);
             SessionState.EraseBool(CCSSetupConstants.SessionStateOptionalUserCcSelected);
             SessionState.EraseBool(CCSSetupConstants.SessionStateOptionalUserDotweenSelected);
+            SessionState.EraseString(CCSSetupConstants.SessionStateOptionalBatchDefinitionIds);
+        }
+
+        /// <summary>Registry definitions in the current optional install batch (for progress window rows).</summary>
+        public static IEnumerable<CCSPackageDefinition> EnumerateCurrentOptionalBatchDefinitions()
+        {
+            string raw = SessionState.GetString(CCSSetupConstants.SessionStateOptionalBatchDefinitionIds, string.Empty);
+            if (string.IsNullOrWhiteSpace(raw))
+            {
+                yield break;
+            }
+
+            string[] tokens = raw.Split(new[] { ',' }, System.StringSplitOptions.RemoveEmptyEntries);
+            for (int index = 0; index < tokens.Length; index++)
+            {
+                string id = tokens[index].Trim();
+                if (CCSPackageRegistry.TryFindById(id, out CCSPackageDefinition definition))
+                {
+                    yield return definition;
+                }
+            }
         }
 
         public static bool TryGetUserFacingStepCounts(out int completed, out int total)

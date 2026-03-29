@@ -12,7 +12,6 @@
 
 using CCS.Hub;
 using UnityEditor;
-using UnityEngine;
 
 namespace CCS.Hub.Editor
 {
@@ -35,8 +34,6 @@ namespace CCS.Hub.Editor
             }
 
             eventHandlersRegistered = true;
-            Debug.LogWarning(
-                $"{CCSSetupConstants.HubFlowDiagnosticPrefix}Orchestrator initialized — subscribed to RequiredAutoInstallCompleted + Branding PackageInstallSucceeded.");
             CCSHubRequiredDependencyBootstrap.RequiredAutoInstallCompleted += OnRequiredAutoInstallCompleted;
             CCSPackageInstallService.PackageInstallSucceeded += OnPackageInstallSucceeded;
         }
@@ -49,9 +46,6 @@ namespace CCS.Hub.Editor
                 return;
             }
 
-            Debug.LogWarning(
-                $"{CCSSetupConstants.HubFlowDiagnosticPrefix}PackageInstallSucceeded — CCS Branding "
-                + $"(id={definition.Id}, packageId={definition.PackageId}). Scheduling first-run Hub auto-open.");
             CCSEditorLog.Info(
                 $"CCS Hub: Branding package install succeeded — attempting first-run Hub auto-open (Input System / Cinemachine may continue in queue).");
             TryBeginFirstRunHubAutoOpen("branding_install_succeeded");
@@ -59,9 +53,6 @@ namespace CCS.Hub.Editor
 
         private static void OnRequiredAutoInstallCompleted()
         {
-            CCSEditorLog.Info("CCS Hub: RequiredAutoInstallCompleted — event received.");
-            Debug.LogWarning($"{CCSSetupConstants.HubFlowDiagnosticPrefix}Orchestrator RECEIVED RequiredAutoInstallCompleted (full required pass done or all required already present).");
-            CCSEditorLog.Info(CCSSetupState.BuildFirstRunStateDump("orchestrator: before auto-open gate (required_pass_complete)").TrimEnd());
             TryBeginFirstRunHubAutoOpen("required_pass_complete");
         }
 
@@ -70,26 +61,18 @@ namespace CCS.Hub.Editor
         /// </summary>
         private static void TryBeginFirstRunHubAutoOpen(string trigger)
         {
-            Debug.LogWarning($"{CCSSetupConstants.HubFlowDiagnosticPrefix}TryBeginFirstRunHubAutoOpen trigger={trigger}");
-
             if (SessionState.GetBool(CCSSetupConstants.SessionStateAutoOpenedThisSession, false))
             {
-                Debug.LogWarning(
-                    $"{CCSSetupConstants.HubFlowDiagnosticPrefix}IGNORED (trigger={trigger}): autoOpenedThisSession already true — Hub already auto-opened this session.");
                 return;
             }
 
             if (CCSSetupState.IsPendingHubAutoOpenAfterRequiredPhase())
             {
-                Debug.LogWarning(
-                    $"{CCSSetupConstants.HubFlowDiagnosticPrefix}IGNORED (trigger={trigger}): pending Hub auto-open already scheduled — no second schedule (e.g. Branding already triggered open; Input/Cinemachine still installing).");
                 return;
             }
 
             if (!CCSSetupState.ShouldAutoOpenMainHubAfterRequiredPhase(out string blockReason))
             {
-                Debug.LogWarning(
-                    $"{CCSSetupConstants.HubFlowDiagnosticPrefix}AUTO-OPEN BLOCKED (trigger={trigger}) → gate: {blockReason}");
                 CCSSetupState.LogFirstRunStateSnapshot($"AUTO-OPEN BLOCKED ({trigger})");
                 CCSEditorLog.Info(
                     $"CCS Hub: Main Hub auto-open — BLOCKED (reason={blockReason}, trigger={trigger}). installQueueBusy="
@@ -99,7 +82,6 @@ namespace CCS.Hub.Editor
             }
 
             CCSSetupState.SetPendingHubAutoOpenAfterRequiredPhase(true);
-            Debug.LogWarning($"{CCSSetupConstants.HubFlowDiagnosticPrefix}Scheduling Hub open (delayCall) trigger={trigger}");
             CCSEditorLog.Info(
                 $"CCS Hub: Main Hub auto-open — ALLOWED (trigger={trigger}); pending flag set; scheduling open after editor is stable (not compiling).");
             EditorApplication.delayCall += WaitForStableEditorThenOpenHub;
@@ -119,12 +101,8 @@ namespace CCS.Hub.Editor
 
         private static void OpenMainHubAfterRequiredPhase()
         {
-            Debug.LogWarning($"{CCSSetupConstants.HubFlowDiagnosticPrefix}Attempting to OPEN HUB window now (OpenMainHubAfterRequiredPhase).");
-
             if (!CCSSetupState.IsPendingHubAutoOpenAfterRequiredPhase())
             {
-                Debug.LogWarning(
-                    $"{CCSSetupConstants.HubFlowDiagnosticPrefix}ABORT: pending Hub auto-open flag was cleared — no duplicate open.");
                 CCSEditorLog.Warning(
                     "CCS Hub: OpenMainHubAfterRequiredPhase — pending Hub auto-open flag was cleared; aborting (no duplicate open).");
                 return;
@@ -133,17 +111,14 @@ namespace CCS.Hub.Editor
             if (!CCSSetupState.ShouldAutoOpenMainHubAfterRequiredPhase(out string blockReason))
             {
                 CCSSetupState.ClearPendingHubAutoOpenAfterRequiredPhase();
-                Debug.LogWarning($"{CCSSetupConstants.HubFlowDiagnosticPrefix}CANCELLED before show: {blockReason}");
                 CCSEditorLog.Info($"CCS Hub: Main Hub auto-open — cancelled before show (reason={blockReason}).");
                 return;
             }
 
             CCSSetupState.ClearPendingHubAutoOpenAfterRequiredPhase();
-            CCSEditorLog.Info("CCS Hub: Opening main CCS Hub window (first-run auto — Branding and/or required pass).");
+            CCSEditorLog.Info("CCS Hub: Opening main CCS Hub window (first-run auto).");
             CCSSetupProgressWindow.CloseForFirstRunTransition();
             CCSSetupWindow.ShowOrFocusFirstRunAuto();
-            Debug.LogWarning($"{CCSSetupConstants.HubFlowDiagnosticPrefix}Hub window OPEN call executed (ShowOrFocusFirstRunAuto).");
-            CCSEditorLog.Info(CCSSetupState.BuildFirstRunStateDump("orchestrator: after ShowOrFocusFirstRunAuto").TrimEnd());
         }
     }
 }

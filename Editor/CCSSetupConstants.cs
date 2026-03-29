@@ -14,10 +14,11 @@ namespace CCS.Hub.Editor
 {
     public static class CCSSetupConstants
     {
-        /// <summary>Console prefix for first-run pipeline diagnostics (use with <c>Debug.LogWarning</c> so messages stay visible).</summary>
-        public const string HubFlowDiagnosticPrefix = "CCS HUB FLOW >>> ";
-
         public const string MenuPathOpenHub = "CCS/CCS Hub/Open CCS Hub";
+
+        /// <summary>Session flag: logged one concise first-run Hub auto-open line this editor session.</summary>
+        public const string SessionStateLoggedFirstRunAutoOpenInfoThisSession =
+            "CCS.Hub.LoggedFirstRunAutoOpenInfoThisSession";
 
         public const string EditorPrefsKeyPrefix = "CCS.Hub.";
 
@@ -49,6 +50,9 @@ namespace CCS.Hub.Editor
 
         /// <summary>Hub optional install UI: sum of user selections (1–2) for step counts on the progress window.</summary>
         public const string SessionStateOptionalUserStepTotal = "CCS.Hub.OptionalUserStepTotal";
+
+        /// <summary>Comma-separated registry definition ids for the current optional Package Manager batch (progress window rows).</summary>
+        public const string SessionStateOptionalBatchDefinitionIds = "CCS.Hub.OptionalBatchDefinitionIds";
 
         /// <summary>Registry row id for Universal RP in <see cref="CCS.Hub.CCSPackageRegistry"/>.</summary>
         public const string UnityUrpDefinitionId = "unity-urp";

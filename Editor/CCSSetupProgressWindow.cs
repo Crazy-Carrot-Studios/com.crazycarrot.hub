@@ -5,11 +5,13 @@
 // Author: James Schilz (Developer)
 // Created: March 27, 2026
 // Last Modified: March 27, 2026
-// Summary: Persistent first-run progress UI for sequential UPM installs (required and optional phases): item name, tier label, status, stage text, and overall counts with retry on failure.
+// Summary: Single EditorWindow for required (first-run) and optional setup: manifest rows with statuses, batch progress bar, completion banners before close.
 // Required Components: None
 // Where to Place: Packages/com.crazycarrot.hub/Editor/
 // ============================================================================
 
+using System;
+using System.Collections.Generic;
 using System.Text;
 using CCS.Hub;
 using UnityEditor;
@@ -18,7 +20,8 @@ using UnityEngine;
 namespace CCS.Hub.Editor
 {
     /// <summary>
-    /// Manifest-driven setup progress: required dependencies first, then optional installs after the user confirms selections in CCS Hub.
+    /// Shared setup progress UI: <see cref="SetupMode.RequiredSetup"/> (all manifest required rows) and
+    /// <see cref="SetupMode.OptionalSetup"/> (user-selected optional batch only).
     /// </summary>
     public sealed class CCSSetupProgressWindow : EditorWindow
     {
@@ -26,18 +29,34 @@ namespace CCS.Hub.Editor
 
         private static CCSSetupProgressWindow instance;
 
+        private readonly Color panelBackground = new Color(0.12f, 0.12f, 0.13f);
+        private readonly Color rowHighlight = new Color(0.22f, 0.18f, 0.14f);
+        private readonly Color accentOrange = new Color(1f, 0.48f, 0.12f);
+        private static readonly Color AccentOrangeStatic = new Color(1f, 0.48f, 0.12f);
+
         [SerializeField]
         private Vector2 scrollPosition;
 
-        private SetupPhase viewPhase = SetupPhase.RequiredDependencies;
+        private SetupMode viewMode = SetupMode.RequiredSetup;
         private bool subscribedToInstallEvents;
         private bool subscribedToEditorUpdate;
         private bool optionalSawActivity;
         private bool optionalCloseScheduled;
+        private bool requiredCompletionUi;
+        private bool optionalCompletionUi;
+        private Action pendingAfterClose;
+        private EditorApplication.CallbackFunction optionalFinishWaitTick;
+        private double optionalFinishDeadline;
 
         #endregion
 
         #region Enums
+
+        public enum SetupMode
+        {
+            RequiredSetup,
+            OptionalSetup,
+        }
 
         private enum SetupPhase
         {
@@ -49,37 +68,95 @@ namespace CCS.Hub.Editor
 
         #region Public Methods
 
-        /// <summary>Shows the progress window for the automatic required-dependency pass (first run).</summary>
+        /// <summary>Opens when the automatic required install queue starts (or resumes after domain reload).</summary>
         public static void ShowRequiredPhase()
         {
+            if (CCSSetupState.IsSetupCompleted() || CCSSetupState.IsSetupSkipped())
+            {
+                return;
+            }
+
             CCSSetupProgressWindow window = GetWindow<CCSSetupProgressWindow>(true, "CCS Hub — Setup", true);
-            window.viewPhase = SetupPhase.RequiredDependencies;
-            window.minSize = new Vector2(520f, 400f);
+            window.viewMode = SetupMode.RequiredSetup;
+            window.requiredCompletionUi = false;
+            window.optionalCompletionUi = false;
+            window.pendingAfterClose = null;
             window.optionalSawActivity = false;
             window.optionalCloseScheduled = false;
             instance = window;
+            window.minSize = new Vector2(480f, 380f);
+            window.maxSize = new Vector2(720f, 900f);
             window.Show();
             EditorApplication.delayCall += () =>
             {
-                window.Focus();
-                window.Repaint();
+                if (window != null)
+                {
+                    window.Focus();
+                    window.Repaint();
+                }
             };
         }
 
-        /// <summary>Shows the same window for optional Package Manager / bootstrap work after the user clicks Install in CCS Hub.</summary>
+        /// <summary>
+        /// After the required pass finishes: show completion text, then close, then run <paramref name="continuation"/>
+        /// (typically <c>RequiredAutoInstallCompleted</c>). Safe if the window was never shown.
+        /// </summary>
+        public static void NotifyRequiredPassCompleteThenRun(Action continuation)
+        {
+            if (instance == null || instance.MapModeToPhase() != SetupPhase.RequiredDependencies)
+            {
+                continuation?.Invoke();
+                return;
+            }
+
+            instance.requiredCompletionUi = true;
+            instance.pendingAfterClose = continuation;
+            instance.Show();
+            instance.Focus();
+            instance.Repaint();
+            CCSSetupProgressWindow win = instance;
+            // Two delayCall steps so "Required installs complete / Opening CCS Hub…" paints at least one frame before close + orchestrator.
+            EditorApplication.delayCall += () =>
+            {
+                if (win == null)
+                {
+                    continuation?.Invoke();
+                    return;
+                }
+
+                win.Repaint();
+                EditorApplication.delayCall += () =>
+                {
+                    if (win != null)
+                    {
+                        win.RunRequiredCloseThenContinuation();
+                    }
+                    else
+                    {
+                        continuation?.Invoke();
+                    }
+                };
+            };
+        }
+
+        /// <summary>Same window in optional mode after the user clicks Install selected in CCS Hub.</summary>
         public static void ShowOptionalPhase()
         {
             CCSSetupProgressWindow window = GetWindow<CCSSetupProgressWindow>(true, "CCS Hub — Setup", true);
-            window.viewPhase = SetupPhase.OptionalInstalls;
-            window.minSize = new Vector2(520f, 360f);
+            window.viewMode = SetupMode.OptionalSetup;
+            window.requiredCompletionUi = false;
+            window.optionalCompletionUi = false;
+            window.pendingAfterClose = null;
             window.optionalSawActivity = false;
             window.optionalCloseScheduled = false;
             instance = window;
+            window.minSize = new Vector2(480f, 360f);
+            window.maxSize = new Vector2(720f, 900f);
             window.Show();
             window.Focus();
         }
 
-        /// <summary>Closes the progress window before opening the main CCS Hub optional UI (first-run transition).</summary>
+        /// <summary>Closes the window if still open (e.g. safety before first-run Hub open).</summary>
         public static void CloseForFirstRunTransition()
         {
             if (instance == null)
@@ -97,7 +174,7 @@ namespace CCS.Hub.Editor
 
         private void OnEnable()
         {
-            titleContent = new GUIContent("CCS Hub — Setup");
+            titleContent = new GUIContent("Setting up Crazy Carrot Studio…");
             SubscribeInstallEvents();
             SubscribeEditorUpdate();
         }
@@ -114,50 +191,175 @@ namespace CCS.Hub.Editor
 
         private void OnGUI()
         {
-            CCSHubBrandingUi.TryBeginBody();
-            try
+            Rect full = new Rect(0f, 0f, position.width, position.height);
+            EditorGUI.DrawRect(full, panelBackground);
+
+            GUILayout.Space(10f);
+            using (new EditorGUILayout.HorizontalScope())
             {
-                DrawTitle();
-                EditorGUILayout.Space(6f);
-                DrawStageLine();
-                EditorGUILayout.Space(6f);
+                GUILayout.Space(14f);
+                using (new EditorGUILayout.VerticalScope())
+                {
+                    DrawHeader();
+                    EditorGUILayout.Space(8f);
 
-                if (CCSHubInstallProgressBar.ShouldShow())
-                {
-                    CCSHubInstallProgressBar.Draw();
-                }
-                else if (ShouldShowPulseBar())
-                {
-                    Rect rect = EditorGUILayout.GetControlRect(false, 22f);
-                    float pulse = 0.5f + 0.5f * Mathf.Sin((float)EditorApplication.timeSinceStartup * 2.5f);
-                    EditorGUI.ProgressBar(rect, Mathf.Clamp01(pulse), "Working…");
+                    if (CCSPackageInstallService.ShouldShowPostReloadInstallBanner())
+                    {
+                        EditorGUILayout.HelpBox(
+                            "Resuming after reload: installs continue one at a time until the queue is empty.",
+                            MessageType.Warning);
+                        EditorGUILayout.Space(6f);
+                    }
+
+                    if (requiredCompletionUi && MapModeToPhase() == SetupPhase.RequiredDependencies)
+                    {
+                        DrawRequiredCompleteBanner();
+                    }
+                    else if (optionalCompletionUi && MapModeToPhase() == SetupPhase.OptionalInstalls)
+                    {
+                        DrawOptionalCompleteBanner();
+                    }
+                    else
+                    {
+                        DrawSubtitle();
+                        EditorGUILayout.Space(6f);
+                        DrawPhaseProgressBar();
+                        EditorGUILayout.Space(8f);
+                        scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
+                        if (MapModeToPhase() == SetupPhase.RequiredDependencies)
+                        {
+                            DrawRequiredRows();
+                            DrawRetrySection();
+                        }
+                        else
+                        {
+                            DrawOptionalRows();
+                        }
+
+                        EditorGUILayout.EndScrollView();
+                        DrawOverallCountLine();
+                    }
                 }
 
-                EditorGUILayout.Space(8f);
-                scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
-                if (viewPhase == SetupPhase.RequiredDependencies)
-                {
-                    DrawRequiredRows();
-                }
-                else
-                {
-                    DrawOptionalSummaryRows();
-                }
-
-                EditorGUILayout.EndScrollView();
-                EditorGUILayout.Space(8f);
-                DrawOverallCount();
-                DrawRetrySection();
-            }
-            finally
-            {
-                CCSHubBrandingUi.TryEndBody();
+                GUILayout.Space(14f);
             }
         }
 
         #endregion
 
         #region Private Methods
+
+        private SetupPhase MapModeToPhase()
+        {
+            return viewMode == SetupMode.RequiredSetup
+                ? SetupPhase.RequiredDependencies
+                : SetupPhase.OptionalInstalls;
+        }
+
+        private void DrawHeader()
+        {
+            GUIStyle titleStyle = new GUIStyle(EditorStyles.boldLabel)
+            {
+                fontSize = 16,
+                normal = { textColor = accentOrange },
+            };
+            GUILayout.Label("Setting up Crazy Carrot Studio…", titleStyle);
+        }
+
+        private void DrawSubtitle()
+        {
+            string section = MapModeToPhase() == SetupPhase.RequiredDependencies ? "Required installs" : "Optional installs";
+            EditorGUILayout.LabelField(section, EditorStyles.boldLabel);
+        }
+
+        private void DrawRequiredCompleteBanner()
+        {
+            GUIStyle accent = new GUIStyle(EditorStyles.boldLabel) { normal = { textColor = accentOrange } };
+            GUILayout.Label("✔ Finished installing required items", accent);
+            EditorGUILayout.Space(4f);
+            EditorGUILayout.LabelField("→ Opening CCS Hub…", EditorStyles.wordWrappedLabel);
+        }
+
+        private void DrawOptionalCompleteBanner()
+        {
+            GUIStyle accent = new GUIStyle(EditorStyles.boldLabel) { normal = { textColor = accentOrange } };
+            GUILayout.Label("✔ Finished", accent);
+        }
+
+        private void DrawPhaseProgressBar()
+        {
+            if (MapModeToPhase() == SetupPhase.RequiredDependencies)
+            {
+                DrawRequiredOnlyProgressBar();
+            }
+            else
+            {
+                if (CCSHubInstallProgressBar.ShouldShow())
+                {
+                    CCSHubInstallProgressBar.Draw();
+                }
+                else if (ShouldShowOptionalPulseBar())
+                {
+                    Rect rect = EditorGUILayout.GetControlRect(false, 22f);
+                    float pulse = 0.5f + 0.5f * Mathf.Sin((float)EditorApplication.timeSinceStartup * 2.5f);
+                    EditorGUI.ProgressBar(rect, Mathf.Clamp01(pulse), "Working…");
+                }
+            }
+        }
+
+        private static void DrawRequiredOnlyProgressBar()
+        {
+            float normalizedPm = CCSPackageInstallService.GetInstallBatchProgressNormalized();
+            string labelPm;
+            if (normalizedPm < 0f)
+            {
+                normalizedPm = 0.5f + 0.5f * Mathf.Sin((float)EditorApplication.timeSinceStartup * 2.5f);
+                labelPm = "Resuming after reload — Package Manager…";
+            }
+            else if (CCSPackageInstallService.TryGetInstallBatchProgressCounts(out int processed, out int total) && total > 0)
+            {
+                labelPm = $"Package installs {processed} / {total}";
+            }
+            else if (CCSPackageInstallService.IsBusy())
+            {
+                labelPm = "Working…";
+            }
+            else
+            {
+                labelPm = "Done";
+                normalizedPm = 1f;
+            }
+
+            Rect rectPm = EditorGUILayout.GetControlRect(false, 22f);
+            EditorGUI.ProgressBar(rectPm, Mathf.Clamp01(normalizedPm), labelPm);
+        }
+
+        private static bool ShouldShowOptionalPulseBar()
+        {
+            return CCSPackageInstallService.IsBusy()
+                || CCSCharacterControllerAssetsBootstrap.IsBootstrapBusy
+                || CCSPackageInstallService.GetInstallBatchProgressNormalized() < 0f;
+        }
+
+        private void DrawOverallCountLine()
+        {
+            if (MapModeToPhase() == SetupPhase.RequiredDependencies)
+            {
+                if (CCSPackageInstallService.TryGetInstallBatchProgressCounts(out int processed, out int total) && total > 0)
+                {
+                    EditorGUILayout.LabelField(
+                        $"Overall: {processed} / {total} Package Manager steps.",
+                        EditorStyles.miniLabel);
+                }
+
+                return;
+            }
+
+            if (CCSHubOptionalInstallContext.TryGetUserFacingStepCounts(out int done, out int userTotal) && userTotal > 0)
+            {
+                EditorGUILayout.LabelField($"Optional setup: {done} / {userTotal} steps.", EditorStyles.miniLabel);
+            }
+        }
 
         private void SubscribeInstallEvents()
         {
@@ -212,8 +414,13 @@ namespace CCS.Hub.Editor
 
         private void OnEditorUpdate()
         {
-            if (viewPhase != SetupPhase.OptionalInstalls)
+            if (MapModeToPhase() == SetupPhase.RequiredDependencies)
             {
+                if (CCSPackageInstallService.IsBusy() || CCSPackageInstallService.GetInstallBatchProgressNormalized() < 0f)
+                {
+                    Repaint();
+                }
+
                 return;
             }
 
@@ -224,14 +431,27 @@ namespace CCS.Hub.Editor
                 optionalCloseScheduled = false;
                 Repaint();
             }
-            else if (optionalSawActivity && !optionalCloseScheduled)
+            else if (optionalSawActivity && !optionalCloseScheduled && !optionalCompletionUi)
             {
                 optionalCloseScheduled = true;
-                EditorApplication.delayCall += CloseOptionalWhenIdle;
+                EditorApplication.delayCall += BeginOptionalCompletionSequence;
             }
         }
 
-        private void CloseOptionalWhenIdle()
+        private void RunRequiredCloseThenContinuation()
+        {
+            if (this == null)
+            {
+                return;
+            }
+
+            Action cont = pendingAfterClose;
+            pendingAfterClose = null;
+            Close();
+            cont?.Invoke();
+        }
+
+        private void BeginOptionalCompletionSequence()
         {
             if (this == null)
             {
@@ -244,144 +464,199 @@ namespace CCS.Hub.Editor
                 return;
             }
 
+            optionalCompletionUi = true;
+            Show();
+            Focus();
+            Repaint();
+            optionalFinishDeadline = EditorApplication.timeSinceStartup + 1.0;
+            optionalFinishWaitTick = OptionalFinishWaitTick;
+            EditorApplication.update += optionalFinishWaitTick;
+        }
+
+        private void OptionalFinishWaitTick()
+        {
+            if (this == null)
+            {
+                UnregisterOptionalFinishWait();
+                return;
+            }
+
+            Repaint();
+            if (EditorApplication.timeSinceStartup >= optionalFinishDeadline)
+            {
+                UnregisterOptionalFinishWait();
+                FinishOptionalCompletionAndClose();
+            }
+        }
+
+        private void UnregisterOptionalFinishWait()
+        {
+            if (optionalFinishWaitTick != null)
+            {
+                EditorApplication.update -= optionalFinishWaitTick;
+                optionalFinishWaitTick = null;
+            }
+        }
+
+        private void FinishOptionalCompletionAndClose()
+        {
+            if (this == null)
+            {
+                return;
+            }
+
             CCSSetupState.SetSetupCompleted(true);
             CCSHubOptionalInstallContext.ClearOptionalUserTracking();
             Close();
             EditorApplication.delayCall += CCSSetupWindow.CloseAllInstances;
         }
 
-        private void DrawTitle()
-        {
-            if (CCSPackageInstallService.ShouldShowPostReloadInstallBanner())
-            {
-                EditorGUILayout.HelpBox(
-                    "Resuming after reload: Package Manager installs continue one at a time until the queue is empty.",
-                    MessageType.Warning);
-            }
-
-            string headline = viewPhase == SetupPhase.RequiredDependencies
-                ? "Installing required dependencies"
-                : "Installing selected optional packages";
-            EditorGUILayout.LabelField(headline, EditorStyles.boldLabel);
-            EditorGUILayout.HelpBox(
-                viewPhase == SetupPhase.RequiredDependencies
-                    ? "Packages are added one at a time via the Unity Package Manager. When this pass finishes and the editor is stable, the CCS Hub window opens for optional CCS tools."
-                    : "Optional selections install sequentially. This window closes when Package Manager and asset bootstrap steps finish.",
-                MessageType.Info);
-        }
-
-        private void DrawStageLine()
-        {
-            string stage = viewPhase == SetupPhase.RequiredDependencies
-                ? BuildRequiredStageText()
-                : BuildOptionalStageText();
-            EditorGUILayout.HelpBox(stage, MessageType.None);
-        }
-
-        private static string BuildRequiredStageText()
-        {
-            if (CCSPackageInstallService.IsBusy())
-            {
-                string active = CCSPackageInstallService.GetActiveInstallDisplayName();
-                return string.IsNullOrEmpty(active)
-                    ? "Package Manager: installing next dependency…"
-                    : $"Package Manager: installing {active}";
-            }
-
-            if (CCSSetupState.AreRequiredAutoDependenciesSatisfied())
-            {
-                return "Required dependencies satisfied. Preparing CCS Hub…";
-            }
-
-            return "Waiting for required dependency installs…";
-        }
-
-        private string BuildOptionalStageText()
-        {
-            string phase = CCSHubOptionalInstallContext.GetCurrentPhaseLabel();
-            if (!string.IsNullOrEmpty(phase))
-            {
-                return phase;
-            }
-
-            if (CCSCharacterControllerAssetsBootstrap.IsBootstrapBusy)
-            {
-                return "Importing Character Controller into Assets/CCS/CharacterController…";
-            }
-
-            if (CCSPackageInstallService.IsBusy())
-            {
-                string active = CCSPackageInstallService.GetActiveInstallDisplayName();
-                return string.IsNullOrEmpty(active)
-                    ? "Package Manager: working…"
-                    : $"Package Manager: installing {active}";
-            }
-
-            if (!optionalSawActivity)
-            {
-                return "Starting optional installs…";
-            }
-
-            return "Finishing…";
-        }
-
-        private static bool ShouldShowPulseBar()
-        {
-            return CCSPackageInstallService.IsBusy()
-                || CCSCharacterControllerAssetsBootstrap.IsBootstrapBusy
-                || CCSPackageInstallService.GetInstallBatchProgressNormalized() < 0f;
-        }
-
         private void DrawRequiredRows()
         {
             foreach (CCSPackageDefinition definition in CCSPackageRegistry.EnumerateAutoRequiredDefinitions())
             {
-                DrawManifestRow(definition, tierLabel: "Required");
+                DrawDefinitionRow(definition);
             }
         }
 
-        private void DrawOptionalSummaryRows()
+        private void DrawOptionalRows()
         {
-            foreach (CCSPackageDefinition definition in CCSPackageRegistry.EnumerateOptionalToolsForHub())
+            foreach (CCSPackageDefinition definition in CCSHubOptionalInstallContext.EnumerateCurrentOptionalBatchDefinitions())
             {
-                DrawManifestRow(definition, tierLabel: "Optional");
+                DrawDefinitionRow(definition);
             }
 
-            EditorGUILayout.Space(4f);
-            string dotweenStatus = CCSDotweenBundleInstaller.IsDemigiantDotweenPresentInProject()
-                ? "Installed"
-                : "Pending / copy when Character Controller + DOTween are selected";
-            DrawPackageRow(
-                "DOTween (Demigiant bundle copy)",
-                "Optional",
-                dotweenStatus,
-                CCSPackageInstallStatus.Unknown);
+            bool dotweenWanted = SessionState.GetBool(CCSSetupConstants.SessionStateOptionalUserDotweenSelected, false);
+            if (dotweenWanted)
+            {
+                bool dotweenInstalled = CCSDotweenBundleInstaller.IsDemigiantDotweenPresentInProject();
+                CCSPackageInstallStatus st = dotweenInstalled
+                    ? CCSPackageInstallStatus.Installed
+                    : (CCSCharacterControllerAssetsBootstrap.IsBootstrapBusy
+                        && SessionState.GetBool(CCSSetupConstants.SessionStateDotweenCopyPending, false)
+                        ? CCSPackageInstallStatus.Installing
+                        : CCSPackageInstallStatus.Pending);
+                DrawCompactRow(
+                    "DOTween (Demigiant bundle)",
+                    FormatStatusLabelWithGlyphAndPercentForDotween(st),
+                    st,
+                    highlight: st == CCSPackageInstallStatus.Installing);
+            }
         }
 
-        private void DrawManifestRow(CCSPackageDefinition definition, string tierLabel)
+        private void DrawDefinitionRow(CCSPackageDefinition definition)
         {
             CCSPackageInstallStatus status = ResolveStatus(definition);
-            string statusLabel = FormatStatusLabel(status);
-            DrawPackageRow(
-                $"{definition.DisplayName} ({definition.PackageId})",
-                tierLabel,
-                statusLabel,
-                status);
+            string label = FormatStatusLabelWithGlyphAndPercent(definition, status);
+            bool highlight = status == CCSPackageInstallStatus.Installing;
+            DrawCompactRow(definition.DisplayName, label, status, highlight);
         }
 
-        private static void DrawPackageRow(
-            string title,
-            string tierLabel,
-            string statusLabel,
-            CCSPackageInstallStatus status)
+        private void DrawCompactRow(string title, string statusLabel, CCSPackageInstallStatus status, bool highlight)
         {
-            EditorGUILayout.BeginVertical(GUI.skin.box);
-            EditorGUILayout.LabelField(title, EditorStyles.boldLabel);
-            EditorGUILayout.LabelField($"Tier: {tierLabel}", EditorStyles.miniLabel);
-            MessageType lineType = status == CCSPackageInstallStatus.Failed ? MessageType.Error : MessageType.None;
-            EditorGUILayout.HelpBox($"Status: {statusLabel}", lineType);
-            EditorGUILayout.EndVertical();
-            EditorGUILayout.Space(4f);
+            Color bg = highlight ? rowHighlight : new Color(0.18f, 0.18f, 0.19f);
+            Rect rowRect = EditorGUILayout.GetControlRect(false, 28f);
+            EditorGUI.DrawRect(rowRect, bg);
+
+            GUIStyle nameStyle = new GUIStyle(EditorStyles.label)
+            {
+                fontStyle = FontStyle.Bold,
+                normal = { textColor = Color.white * 0.92f },
+            };
+            GUIStyle statusStyle = new GUIStyle(EditorStyles.miniLabel)
+            {
+                normal = { textColor = StatusColor(status) },
+                fontStyle = FontStyle.Bold,
+            };
+
+            Rect inner = rowRect;
+            inner.xMin += 8f;
+            inner.xMax -= 8f;
+            Rect left = inner;
+            left.width = inner.width * 0.58f;
+            Rect right = inner;
+            right.xMin = left.xMax + 6f;
+
+            GUI.Label(left, title, nameStyle);
+            GUI.Label(right, statusLabel, statusStyle);
+            EditorGUILayout.Space(3f);
+        }
+
+        /// <summary>Clear status column: [✔] Installed, [●] Installing, [ ] Pending, [✖] Failed; appends batch % when PM is installing this row.</summary>
+        private static string FormatStatusLabelWithGlyph(CCSPackageInstallStatus status)
+        {
+            string word = FormatStatusLabel(status);
+            string glyph;
+            switch (status)
+            {
+                case CCSPackageInstallStatus.Installed:
+                case CCSPackageInstallStatus.Skipped:
+                    glyph = "[✔]";
+                    break;
+                case CCSPackageInstallStatus.Installing:
+                    glyph = "[●]";
+                    break;
+                case CCSPackageInstallStatus.Failed:
+                    glyph = "[✖]";
+                    break;
+                default:
+                    glyph = "[ ]";
+                    break;
+            }
+
+            return $"{glyph} {word}";
+        }
+
+        private static string FormatStatusLabelWithGlyphAndPercent(CCSPackageDefinition definition, CCSPackageInstallStatus status)
+        {
+            string line = FormatStatusLabelWithGlyph(status);
+            if (status != CCSPackageInstallStatus.Installing)
+            {
+                return line;
+            }
+
+            if (CCSPackageInstallService.IsInstalling(definition.Id))
+            {
+                float n = CCSPackageInstallService.GetInstallBatchProgressNormalized();
+                if (n >= 0f && n <= 1f)
+                {
+                    return $"{line} ({Mathf.RoundToInt(n * 100f)}%)";
+                }
+            }
+
+            return line;
+        }
+
+        private static string FormatStatusLabelWithGlyphAndPercentForDotween(CCSPackageInstallStatus status)
+        {
+            string line = FormatStatusLabelWithGlyph(status);
+            if (status != CCSPackageInstallStatus.Installing)
+            {
+                return line;
+            }
+
+            float n = CCSPackageInstallService.GetInstallBatchProgressNormalized();
+            if (n >= 0f && n <= 1f)
+            {
+                return $"{line} ({Mathf.RoundToInt(n * 100f)}%)";
+            }
+
+            return line;
+        }
+
+        private static Color StatusColor(CCSPackageInstallStatus status)
+        {
+            switch (status)
+            {
+                case CCSPackageInstallStatus.Failed:
+                    return new Color(1f, 0.45f, 0.45f);
+                case CCSPackageInstallStatus.Installing:
+                    return AccentOrangeStatic;
+                case CCSPackageInstallStatus.Installed:
+                    return new Color(0.55f, 0.9f, 0.55f);
+                default:
+                    return new Color(0.75f, 0.75f, 0.78f);
+            }
         }
 
         private static CCSPackageInstallStatus ResolveStatus(CCSPackageDefinition definition)
@@ -393,7 +668,7 @@ namespace CCS.Hub.Editor
 
             if (CCSPackageInstallService.IsSkipped(definition.Id))
             {
-                return CCSPackageInstallStatus.Skipped;
+                return CCSPackageInstallStatus.Installed;
             }
 
             if (CCSPackageInstallService.IsInstalling(definition.Id))
@@ -431,10 +706,10 @@ namespace CCS.Hub.Editor
 
             if (!CCSPackageStatusService.IsListReady())
             {
-                return CCSPackageInstallStatus.Unknown;
+                return CCSPackageInstallStatus.Pending;
             }
 
-            return CCSPackageInstallStatus.NotInstalled;
+            return CCSPackageInstallStatus.Pending;
         }
 
         private static string FormatStatusLabel(CCSPackageInstallStatus status)
@@ -442,51 +717,23 @@ namespace CCS.Hub.Editor
             switch (status)
             {
                 case CCSPackageInstallStatus.Pending:
+                case CCSPackageInstallStatus.Unknown:
+                case CCSPackageInstallStatus.NotInstalled:
                     return "Pending";
                 case CCSPackageInstallStatus.Installing:
                     return "Installing";
                 case CCSPackageInstallStatus.Installed:
+                case CCSPackageInstallStatus.Skipped:
                     return "Installed";
                 case CCSPackageInstallStatus.Failed:
                     return "Failed";
-                case CCSPackageInstallStatus.Skipped:
-                    return "Skipped";
-                case CCSPackageInstallStatus.Unknown:
-                    return "Pending";
                 default:
                     return status.ToString();
             }
         }
 
-        private void DrawOverallCount()
-        {
-            if (viewPhase == SetupPhase.RequiredDependencies)
-            {
-                if (CCSPackageInstallService.TryGetInstallBatchProgressCounts(out int processed, out int total) && total > 0)
-                {
-                    EditorGUILayout.LabelField($"Overall: {processed} / {total} steps completed (Package Manager batch).", EditorStyles.miniLabel);
-                }
-                else
-                {
-                    EditorGUILayout.LabelField("Overall: batch progress resumes after domain reload if needed.", EditorStyles.miniLabel);
-                }
-
-                return;
-            }
-
-            if (CCSHubOptionalInstallContext.TryGetUserFacingStepCounts(out int done, out int userTotal) && userTotal > 0)
-            {
-                EditorGUILayout.LabelField($"Optional setup: {done} / {userTotal} steps.", EditorStyles.miniLabel);
-            }
-        }
-
         private void DrawRetrySection()
         {
-            if (viewPhase != SetupPhase.RequiredDependencies)
-            {
-                return;
-            }
-
             StringBuilder failedNames = new StringBuilder();
             foreach (CCSPackageDefinition definition in CCSPackageRegistry.EnumerateAutoRequiredDefinitions())
             {
@@ -508,6 +755,7 @@ namespace CCS.Hub.Editor
                 return;
             }
 
+            EditorGUILayout.Space(6f);
             EditorGUILayout.HelpBox(
                 $"Failed: {failedNames}. Check the Console for Package Manager errors. You can retry one package at a time.",
                 MessageType.Warning);

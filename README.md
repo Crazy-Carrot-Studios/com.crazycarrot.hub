@@ -1,6 +1,6 @@
 # CCS Hub (com.crazycarrot.hub)
 
-Version: 0.2.21
+**Version:** 0.2.22  
 
 First-run setup and package hub for Crazy Carrot Studios Unity projects.
 
@@ -10,27 +10,25 @@ First-run setup and package hub for Crazy Carrot Studios Unity projects.
 
 In Unity:
 
-Window → Package Manager → Add package from Git URL
+**Window → Package Manager → Add package from Git URL**
 
-Copy this URL:
+Paste:
 
-```
 https://github.com/Crazy-Carrot-Studios/com.crazycarrot.hub.git
-```
 
 ---
 
 ## What it does
 
-- Installs required CCS dependencies automatically
-- Shows setup progress
-- Opens CCS Hub for optional installs
+- Installs required CCS dependencies automatically  
+- Shows setup progress  
+- Opens CCS Hub for optional installs  
 
 ---
 
 ## Open Hub Manually
 
-CCS → CCS Hub → Open CCS Hub
+CCS → CCS Hub → Open CCS Hub  
 
 ---
 
@@ -50,5 +48,5 @@ Assets/CCS/
 
 ## Notes
 
-- First-run setup runs once per project
-- Hub will not auto-open again after setup is completed or skipped
+- First-run setup runs once per project  
+- Hub will not auto-open again after setup is completed or skipped  
