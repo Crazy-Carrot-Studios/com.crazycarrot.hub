@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.27] - 2026-03-28
+
+### Fixed
+
+- **Automatic first-run bootstrap:** The pipeline no longer relies on a single `EditorApplication.delayCall` immediately after `[InitializeOnLoad]`. It now waits until **`EditorApplication.isCompiling`** is false (with a bounded timeout), and **re-schedules after `AssemblyReloadEvents.afterAssemblyReload`** so Git URL installs survive compilation/domain reload noise. Internal reset still uses **`RunFirstRunPipelineNow(true)`** unchanged (forced path, no stability wait).
+
 ## [0.2.26] - 2026-03-28
 
 ### Fixed

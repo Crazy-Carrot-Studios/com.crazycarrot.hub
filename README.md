@@ -1,6 +1,6 @@
 # CCS Hub (com.crazycarrot.hub)
 
-**Version:** 0.2.26
+**Version:** 0.2.27
 
 First-run setup and package hub for Crazy Carrot Studios Unity projects.
 
