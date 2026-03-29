@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.32] - 2026-03-28
+
+### Fixed
+
+- **First-run regression:** Automatic pipeline no longer bails out only because `SetupCompleted` / `SetupSkipped` EditorPrefs are set. `ShouldSkipAutomaticFirstRunPipeline()` now requires a **successful Package Manager list**, **no missing auto-required manifest packages**, and only then honors skip/completed. If anything required is missing, the pipeline runs.
+- **Stale wizard state:** After a successful package list refresh, `ExecuteFirstRunPipelineAfterListReady()` calls **`TryRecoverStaleWizardStateIfRequiredPackagesMissing`**, which clears completed/skipped + required-deps-satisfied prefs and session auto-open flags when the manifest says required packages are still missing, then runs **`TryScheduleAutoInstall()`** (no early return on completed/skipped).
+- **Restored required queue UI:** `RequestRequiredProgressUiForRestoredAutoRequiredQueue()` shows the required progress window whenever the list is unusable or any auto-required package is missing — not blocked by stale completed/skipped alone.
+
+### Changed
+
+- **Diagnostics:** When the automatic pipeline is skipped legitimately, an **Info** log records reason plus `setupCompleted`, `setupSkipped`, pending queue, pending Hub auto-open, `autoOpenedThisSession`, list readiness, and `missingRequired`.
+
 ## [0.2.30] - 2026-03-28
 
 ### Changed

@@ -164,6 +164,15 @@ namespace CCS.Hub.Editor
             SessionState.EraseBool(CCSSetupConstants.SessionStatePendingHubAutoOpenAfterRequiredPhase);
         }
 
+        /// <summary>
+        /// Used when required-package integrity recovery runs: clears auto-open SessionState so a new required pass can schedule Hub.
+        /// </summary>
+        public static void ClearSessionFlagsForRequiredPackageRecovery()
+        {
+            SessionState.EraseBool(CCSSetupConstants.SessionStateAutoOpenedThisSession);
+            ClearPendingHubAutoOpenAfterRequiredPhase();
+        }
+
         #endregion
 
         #region Public Methods — Reset & diagnostics

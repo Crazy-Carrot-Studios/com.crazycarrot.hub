@@ -131,21 +131,12 @@ namespace CCS.Hub.Editor
         }
 
         /// <summary>
-        /// Skips PM refresh and required evaluation when the project is already past first-run and nothing Hub-related is pending.
+        /// Skips PM refresh only when nothing is pending, the package list is trustworthy,
+        /// all manifest-required packages are installed, and the user is done with first-run (completed or skip-with-deps-OK).
+        /// Stale EditorPrefs never override a missing required package.
         /// </summary>
         private static bool ShouldSkipAutomaticFirstRunPipeline()
         {
-            // Skip / finished Hub — never re-run automatic required flow (fixes reopen after "Skip for now" or optional completion).
-            if (CCSSetupState.IsSetupSkipped())
-            {
-                return true;
-            }
-
-            if (!CCSSetupState.IsSetupCompleted())
-            {
-                return false;
-            }
-
             if (CCSPackageInstallService.IsBusy())
             {
                 return false;
@@ -162,17 +153,56 @@ namespace CCS.Hub.Editor
                 return false;
             }
 
+            if (!CCSPackageStatusService.IsListReady() || CCSPackageStatusService.IsLastPackageListRefreshFailed())
+            {
+                return false;
+            }
+
+            if (CCSHubRequiredDependencyBootstrap.HasMissingAutoRequiredPackages())
+            {
+                return false;
+            }
+
+            if (CCSSetupState.IsSetupSkipped())
+            {
+                LogAutomaticFirstRunPipelineSkippedTrue(
+                    "setup skipped and all auto-required packages are installed");
+                return true;
+            }
+
+            if (!CCSSetupState.IsSetupCompleted())
+            {
+                return false;
+            }
+
+            LogAutomaticFirstRunPipelineSkippedTrue(
+                "setup completed, all auto-required packages installed, no pending Hub work");
             return true;
+        }
+
+        private static void LogAutomaticFirstRunPipelineSkippedTrue(string reason)
+        {
+            string pendingQueue = SessionState.GetString(CCSSetupConstants.SessionStatePendingInstallQueueIds, string.Empty);
+            CCSEditorLog.Info(
+                "CCS Hub: Automatic first-run pipeline skipped — "
+                + reason
+                + $". setupCompleted={CCSSetupState.IsSetupCompleted()}"
+                + $" setupSkipped={CCSSetupState.IsSetupSkipped()}"
+                + $" pendingQueue=\"{pendingQueue}\""
+                + $" pendingHubAutoOpen={CCSSetupState.IsPendingHubAutoOpenAfterRequiredPhase()}"
+                + $" autoOpenedThisSession={SessionState.GetBool(CCSSetupConstants.SessionStateAutoOpenedThisSession, false)}"
+                + $" listReady={CCSPackageStatusService.IsListReady()}"
+                + $" listRefreshFailed={CCSPackageStatusService.IsLastPackageListRefreshFailed()}"
+                + $" missingRequired={CCSHubRequiredDependencyBootstrap.HasMissingAutoRequiredPackages()}");
         }
 
         private static void ExecuteFirstRunPipelineAfterListReady()
         {
-            if (CCSSetupState.IsSetupSkipped() || CCSSetupState.IsSetupCompleted())
-            {
-                return;
-            }
-
             CCSSetupOrchestrator.EnsureInitialized();
+
+            CCSHubRequiredDependencyBootstrap.TryRecoverStaleWizardStateIfRequiredPackagesMissing(
+                "ExecuteFirstRunPipelineAfterListReady");
+
             CCSSetupState.TryRecoverStaleFirstRunAutoOpenSessionStateIfNoHubWindow();
             CCSHubRequiredDependencyBootstrap.TryScheduleAutoInstall();
         }

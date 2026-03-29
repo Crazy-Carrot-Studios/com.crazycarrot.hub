@@ -46,6 +46,65 @@ namespace CCS.Hub.Editor
         #region Public Methods
 
         /// <summary>
+        /// True when the Package Manager list is unusable, or any auto-required manifest package is not installed.
+        /// This is the integrity check — EditorPrefs alone must not override it.
+        /// </summary>
+        public static bool HasMissingAutoRequiredPackages()
+        {
+            if (!CCSPackageStatusService.IsListReady() || CCSPackageStatusService.IsLastPackageListRefreshFailed())
+            {
+                return true;
+            }
+
+            foreach (CCSPackageDefinition definition in CCSPackageRegistry.EnumerateAutoRequiredDefinitions())
+            {
+                if (!CCSPackageStatusService.IsPackageInstalled(definition.PackageId))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// If setup was marked completed/skipped but required packages are missing (stale prefs or manual manifest edits),
+        /// clears wizard flags and session auto-open state so <see cref="TryScheduleAutoInstall"/> can run again.
+        /// </summary>
+        public static bool TryRecoverStaleWizardStateIfRequiredPackagesMissing(string context)
+        {
+            if (!CCSPackageStatusService.IsListReady() || CCSPackageStatusService.IsLastPackageListRefreshFailed())
+            {
+                return false;
+            }
+
+            if (!HasMissingAutoRequiredPackages())
+            {
+                return false;
+            }
+
+            if (!CCSSetupState.IsSetupCompleted() && !CCSSetupState.IsSetupSkipped())
+            {
+                return false;
+            }
+
+            List<string> missingLabels = BuildMissingAutoRequiredLabels();
+            CCSEditorLog.Warning(
+                "CCS Hub: Stale first-run state — "
+                + context
+                + " — setup was marked finished but required packages are missing ("
+                + string.Join(", ", missingLabels)
+                + "). Clearing completed/skipped flags and re-evaluating required installs.");
+
+            CCSSetupState.SetSetupCompleted(false);
+            CCSSetupState.SetSetupSkipped(false);
+            CCSSetupState.ClearRequiredAutoDependenciesSatisfied();
+            CCSSetupState.ClearSessionFlagsForRequiredPackageRecovery();
+            ResetRequiredBootstrapCycleGuard();
+            return true;
+        }
+
+        /// <summary>
         /// Called from <see cref="CCSSetupState.ResetAllFirstRunStateForThisProject"/> so the next <see cref="TryScheduleAutoInstall"/> can run.
         /// </summary>
         public static void ResetRequiredBootstrapCycleGuard()
@@ -59,7 +118,9 @@ namespace CCS.Hub.Editor
         /// </summary>
         public static void RequestRequiredProgressUiForRestoredAutoRequiredQueue()
         {
-            if (CCSSetupState.IsSetupCompleted() || CCSSetupState.IsSetupSkipped())
+            if (CCSPackageStatusService.IsListReady()
+                && !CCSPackageStatusService.IsLastPackageListRefreshFailed()
+                && !HasMissingAutoRequiredPackages())
             {
                 return;
             }
@@ -197,6 +258,20 @@ namespace CCS.Hub.Editor
         #endregion
 
         #region Private Methods
+
+        private static List<string> BuildMissingAutoRequiredLabels()
+        {
+            List<string> labels = new List<string>();
+            foreach (CCSPackageDefinition definition in CCSPackageRegistry.EnumerateAutoRequiredDefinitions())
+            {
+                if (!CCSPackageStatusService.IsPackageInstalled(definition.PackageId))
+                {
+                    labels.Add($"{definition.DisplayName} ({definition.PackageId})");
+                }
+            }
+
+            return labels;
+        }
 
         private static void ScheduleRequiredAutoInstallCompletedNotification()
         {
