@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.24] - 2026-03-27
+
+### Added
+
+- **Temporary Phase 1 QA diagnostics:** `CCSSetupDiagnosticTrace` (`CCS Hub DIAG:` prefix via `Debug.Log`) traces Bootstrap → PM list refresh → `TryScheduleAutoInstall` → `ShowRequiredPhase` → completion. One `Debug.LogWarning` banner reminds you to show regular Logs in the Console. Set `CCSSetupDiagnosticTrace.Enabled = false` (or remove calls) after debugging.
+
 ## [0.2.23] - 2026-03-27
 
 ### Changed

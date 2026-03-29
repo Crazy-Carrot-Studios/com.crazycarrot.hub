@@ -36,37 +36,58 @@ namespace CCS.Hub.Editor
         /// </summary>
         public static void TryScheduleAutoInstall()
         {
+            CCSSetupDiagnosticTrace.Log("Required bootstrap TryScheduleAutoInstall entry");
             CCSSetupOrchestrator.EnsureInitialized();
 
             if (!CCSPackageStatusService.IsListReady())
             {
+                CCSSetupDiagnosticTrace.Log("Blocked — Package Manager list not ready yet; deferring TryScheduleAutoInstall");
                 EditorApplication.delayCall += TryScheduleAutoInstall;
                 return;
             }
 
-            // Phase 1: one entry — show required progress as soon as we evaluate (before enqueue / zero-missing completion).
-            if (!CCSSetupState.IsSetupCompleted() && !CCSSetupState.IsSetupSkipped())
-            {
-                logRequiredPhaseLifecycle = true;
-                CCSSetupProgressWindow.ShowRequiredPhase();
-                CCSEditorLog.Info("CCS Hub: Required install phase started.");
-            }
-            else
-            {
-                logRequiredPhaseLifecycle = false;
-            }
+            CCSSetupDiagnosticTrace.LogSetupGateSnapshot();
 
             List<CCSPackageDefinition> missing = new List<CCSPackageDefinition>();
+            int requiredDefinitionCount = 0;
             foreach (CCSPackageDefinition definition in CCSPackageRegistry.EnumerateAutoRequiredDefinitions())
             {
+                requiredDefinitionCount++;
                 if (!CCSPackageStatusService.IsPackageInstalled(definition.PackageId))
                 {
                     missing.Add(definition);
                 }
             }
 
+            CCSSetupDiagnosticTrace.Log($"Required definitions count={requiredDefinitionCount}");
+            CCSSetupDiagnosticTrace.Log($"Missing required count={missing.Count}");
+
+            // Phase 1: one entry — show required progress as soon as we evaluate (before enqueue / zero-missing completion).
+            if (!CCSSetupState.IsSetupCompleted() && !CCSSetupState.IsSetupSkipped())
+            {
+                logRequiredPhaseLifecycle = true;
+                CCSSetupDiagnosticTrace.Log("Calling ShowRequiredPhase (first-run path)");
+                CCSSetupProgressWindow.ShowRequiredPhase();
+                CCSSetupDiagnosticTrace.Log("Returned from ShowRequiredPhase");
+                CCSEditorLog.Info("CCS Hub: Required install phase started.");
+            }
+            else
+            {
+                logRequiredPhaseLifecycle = false;
+                if (CCSSetupState.IsSetupCompleted())
+                {
+                    CCSSetupDiagnosticTrace.Log("Blocked ShowRequiredPhase — setupCompleted=True");
+                }
+
+                if (CCSSetupState.IsSetupSkipped())
+                {
+                    CCSSetupDiagnosticTrace.Log("Blocked ShowRequiredPhase — setupSkipped=True");
+                }
+            }
+
             if (missing.Count == 0)
             {
+                CCSSetupDiagnosticTrace.Log("Branch — all required already installed (or none in manifest); scheduling completion on delayCall");
                 string summary = BuildAlreadyPresentSummary();
                 CCSSetupState.SetRequiredAutoDependenciesSatisfied(summary);
                 // Defer completion scheduling so the window paints at least one frame before Hub auto-open (never same frame as Show).
@@ -79,6 +100,7 @@ namespace CCS.Hub.Editor
                 CCSSetupState.ClearRequiredAutoDependenciesSatisfied();
             }
 
+            CCSSetupDiagnosticTrace.Log("EnqueueAutoRequiredDefinitions (missing packages)");
             CCSPackageInstallService.EnqueueAutoRequiredDefinitions(missing);
         }
 
@@ -133,14 +155,17 @@ namespace CCS.Hub.Editor
 
         private static void ScheduleRequiredAutoInstallCompletedNotification()
         {
+            CCSSetupDiagnosticTrace.Log("ScheduleRequiredAutoInstallCompletedNotification — delayCall queued");
             EditorApplication.delayCall += () =>
             {
+                CCSSetupDiagnosticTrace.Log("Required completion — before NotifyRequiredPassCompleteThenRun");
                 CCSSetupProgressWindow.NotifyRequiredPassCompleteThenRun(NotifyRequiredAutoInstallCompletedSubscribers);
             };
         }
 
         private static void NotifyRequiredAutoInstallCompletedSubscribers()
         {
+            CCSSetupDiagnosticTrace.Log("NotifyRequiredAutoInstallCompletedSubscribers — before RequiredAutoInstallCompleted event");
             if (logRequiredPhaseLifecycle)
             {
                 CCSEditorLog.Info("CCS Hub: Required install phase complete.");

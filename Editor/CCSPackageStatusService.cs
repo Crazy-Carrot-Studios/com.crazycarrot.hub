@@ -51,10 +51,12 @@ namespace CCS.Hub.Editor
         {
             if (listRefreshInProgress)
             {
+                CCSSetupDiagnosticTrace.Log("PackageStatus RefreshInstalledPackages — refresh already in progress, chaining callback");
                 pendingOnComplete += onComplete;
                 return;
             }
 
+            CCSSetupDiagnosticTrace.Log("PackageStatus RefreshInstalledPackages — Client.List started");
             listRefreshInProgress = true;
             listReady = false;
             listRequest = Client.List(true);
@@ -89,6 +91,8 @@ namespace CCS.Hub.Editor
 
                 listRequest = null;
                 listRefreshInProgress = false;
+                CCSSetupDiagnosticTrace.Log(
+                    $"PackageStatus list refresh finished — listReady={listReady} entryCount={InstalledPackageNames.Count}");
                 onComplete?.Invoke();
                 Action chained = pendingOnComplete;
                 pendingOnComplete = null;

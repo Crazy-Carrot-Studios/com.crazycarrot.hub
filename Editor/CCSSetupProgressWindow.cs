@@ -71,8 +71,10 @@ namespace CCS.Hub.Editor
         /// <summary>Opens when the automatic required install queue starts (or resumes after domain reload).</summary>
         public static void ShowRequiredPhase()
         {
+            CCSSetupDiagnosticTrace.Log("CCSSetupProgressWindow.ShowRequiredPhase entry");
             if (CCSSetupState.IsSetupCompleted() || CCSSetupState.IsSetupSkipped())
             {
+                CCSSetupDiagnosticTrace.Log("ShowRequiredPhase skipped — setupCompleted or setupSkipped (inner gate)");
                 return;
             }
 
@@ -87,6 +89,7 @@ namespace CCS.Hub.Editor
             window.minSize = new Vector2(480f, 380f);
             window.maxSize = new Vector2(720f, 900f);
             window.Show();
+            CCSSetupDiagnosticTrace.Log("ShowRequiredPhase — GetWindow/Show completed");
             EditorApplication.delayCall += () =>
             {
                 if (window != null)
@@ -103,8 +106,11 @@ namespace CCS.Hub.Editor
         /// </summary>
         public static void NotifyRequiredPassCompleteThenRun(Action continuation)
         {
+            CCSSetupDiagnosticTrace.Log(
+                $"NotifyRequiredPassCompleteThenRun — instance={(instance == null ? "null" : "ok")} phase={(instance == null ? "n/a" : instance.MapModeToPhase().ToString())}");
             if (instance == null || instance.MapModeToPhase() != SetupPhase.RequiredDependencies)
             {
+                CCSSetupDiagnosticTrace.Log("NotifyRequiredPassCompleteThenRun — immediate continuation (no required UI)");
                 continuation?.Invoke();
                 return;
             }

@@ -17,10 +17,23 @@ namespace CCS.Hub.Editor
     [InitializeOnLoad]
     public static class CCSSetupBootstrap
     {
+        #region Variables
+
+        private static bool diagnosticBannerLogged;
+
+        #endregion
+
         #region Unity Callbacks
 
         static CCSSetupBootstrap()
         {
+            if (!diagnosticBannerLogged)
+            {
+                diagnosticBannerLogged = true;
+                CCSSetupDiagnosticTrace.LogTraceBannerOnce();
+            }
+
+            CCSSetupDiagnosticTrace.Log("Bootstrap static ctor (InitializeOnLoad — assembly loaded)");
             CCSSetupOrchestrator.EnsureInitialized();
             EditorApplication.delayCall += OnEditorDelayCall;
         }
@@ -35,6 +48,7 @@ namespace CCS.Hub.Editor
         /// </summary>
         public static void RunFirstRunPipelineNow()
         {
+            CCSSetupDiagnosticTrace.Log("Bootstrap RunFirstRunPipelineNow (requesting Package Manager list refresh)");
             CCSPackageStatusService.RefreshInstalledPackages(ExecuteFirstRunPipelineAfterListReady);
         }
 
@@ -44,13 +58,17 @@ namespace CCS.Hub.Editor
 
         private static void OnEditorDelayCall()
         {
+            CCSSetupDiagnosticTrace.Log("Bootstrap OnEditorDelayCall (first-run pipeline)");
             RunFirstRunPipelineNow();
         }
 
         private static void ExecuteFirstRunPipelineAfterListReady()
         {
+            CCSSetupDiagnosticTrace.Log("Bootstrap ExecuteFirstRunPipelineAfterListReady (PM list callback)");
             CCSSetupOrchestrator.EnsureInitialized();
+            CCSSetupDiagnosticTrace.LogSetupGateSnapshot();
             CCSSetupState.TryRecoverStaleFirstRunAutoOpenSessionStateIfNoHubWindow();
+            CCSSetupDiagnosticTrace.Log("Bootstrap invoking TryScheduleAutoInstall");
             CCSHubRequiredDependencyBootstrap.TryScheduleAutoInstall();
         }
 

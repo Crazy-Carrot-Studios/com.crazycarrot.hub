@@ -372,6 +372,7 @@ namespace CCS.Hub.Editor
                 RaiseStateChanged();
                 if (autoRequiredPassActive)
                 {
+                    CCSSetupDiagnosticTrace.Log("InstallService restore — calling ShowRequiredPhase (auto-required queue after domain reload)");
                     CCSSetupProgressWindow.ShowRequiredPhase();
                 }
             }
