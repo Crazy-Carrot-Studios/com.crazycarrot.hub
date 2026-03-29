@@ -4,8 +4,8 @@
 // GameObject: N/A (Editor Utility)
 // Author: James Schilz (Developer)
 // Created: March 27, 2026
-// Last Modified: March 27, 2026
-// Summary: Single EditorWindow for required (first-run) and optional setup: manifest rows with statuses, batch progress bar, completion banners before close.
+// Last Modified: March 28, 2026
+// Summary: Single EditorWindow for required (first-run) and optional setup: manifest rows with statuses, batch progress bar, required completion hold (~1s) then Hub handoff.
 // Required Components: None
 // Where to Place: Packages/com.crazycarrot.hub/Editor/
 // ============================================================================
@@ -48,6 +48,12 @@ namespace CCS.Hub.Editor
         private EditorApplication.CallbackFunction optionalFinishWaitTick;
         private double optionalFinishDeadline;
 
+        private EditorApplication.CallbackFunction requiredFinishWaitTick;
+        private double requiredFinishDeadline;
+
+        /// <summary>How long the required-completion banner stays visible before <see cref="NotifyRequiredPassCompleteThenRun"/> invokes its continuation.</summary>
+        private const double RequiredCompletionVisibleHoldSeconds = 1.0;
+
         #endregion
 
         #region Enums
@@ -77,6 +83,7 @@ namespace CCS.Hub.Editor
             }
 
             CCSSetupProgressWindow window = GetWindow<CCSSetupProgressWindow>(true, "CCS Hub — Setup", true);
+            window.UnregisterRequiredFinishWait();
             window.viewMode = SetupMode.RequiredSetup;
             window.requiredCompletionUi = false;
             window.optionalCompletionUi = false;
@@ -98,8 +105,9 @@ namespace CCS.Hub.Editor
         }
 
         /// <summary>
-        /// After the required pass finishes: show completion text, then close, then run <paramref name="continuation"/>
-        /// (typically <c>RequiredAutoInstallCompleted</c>). Safe if the window was never shown.
+        /// After the required pass finishes: show completion text, hold it visible (~1s), then run <paramref name="continuation"/>
+        /// (typically <c>RequiredAutoInstallCompleted</c>) without closing this window — orchestrator opens Hub, then closes progress.
+        /// Safe if the window was never shown.
         /// </summary>
         public static void NotifyRequiredPassCompleteThenRun(Action continuation)
         {
@@ -109,40 +117,22 @@ namespace CCS.Hub.Editor
                 return;
             }
 
+            instance.UnregisterRequiredFinishWait();
             instance.requiredCompletionUi = true;
             instance.pendingAfterClose = continuation;
             instance.Show();
             instance.Focus();
             instance.Repaint();
-            CCSSetupProgressWindow win = instance;
-            // Two delayCall steps so "Required installs complete / Opening CCS Hub…" paints at least one frame before close + orchestrator.
-            EditorApplication.delayCall += () =>
-            {
-                if (win == null)
-                {
-                    continuation?.Invoke();
-                    return;
-                }
-
-                win.Repaint();
-                EditorApplication.delayCall += () =>
-                {
-                    if (win != null)
-                    {
-                        win.RunRequiredCloseThenContinuation();
-                    }
-                    else
-                    {
-                        continuation?.Invoke();
-                    }
-                };
-            };
+            instance.requiredFinishDeadline = EditorApplication.timeSinceStartup + RequiredCompletionVisibleHoldSeconds;
+            instance.requiredFinishWaitTick = instance.RequiredFinishWaitTick;
+            EditorApplication.update += instance.requiredFinishWaitTick;
         }
 
         /// <summary>Same window in optional mode after the user clicks Install selected in CCS Hub.</summary>
         public static void ShowOptionalPhase()
         {
             CCSSetupProgressWindow window = GetWindow<CCSSetupProgressWindow>(true, "CCS Hub — Setup", true);
+            window.UnregisterRequiredFinishWait();
             window.viewMode = SetupMode.OptionalSetup;
             window.requiredCompletionUi = false;
             window.optionalCompletionUi = false;
@@ -181,6 +171,7 @@ namespace CCS.Hub.Editor
 
         private void OnDisable()
         {
+            UnregisterRequiredFinishWait();
             UnsubscribeInstallEvents();
             UnsubscribeEditorUpdate();
             if (instance == this)
@@ -438,16 +429,26 @@ namespace CCS.Hub.Editor
             }
         }
 
-        private void RunRequiredCloseThenContinuation()
+        private void UnregisterRequiredFinishWait()
         {
-            if (this == null)
+            if (requiredFinishWaitTick != null)
+            {
+                EditorApplication.update -= requiredFinishWaitTick;
+                requiredFinishWaitTick = null;
+            }
+        }
+
+        private void RequiredFinishWaitTick()
+        {
+            Repaint();
+            if (EditorApplication.timeSinceStartup < requiredFinishDeadline)
             {
                 return;
             }
 
+            UnregisterRequiredFinishWait();
             Action cont = pendingAfterClose;
             pendingAfterClose = null;
-            Close();
             cont?.Invoke();
         }
 

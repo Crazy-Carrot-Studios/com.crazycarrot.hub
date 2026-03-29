@@ -4,7 +4,7 @@
 // GameObject: N/A (Editor Utility)
 // Author: James Schilz (Developer)
 // Created: March 27, 2026
-// Last Modified: March 27, 2026
+// Last Modified: March 28, 2026
 // Summary: First-run Hub auto-open: (1) when CCS Branding Client.Add succeeds, (2) fallback when required pass completes. Shared gate + single schedule. EnsureInitialized before any install/event.
 // Required Components: None
 // Where to Place: Packages/com.crazycarrot.hub/Editor/
@@ -108,8 +108,9 @@ namespace CCS.Hub.Editor
             }
 
             CCSSetupState.ClearPendingHubAutoOpenAfterRequiredPhase();
-            CCSSetupProgressWindow.CloseForFirstRunTransition();
+            // Show Hub while the completion banner may still be visible; then close progress so the transition reads as "next stage" not "window disappeared first."
             CCSSetupWindow.ShowOrFocusFirstRunAuto();
+            CCSSetupProgressWindow.CloseForFirstRunTransition();
         }
     }
 }

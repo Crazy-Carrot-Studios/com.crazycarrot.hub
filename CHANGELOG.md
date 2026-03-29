@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.28] - 2026-03-28
+
+### Changed
+
+- **Required → Hub transition:** Completion banner (**Finished installing required items** / **→ Opening CCS Hub…**) stays visible for **~1 second** (`EditorApplication.timeSinceStartup`), then **`RequiredAutoInstallCompleted`** runs (no close-before-continuation). **CCSSetupOrchestrator** opens the Hub **before** closing the progress window so the handoff feels sequential, not flickery. Optional completion path unchanged.
+
 ## [0.2.27] - 2026-03-28
 
 ### Fixed
