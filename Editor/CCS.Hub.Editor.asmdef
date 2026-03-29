@@ -2,7 +2,6 @@
     "name": "CCS.Hub.Editor",
     "rootNamespace": "CCS.Hub.Editor",
     "references": [
-        "CCS.Branding.Editor",
         "CCS.Hub.Runtime"
     ],
     "includePlatforms": [
