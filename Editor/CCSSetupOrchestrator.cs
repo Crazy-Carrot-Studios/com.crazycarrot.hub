@@ -46,8 +46,6 @@ namespace CCS.Hub.Editor
                 return;
             }
 
-            CCSEditorLog.Info(
-                $"CCS Hub: Branding package install succeeded — attempting first-run Hub auto-open (Input System / Cinemachine may continue in queue).");
             TryBeginFirstRunHubAutoOpen("branding_install_succeeded");
         }
 
@@ -73,17 +71,12 @@ namespace CCS.Hub.Editor
 
             if (!CCSSetupState.ShouldAutoOpenMainHubAfterRequiredPhase(out string blockReason))
             {
-                CCSSetupState.LogFirstRunStateSnapshot($"AUTO-OPEN BLOCKED ({trigger})");
                 CCSEditorLog.Info(
-                    $"CCS Hub: Main Hub auto-open — BLOCKED (reason={blockReason}, trigger={trigger}). installQueueBusy="
-                    + CCSPackageInstallService.IsBusy()
-                    + ".");
+                    $"CCS Hub: Main Hub auto-open skipped (reason={blockReason}, trigger={trigger}).");
                 return;
             }
 
             CCSSetupState.SetPendingHubAutoOpenAfterRequiredPhase(true);
-            CCSEditorLog.Info(
-                $"CCS Hub: Main Hub auto-open — ALLOWED (trigger={trigger}); pending flag set; scheduling open after editor is stable (not compiling).");
             EditorApplication.delayCall += WaitForStableEditorThenOpenHub;
         }
 
@@ -91,7 +84,6 @@ namespace CCS.Hub.Editor
         {
             if (EditorApplication.isCompiling)
             {
-                CCSEditorLog.Info("CCS Hub: Waiting for compilation to finish before opening main Hub.");
                 EditorApplication.delayCall += WaitForStableEditorThenOpenHub;
                 return;
             }
@@ -116,7 +108,6 @@ namespace CCS.Hub.Editor
             }
 
             CCSSetupState.ClearPendingHubAutoOpenAfterRequiredPhase();
-            CCSEditorLog.Info("CCS Hub: Opening main CCS Hub window (first-run auto).");
             CCSSetupProgressWindow.CloseForFirstRunTransition();
             CCSSetupWindow.ShowOrFocusFirstRunAuto();
         }

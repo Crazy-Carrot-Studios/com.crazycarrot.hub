@@ -35,7 +35,6 @@ namespace CCS.Hub.Editor
         /// </summary>
         public static void RunFirstRunPipelineNow()
         {
-            CCSEditorLog.Info("CCS Hub: RunFirstRunPipelineNow — refreshing installed package list…");
             CCSPackageStatusService.RefreshInstalledPackages(ExecuteFirstRunPipelineAfterListReady);
         }
 
@@ -45,21 +44,13 @@ namespace CCS.Hub.Editor
 
         private static void OnEditorDelayCall()
         {
-            CCSEditorLog.Info("CCS Hub: Bootstrap — editor delayCall (InitializeOnLoad first-run pipeline).");
             RunFirstRunPipelineNow();
         }
 
         private static void ExecuteFirstRunPipelineAfterListReady()
         {
             CCSSetupOrchestrator.EnsureInitialized();
-            CCSEditorLog.Info("CCS Hub: Bootstrap — package list ready.");
             CCSSetupState.TryRecoverStaleFirstRunAutoOpenSessionStateIfNoHubWindow();
-
-            CCSSetupState.ShouldAutoOpenMainHubAfterRequiredPhase(out string gateReason);
-            CCSEditorLog.Info(
-                $"CCS Hub: First-run auto-open gate (for next required pass): {(gateReason == null ? "ALLOW" : "BLOCK (" + gateReason + ")")}. "
-                + $"installQueueBusy={CCSPackageInstallService.IsBusy()}.");
-
             CCSHubRequiredDependencyBootstrap.TryScheduleAutoInstall();
         }
 

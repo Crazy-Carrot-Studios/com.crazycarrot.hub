@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.23] - 2026-03-27
+
+### Changed
+
+- **Phase 1 required flow:** `CCSHubRequiredDependencyBootstrap.TryScheduleAutoInstall` now opens the required progress window once at the start of evaluation (when first-run setup is not completed/skipped), removes duplicate `ShowRequiredPhase` calls on the enqueue and zero-missing branches, and uses a single completion callback before `RequiredAutoInstallCompleted`. Production logging: one **Info** when the required phase starts and one **Info** when it completes (only when that UI path ran); removed the prior subscriber-invocation debug line.
+- **Bootstrap / orchestrator:** Fewer **Info** lines on the first-run pipeline and Hub auto-open path (`CCSSetupBootstrap`, `CCSSetupOrchestrator`); keep skip/cancel **Info** and real **Warning**/**Error** messages.
+
 ## [0.2.22] - 2026-03-27
 
 ### Added
