@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.29] - 2026-03-28
+
+### Fixed
+
+- **First-run reopen after Skip / optional completion:** `ShouldSkipAutomaticFirstRunPipeline()` now treats **`IsSetupSkipped()`** as a hard skip (previously only `IsSetupCompleted()` gated the automatic pipeline, so **Skip for now** still re-ran required progress after `AssemblyReloadEvents` / editor stable bootstrap). `ExecuteFirstRunPipelineAfterListReady` also no-ops if setup is completed or skipped.
+
+### Changed
+
+- **Progress UI:** Required and optional **Package Manager** rows use **manifest/batch order** so only one row is non-terminal at a time (others show **Pending** until the previous step finishes); DOTween row stays **Pending** until optional batch rows are complete.
+- **CCSSetupWindow:** Clearer subtitle, spacing, `helpBox` optional rows, separator + footer actions (Install Selected / Skip for now).
+- **Removed** `Tools → CCS Hub (Internal) → Reset first-run state…` (**`CCSSetupDevReset`** menu) from the shipping package.
+
 ## [0.2.28] - 2026-03-28
 
 ### Changed

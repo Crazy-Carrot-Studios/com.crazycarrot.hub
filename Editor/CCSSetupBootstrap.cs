@@ -135,6 +135,12 @@ namespace CCS.Hub.Editor
         /// </summary>
         private static bool ShouldSkipAutomaticFirstRunPipeline()
         {
+            // Skip / finished Hub — never re-run automatic required flow (fixes reopen after "Skip for now" or optional completion).
+            if (CCSSetupState.IsSetupSkipped())
+            {
+                return true;
+            }
+
             if (!CCSSetupState.IsSetupCompleted())
             {
                 return false;
@@ -161,6 +167,11 @@ namespace CCS.Hub.Editor
 
         private static void ExecuteFirstRunPipelineAfterListReady()
         {
+            if (CCSSetupState.IsSetupSkipped() || CCSSetupState.IsSetupCompleted())
+            {
+                return;
+            }
+
             CCSSetupOrchestrator.EnsureInitialized();
             CCSSetupState.TryRecoverStaleFirstRunAutoOpenSessionStateIfNoHubWindow();
             CCSHubRequiredDependencyBootstrap.TryScheduleAutoInstall();

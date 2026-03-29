@@ -5,13 +5,14 @@
 // Author: James Schilz (Developer)
 // Created: March 27, 2026
 // Last Modified: March 28, 2026
-// Summary: Single EditorWindow for required (first-run) and optional setup: manifest rows with statuses, batch progress bar, required completion hold (~1s) then Hub handoff.
+// Summary: Required/optional setup progress UI; sequential one-at-a-time row status; completion hold then Hub handoff.
 // Required Components: None
 // Where to Place: Packages/com.crazycarrot.hub/Editor/
 // ============================================================================
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using CCS.Hub;
 using UnityEditor;
@@ -521,7 +522,7 @@ namespace CCS.Hub.Editor
         }
 
         /// <summary>Required-row status only — optional batch uses <see cref="DrawDefinitionRow"/> instead.</summary>
-        private static CCSPackageInstallStatus GetStatusForRequiredRow(CCSPackageDefinition definition)
+        private CCSPackageInstallStatus GetStatusForRequiredRow(CCSPackageDefinition definition)
         {
             return ResolveStatus(definition);
         }
@@ -561,6 +562,11 @@ namespace CCS.Hub.Editor
                         && SessionState.GetBool(CCSSetupConstants.SessionStateDotweenCopyPending, false)
                         ? CCSPackageInstallStatus.Installing
                         : CCSPackageInstallStatus.Pending);
+                if (!AreAllOptionalBatchPackagesTerminalSuccess())
+                {
+                    st = CCSPackageInstallStatus.Pending;
+                }
+
                 DrawCompactRow(
                     "DOTween (Demigiant bundle)",
                     FormatStatusLabelWithGlyphAndPercentForDotween(st),
@@ -684,7 +690,120 @@ namespace CCS.Hub.Editor
             }
         }
 
-        private static CCSPackageInstallStatus ResolveStatus(CCSPackageDefinition definition)
+        private CCSPackageInstallStatus ResolveStatus(CCSPackageDefinition definition)
+        {
+            CCSPackageInstallStatus raw = ResolveStatusRaw(definition);
+            if (MapModeToPhase() == SetupPhase.RequiredDependencies)
+            {
+                return ApplySequentialRequiredStatus(definition, raw);
+            }
+
+            if (MapModeToPhase() == SetupPhase.OptionalInstalls)
+            {
+                return ApplySequentialOptionalBatchStatus(definition, raw);
+            }
+
+            return raw;
+        }
+
+        private static bool IsTerminalSuccessStatus(CCSPackageInstallStatus status)
+        {
+            return status == CCSPackageInstallStatus.Installed || status == CCSPackageInstallStatus.Skipped;
+        }
+
+        /// <summary>PM optional batch rows: only one non-terminal row at a time; earlier rows read as Installed, later as Pending.</summary>
+        private CCSPackageInstallStatus ApplySequentialOptionalBatchStatus(CCSPackageDefinition definition, CCSPackageInstallStatus raw)
+        {
+            List<CCSPackageDefinition> order = CCSHubOptionalInstallContext.EnumerateCurrentOptionalBatchDefinitions().ToList();
+            int idx = order.FindIndex(d => d.Id == definition.Id);
+            if (idx < 0)
+            {
+                return raw;
+            }
+
+            int firstActive = -1;
+            for (int i = 0; i < order.Count; i++)
+            {
+                CCSPackageInstallStatus r = ResolveStatusRaw(order[i]);
+                if (!IsTerminalSuccessStatus(r))
+                {
+                    firstActive = i;
+                    break;
+                }
+            }
+
+            if (firstActive < 0)
+            {
+                return raw;
+            }
+
+            if (idx < firstActive)
+            {
+                return CCSPackageInstallStatus.Installed;
+            }
+
+            if (idx > firstActive)
+            {
+                return CCSPackageInstallStatus.Pending;
+            }
+
+            return raw;
+        }
+
+        /// <summary>Required rows follow manifest order; only one non-terminal step is highlighted at a time.</summary>
+        private CCSPackageInstallStatus ApplySequentialRequiredStatus(CCSPackageDefinition definition, CCSPackageInstallStatus raw)
+        {
+            List<CCSPackageDefinition> order = EnumerateRequiredDefinitionsForProgress().ToList();
+            int idx = order.FindIndex(d => d.Id == definition.Id);
+            if (idx < 0)
+            {
+                return raw;
+            }
+
+            int firstActive = -1;
+            for (int i = 0; i < order.Count; i++)
+            {
+                CCSPackageInstallStatus r = ResolveStatusRaw(order[i]);
+                if (!IsTerminalSuccessStatus(r))
+                {
+                    firstActive = i;
+                    break;
+                }
+            }
+
+            if (firstActive < 0)
+            {
+                return raw;
+            }
+
+            if (idx < firstActive)
+            {
+                return CCSPackageInstallStatus.Installed;
+            }
+
+            if (idx > firstActive)
+            {
+                return CCSPackageInstallStatus.Pending;
+            }
+
+            return raw;
+        }
+
+        private bool AreAllOptionalBatchPackagesTerminalSuccess()
+        {
+            foreach (CCSPackageDefinition def in CCSHubOptionalInstallContext.EnumerateCurrentOptionalBatchDefinitions())
+            {
+                if (!IsTerminalSuccessStatus(ResolveStatusRaw(def)))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>Raw install/presence status before sequential presentation rules.</summary>
+        private static CCSPackageInstallStatus ResolveStatusRaw(CCSPackageDefinition definition)
         {
             if (CCSPackageInstallService.IsFailed(definition.Id))
             {
@@ -693,7 +812,7 @@ namespace CCS.Hub.Editor
 
             if (CCSPackageInstallService.IsSkipped(definition.Id))
             {
-                return CCSPackageInstallStatus.Installed;
+                return CCSPackageInstallStatus.Skipped;
             }
 
             if (CCSPackageInstallService.IsInstalling(definition.Id))

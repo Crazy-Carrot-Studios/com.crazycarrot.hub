@@ -4,8 +4,8 @@
 // GameObject: N/A (Editor Utility)
 // Author: James Schilz (Developer)
 // Created: March 25, 2025
-// Last Modified: March 27, 2026
-// Summary: Minimal optional-package picker: toggles, short descriptions, Install Selected / Skip. No install progress UI (handled by CCSSetupProgressWindow).
+// Last Modified: March 28, 2026
+// Summary: Optional-package decision screen: clear hierarchy, polished actions; progress lives in CCSSetupProgressWindow.
 // Required Components: None
 // Where to Place: Packages/com.crazycarrot.hub/Editor/
 // ============================================================================
@@ -140,7 +140,7 @@ namespace CCS.Hub.Editor
 
         private static void ApplyHubWindowLayoutAndFocus(CCSSetupWindow window)
         {
-            window.minSize = new Vector2(420f, 280f);
+            window.minSize = new Vector2(460f, 320f);
             window.Show();
 
             EditorApplication.delayCall += () =>
@@ -184,19 +184,31 @@ namespace CCS.Hub.Editor
             CCSHubBrandingUi.TryBeginBody();
             try
             {
-                EditorGUILayout.Space(6f);
+                EditorGUILayout.Space(10f);
                 CCSHubBrandingUi.TryDrawTitleBanner("CCS Hub");
+                EditorGUILayout.Space(4f);
+                GUIStyle subtitleStyle = new GUIStyle(EditorStyles.wordWrappedLabel)
+                {
+                    normal = { textColor = new Color(0.75f, 0.75f, 0.78f) },
+                    fontSize = 11,
+                };
+                EditorGUILayout.LabelField("Choose optional packages for this project. Required dependencies were handled in the previous step.", subtitleStyle);
+                EditorGUILayout.Space(14f);
+
                 EditorGUILayout.LabelField("Optional packages", EditorStyles.boldLabel);
-                EditorGUILayout.Space(8f);
-                scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
+                EditorGUILayout.Space(6f);
+
+                scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition, GUILayout.ExpandHeight(true));
                 DrawOptionalPackageRows();
                 DrawDotweenOptionalRow();
                 EditorGUILayout.EndScrollView();
-                EditorGUILayout.Space(10f);
+
+                EditorGUILayout.Space(12f);
                 DrawMinimalToolbar();
+
                 if (!string.IsNullOrEmpty(statusLine) && statusLine != "Ready.")
                 {
-                    EditorGUILayout.Space(4f);
+                    EditorGUILayout.Space(8f);
                     EditorGUILayout.HelpBox(statusLine, MessageType.None);
                 }
             }
@@ -270,51 +282,65 @@ namespace CCS.Hub.Editor
                     continue;
                 }
 
-                EditorGUILayout.BeginVertical(GUI.skin.box);
+                EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+                EditorGUILayout.Space(4f);
                 bool selected = optionalSelectionByDefinitionId.TryGetValue(definition.Id, out bool value) && value;
-                bool newValue = EditorGUILayout.ToggleLeft(definition.DisplayName, selected);
+                bool newValue = EditorGUILayout.ToggleLeft(definition.DisplayName, selected, EditorStyles.boldLabel);
                 optionalSelectionByDefinitionId[definition.Id] = newValue;
                 if (!string.IsNullOrWhiteSpace(definition.Description))
                 {
+                    EditorGUILayout.Space(2f);
                     EditorGUILayout.LabelField(definition.Description, EditorStyles.wordWrappedMiniLabel);
                 }
 
+                EditorGUILayout.Space(4f);
                 EditorGUILayout.EndVertical();
-                EditorGUILayout.Space(6f);
+                EditorGUILayout.Space(8f);
             }
         }
 
         private void DrawDotweenOptionalRow()
         {
-            EditorGUILayout.BeginVertical(GUI.skin.box);
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+            EditorGUILayout.Space(4f);
             EditorGUI.BeginChangeCheck();
-            includeDotweenOptional = EditorGUILayout.ToggleLeft("DOTween (Demigiant)", includeDotweenOptional);
+            includeDotweenOptional = EditorGUILayout.ToggleLeft("DOTween (Demigiant)", includeDotweenOptional, EditorStyles.boldLabel);
             if (EditorGUI.EndChangeCheck())
             {
                 CCSSetupState.SetIncludeDotweenOptional(includeDotweenOptional);
             }
 
+            EditorGUILayout.Space(2f);
             EditorGUILayout.LabelField(
-                "Optional bundle copy into Assets/Plugins and Resources (license terms apply).",
+                "Copies the Demigiant bundle into Assets/Plugins and Resources (see vendor license).",
                 EditorStyles.wordWrappedMiniLabel);
+            EditorGUILayout.Space(4f);
             EditorGUILayout.EndVertical();
         }
 
         private void DrawMinimalToolbar()
         {
             bool busy = CCSPackageInstallService.IsBusy() || CCSCharacterControllerAssetsBootstrap.IsBootstrapBusy;
-            using (new EditorGUI.DisabledScope(busy))
+            Rect line = EditorGUILayout.GetControlRect(false, 1f);
+            EditorGUI.DrawRect(line, new Color(0.28f, 0.28f, 0.3f));
+            EditorGUILayout.Space(12f);
+            using (new EditorGUILayout.HorizontalScope())
             {
-                if (GUILayout.Button("Install Selected", GUILayout.Height(32f)))
+                using (new EditorGUI.DisabledScope(busy))
                 {
-                    RunInstallSelectedOptional();
-                }
+                    GUIStyle primary = new GUIStyle(GUI.skin.button) { fontStyle = FontStyle.Bold, fixedHeight = 34f };
+                    if (GUILayout.Button("Install Selected", primary, GUILayout.ExpandWidth(true)))
+                    {
+                        RunInstallSelectedOptional();
+                    }
 
-                if (GUILayout.Button("Skip for now", GUILayout.Height(24f)))
-                {
-                    CCSSetupState.SetSetupSkipped(true);
-                    statusLine = "Skipped. Reopen from CCS → CCS Hub anytime.";
-                    Close();
+                    GUILayout.Space(12f);
+                    if (GUILayout.Button("Skip for now", GUILayout.Height(28f), GUILayout.Width(118f)))
+                    {
+                        CCSSetupState.SetSetupSkipped(true);
+                        statusLine = "Skipped. Open CCS → CCS Hub → Open CCS Hub anytime.";
+                        Close();
+                    }
                 }
             }
         }
