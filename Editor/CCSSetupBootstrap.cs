@@ -10,6 +10,7 @@
 // Where to Place: Packages/com.crazycarrot.hub/Editor/
 // ============================================================================
 
+using CCS.Hub;
 using UnityEditor;
 
 namespace CCS.Hub.Editor
@@ -17,23 +18,10 @@ namespace CCS.Hub.Editor
     [InitializeOnLoad]
     public static class CCSSetupBootstrap
     {
-        #region Variables
-
-        private static bool diagnosticBannerLogged;
-
-        #endregion
-
         #region Unity Callbacks
 
         static CCSSetupBootstrap()
         {
-            if (!diagnosticBannerLogged)
-            {
-                diagnosticBannerLogged = true;
-                CCSSetupDiagnosticTrace.LogTraceBannerOnce();
-            }
-
-            CCSSetupDiagnosticTrace.Log("Bootstrap static ctor (InitializeOnLoad — assembly loaded)");
             CCSSetupOrchestrator.EnsureInitialized();
             EditorApplication.delayCall += OnEditorDelayCall;
         }
@@ -46,9 +34,14 @@ namespace CCS.Hub.Editor
         /// Same entry point as editor load: refresh Package Manager list, then <see cref="CCSHubRequiredDependencyBootstrap.TryScheduleAutoInstall"/>.
         /// Use after <see cref="CCSSetupState.ResetAllFirstRunStateForThisProject"/> to rerun without restarting Unity.
         /// </summary>
-        public static void RunFirstRunPipelineNow()
+        /// <param name="forceRun">When <c>true</c>, skips the idle early-out (internal reset / forced pipeline).</param>
+        public static void RunFirstRunPipelineNow(bool forceRun = false)
         {
-            CCSSetupDiagnosticTrace.Log("Bootstrap RunFirstRunPipelineNow (requesting Package Manager list refresh)");
+            if (!forceRun && ShouldSkipAutomaticFirstRunPipeline())
+            {
+                return;
+            }
+
             CCSPackageStatusService.RefreshInstalledPackages(ExecuteFirstRunPipelineAfterListReady);
         }
 
@@ -56,19 +49,44 @@ namespace CCS.Hub.Editor
 
         #region Private Methods
 
+        /// <summary>
+        /// Skips PM refresh and required evaluation when the project is already past first-run and nothing Hub-related is pending.
+        /// </summary>
+        private static bool ShouldSkipAutomaticFirstRunPipeline()
+        {
+            if (!CCSSetupState.IsSetupCompleted())
+            {
+                return false;
+            }
+
+            if (CCSPackageInstallService.IsBusy())
+            {
+                return false;
+            }
+
+            if (CCSSetupState.IsPendingHubAutoOpenAfterRequiredPhase())
+            {
+                return false;
+            }
+
+            string pendingQueue = SessionState.GetString(CCSSetupConstants.SessionStatePendingInstallQueueIds, string.Empty);
+            if (!string.IsNullOrWhiteSpace(pendingQueue))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
         private static void OnEditorDelayCall()
         {
-            CCSSetupDiagnosticTrace.Log("Bootstrap OnEditorDelayCall (first-run pipeline)");
-            RunFirstRunPipelineNow();
+            RunFirstRunPipelineNow(forceRun: false);
         }
 
         private static void ExecuteFirstRunPipelineAfterListReady()
         {
-            CCSSetupDiagnosticTrace.Log("Bootstrap ExecuteFirstRunPipelineAfterListReady (PM list callback)");
             CCSSetupOrchestrator.EnsureInitialized();
-            CCSSetupDiagnosticTrace.LogSetupGateSnapshot();
             CCSSetupState.TryRecoverStaleFirstRunAutoOpenSessionStateIfNoHubWindow();
-            CCSSetupDiagnosticTrace.Log("Bootstrap invoking TryScheduleAutoInstall");
             CCSHubRequiredDependencyBootstrap.TryScheduleAutoInstall();
         }
 

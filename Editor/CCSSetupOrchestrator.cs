@@ -34,7 +34,6 @@ namespace CCS.Hub.Editor
             }
 
             eventHandlersRegistered = true;
-            CCSSetupDiagnosticTrace.Log("Orchestrator EnsureInitialized — subscribed to RequiredAutoInstallCompleted + Branding PackageInstallSucceeded");
             CCSHubRequiredDependencyBootstrap.RequiredAutoInstallCompleted += OnRequiredAutoInstallCompleted;
             CCSPackageInstallService.PackageInstallSucceeded += OnPackageInstallSucceeded;
         }
@@ -52,7 +51,6 @@ namespace CCS.Hub.Editor
 
         private static void OnRequiredAutoInstallCompleted()
         {
-            CCSSetupDiagnosticTrace.Log("Orchestrator OnRequiredAutoInstallCompleted (event fired)");
             TryBeginFirstRunHubAutoOpen("required_pass_complete");
         }
 
@@ -61,28 +59,23 @@ namespace CCS.Hub.Editor
         /// </summary>
         private static void TryBeginFirstRunHubAutoOpen(string trigger)
         {
-            CCSSetupDiagnosticTrace.Log($"Orchestrator TryBeginFirstRunHubAutoOpen trigger={trigger}");
             if (SessionState.GetBool(CCSSetupConstants.SessionStateAutoOpenedThisSession, false))
             {
-                CCSSetupDiagnosticTrace.Log("Blocked Hub auto-open — autoOpenedThisSession=True");
                 return;
             }
 
             if (CCSSetupState.IsPendingHubAutoOpenAfterRequiredPhase())
             {
-                CCSSetupDiagnosticTrace.Log("Blocked Hub auto-open — pendingHubAutoOpenAfterRequiredPhase already set");
                 return;
             }
 
             if (!CCSSetupState.ShouldAutoOpenMainHubAfterRequiredPhase(out string blockReason))
             {
-                CCSSetupDiagnosticTrace.Log($"Blocked Hub auto-open — gate={blockReason}");
                 CCSEditorLog.Info(
                     $"CCS Hub: Main Hub auto-open skipped (reason={blockReason}, trigger={trigger}).");
                 return;
             }
 
-            CCSSetupDiagnosticTrace.Log("Orchestrator scheduling Hub open after editor stable (delayCall)");
             CCSSetupState.SetPendingHubAutoOpenAfterRequiredPhase(true);
             EditorApplication.delayCall += WaitForStableEditorThenOpenHub;
         }
@@ -115,7 +108,6 @@ namespace CCS.Hub.Editor
             }
 
             CCSSetupState.ClearPendingHubAutoOpenAfterRequiredPhase();
-            CCSSetupDiagnosticTrace.Log("OpenMainHubAfterRequiredPhase — closing progress window and showing Hub");
             CCSSetupProgressWindow.CloseForFirstRunTransition();
             CCSSetupWindow.ShowOrFocusFirstRunAuto();
         }

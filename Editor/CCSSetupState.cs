@@ -181,6 +181,7 @@ namespace CCS.Hub.Editor
         /// </summary>
         public static void ResetAllFirstRunStateForThisProject()
         {
+            CCSHubRequiredDependencyBootstrap.ResetRequiredBootstrapCycleGuard();
             CCSPackageInstallService.ResetPipelineStateForFirstRunStateReset();
             CCSHubOptionalInstallContext.ClearOptionalUserTracking();
 
@@ -229,6 +230,7 @@ namespace CCS.Hub.Editor
             builder.AppendLine($"  Session optionalUserDotweenSelected: {SessionState.GetBool(CCSSetupConstants.SessionStateOptionalUserDotweenSelected, false)}");
             builder.AppendLine($"  Session optionalUserStepTotal: {SessionState.GetInt(CCSSetupConstants.SessionStateOptionalUserStepTotal, 0)}");
             builder.AppendLine($"  Package list ready: {CCSPackageStatusService.IsListReady()}");
+            builder.AppendLine($"  Package list refresh failed (last): {CCSPackageStatusService.IsLastPackageListRefreshFailed()}");
             builder.AppendLine($"  Install queue busy: {CCSPackageInstallService.IsBusy()}");
             ShouldAutoOpenMainHubAfterRequiredPhase(out string blockReason);
             builder.AppendLine(

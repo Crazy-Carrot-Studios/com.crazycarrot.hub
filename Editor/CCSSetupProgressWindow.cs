@@ -71,10 +71,8 @@ namespace CCS.Hub.Editor
         /// <summary>Opens when the automatic required install queue starts (or resumes after domain reload).</summary>
         public static void ShowRequiredPhase()
         {
-            CCSSetupDiagnosticTrace.Log("CCSSetupProgressWindow.ShowRequiredPhase entry");
             if (CCSSetupState.IsSetupCompleted() || CCSSetupState.IsSetupSkipped())
             {
-                CCSSetupDiagnosticTrace.Log("ShowRequiredPhase skipped — setupCompleted or setupSkipped (inner gate)");
                 return;
             }
 
@@ -89,7 +87,6 @@ namespace CCS.Hub.Editor
             window.minSize = new Vector2(480f, 380f);
             window.maxSize = new Vector2(720f, 900f);
             window.Show();
-            CCSSetupDiagnosticTrace.Log("ShowRequiredPhase — GetWindow/Show completed");
             EditorApplication.delayCall += () =>
             {
                 if (window != null)
@@ -106,11 +103,8 @@ namespace CCS.Hub.Editor
         /// </summary>
         public static void NotifyRequiredPassCompleteThenRun(Action continuation)
         {
-            CCSSetupDiagnosticTrace.Log(
-                $"NotifyRequiredPassCompleteThenRun — instance={(instance == null ? "null" : "ok")} phase={(instance == null ? "n/a" : instance.MapModeToPhase().ToString())}");
             if (instance == null || instance.MapModeToPhase() != SetupPhase.RequiredDependencies)
             {
-                CCSSetupDiagnosticTrace.Log("NotifyRequiredPassCompleteThenRun — immediate continuation (no required UI)");
                 continuation?.Invoke();
                 return;
             }
@@ -517,13 +511,37 @@ namespace CCS.Hub.Editor
             EditorApplication.delayCall += CCSSetupWindow.CloseAllInstances;
         }
 
+        #region Required phase — manifest rows & status
+
+        /// <summary>Single source for required-mode rows (manifest auto-required definitions only).</summary>
+        private static IEnumerable<CCSPackageDefinition> EnumerateRequiredDefinitionsForProgress()
+        {
+            return CCSPackageRegistry.EnumerateAutoRequiredDefinitions();
+        }
+
+        /// <summary>Required-row status only — optional batch uses <see cref="DrawDefinitionRow"/> instead.</summary>
+        private static CCSPackageInstallStatus GetStatusForRequiredRow(CCSPackageDefinition definition)
+        {
+            return ResolveStatus(definition);
+        }
+
         private void DrawRequiredRows()
         {
-            foreach (CCSPackageDefinition definition in CCSPackageRegistry.EnumerateAutoRequiredDefinitions())
+            foreach (CCSPackageDefinition definition in EnumerateRequiredDefinitionsForProgress())
             {
-                DrawDefinitionRow(definition);
+                DrawDefinitionRowForRequiredPhase(definition);
             }
         }
+
+        private void DrawDefinitionRowForRequiredPhase(CCSPackageDefinition definition)
+        {
+            CCSPackageInstallStatus status = GetStatusForRequiredRow(definition);
+            string label = FormatStatusLabelWithGlyphAndPercent(definition, status);
+            bool highlight = status == CCSPackageInstallStatus.Installing;
+            DrawCompactRow(definition.DisplayName, label, status, highlight);
+        }
+
+        #endregion
 
         private void DrawOptionalRows()
         {

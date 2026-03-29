@@ -4,7 +4,7 @@
 // GameObject: N/A (Editor Utility)
 // Author: James Schilz (Developer)
 // Created: March 25, 2025
-// Last Modified: March 25, 2025
+// Last Modified: March 27, 2026
 // Summary: Loads Package Manager package names and resolves whether registry package IDs are installed.
 // Required Components: None
 // Where to Place: Packages/com.crazycarrot.hub/Editor/
@@ -25,16 +25,35 @@ namespace CCS.Hub.Editor
         private static ListRequest listRequest;
         private static readonly HashSet<string> InstalledPackageNames = new HashSet<string>();
         private static bool listRefreshInProgress;
+        /// <summary>True only after a <em>successful</em> Client.List — never after a failed refresh.</summary>
         private static bool listReady;
+
+        /// <summary>Set when the last completed refresh failed; cleared when a new refresh starts or succeeds.</summary>
+        private static bool lastListRefreshFailed;
         private static Action pendingOnComplete;
 
         #endregion
 
         #region Public Methods
 
+        /// <summary>True only when the last package list refresh completed successfully with usable data.</summary>
         public static bool IsListReady()
         {
             return listReady;
+        }
+
+        /// <summary>True while a Client.List request is in flight.</summary>
+        public static bool IsListRefreshInProgress()
+        {
+            return listRefreshInProgress;
+        }
+
+        /// <summary>
+        /// True when the most recent list refresh finished with an error. Required-flow callers must not treat package membership as known.
+        /// </summary>
+        public static bool IsLastPackageListRefreshFailed()
+        {
+            return lastListRefreshFailed;
         }
 
         public static bool IsPackageInstalled(string packageName)
@@ -51,14 +70,13 @@ namespace CCS.Hub.Editor
         {
             if (listRefreshInProgress)
             {
-                CCSSetupDiagnosticTrace.Log("PackageStatus RefreshInstalledPackages — refresh already in progress, chaining callback");
                 pendingOnComplete += onComplete;
                 return;
             }
 
-            CCSSetupDiagnosticTrace.Log("PackageStatus RefreshInstalledPackages — Client.List started");
             listRefreshInProgress = true;
             listReady = false;
+            lastListRefreshFailed = false;
             listRequest = Client.List(true);
             EditorApplication.update -= OnEditorUpdate;
             EditorApplication.update += OnEditorUpdate;
@@ -80,19 +98,19 @@ namespace CCS.Hub.Editor
                     }
 
                     listReady = true;
+                    lastListRefreshFailed = false;
                     CCSEditorLog.Info($"Package list refresh succeeded with {InstalledPackageNames.Count} entries.");
                 }
                 else
                 {
                     string message = listRequest.Error != null ? listRequest.Error.message : "Unknown error.";
                     CCSEditorLog.Warning($"Package list refresh failed: {message}");
-                    listReady = true;
+                    listReady = false;
+                    lastListRefreshFailed = true;
                 }
 
                 listRequest = null;
                 listRefreshInProgress = false;
-                CCSSetupDiagnosticTrace.Log(
-                    $"PackageStatus list refresh finished — listReady={listReady} entryCount={InstalledPackageNames.Count}");
                 onComplete?.Invoke();
                 Action chained = pendingOnComplete;
                 pendingOnComplete = null;

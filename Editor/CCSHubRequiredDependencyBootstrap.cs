@@ -21,76 +21,129 @@ namespace CCS.Hub.Editor
 {
     public static class CCSHubRequiredDependencyBootstrap
     {
+        #region Variables
+
         /// <summary>
         /// When true, <see cref="TryScheduleAutoInstall"/> showed the required progress window and we pair one completion <see cref="CCSEditorLog.Info"/> with it.
         /// </summary>
         private static bool logRequiredPhaseLifecycle;
 
         /// <summary>
+        /// Prevents overlapping required evaluations (delayCall re-entry, duplicate bootstrap, etc.). Cleared when the required pass completes or on explicit reset.
+        /// </summary>
+        private static bool requiredBootstrapCycleActive;
+
+        private static int tryScheduleDeferralCount;
+
+        private const int MaxTryScheduleDeferrals = 64;
+
+        #endregion
+
+        #region Events
+
+        /// <summary>
         /// Fired after required dependency auto-install has finished (queue drained or all already present). Dispatched on a delay call.
         /// </summary>
         public static event Action RequiredAutoInstallCompleted;
+
+        #endregion
+
+        #region Public Methods
+
+        /// <summary>
+        /// Called from <see cref="CCSSetupState.ResetAllFirstRunStateForThisProject"/> so the next <see cref="TryScheduleAutoInstall"/> can run.
+        /// </summary>
+        public static void ResetRequiredBootstrapCycleGuard()
+        {
+            requiredBootstrapCycleActive = false;
+            tryScheduleDeferralCount = 0;
+        }
+
+        /// <summary>
+        /// Single entry for showing required progress UI after <see cref="CCSPackageInstallService"/> restores an auto-required queue from session (domain reload). Does not start evaluation.
+        /// </summary>
+        public static void RequestRequiredProgressUiForRestoredAutoRequiredQueue()
+        {
+            if (CCSSetupState.IsSetupCompleted() || CCSSetupState.IsSetupSkipped())
+            {
+                return;
+            }
+
+            CCSSetupProgressWindow.ShowRequiredPhase();
+        }
 
         /// <summary>
         /// Called from <see cref="CCSSetupBootstrap"/> after Package Manager list refresh.
         /// </summary>
         public static void TryScheduleAutoInstall()
         {
-            CCSSetupDiagnosticTrace.Log("Required bootstrap TryScheduleAutoInstall entry");
             CCSSetupOrchestrator.EnsureInitialized();
 
             if (!CCSPackageStatusService.IsListReady())
             {
-                CCSSetupDiagnosticTrace.Log("Blocked — Package Manager list not ready yet; deferring TryScheduleAutoInstall");
-                EditorApplication.delayCall += TryScheduleAutoInstall;
+                if (CCSPackageStatusService.IsLastPackageListRefreshFailed())
+                {
+                    CCSEditorLog.Error(
+                        "CCS Hub: Required package evaluation aborted — Package Manager package list failed to load. "
+                        + "Fix Package Manager connectivity and use the internal reset menu or reopen the project.");
+                    tryScheduleDeferralCount = 0;
+                    return;
+                }
+
+                if (CCSPackageStatusService.IsListRefreshInProgress())
+                {
+                    if (tryScheduleDeferralCount >= MaxTryScheduleDeferrals)
+                    {
+                        CCSEditorLog.Error("CCS Hub: Required bootstrap stopped — package list stayed unavailable (deferral limit).");
+                        tryScheduleDeferralCount = 0;
+                        return;
+                    }
+
+                    tryScheduleDeferralCount++;
+                    EditorApplication.delayCall += TryScheduleAutoInstall;
+                    return;
+                }
+
+                // No list data yet — request a refresh then retry (covers callers that did not preflight Refresh).
+                tryScheduleDeferralCount = 0;
+                CCSPackageStatusService.RefreshInstalledPackages(TryScheduleAutoInstall);
                 return;
             }
 
-            CCSSetupDiagnosticTrace.LogSetupGateSnapshot();
+            tryScheduleDeferralCount = 0;
+
+            if (requiredBootstrapCycleActive)
+            {
+                return;
+            }
+
+            requiredBootstrapCycleActive = true;
 
             List<CCSPackageDefinition> missing = new List<CCSPackageDefinition>();
-            int requiredDefinitionCount = 0;
             foreach (CCSPackageDefinition definition in CCSPackageRegistry.EnumerateAutoRequiredDefinitions())
             {
-                requiredDefinitionCount++;
                 if (!CCSPackageStatusService.IsPackageInstalled(definition.PackageId))
                 {
                     missing.Add(definition);
                 }
             }
 
-            CCSSetupDiagnosticTrace.Log($"Required definitions count={requiredDefinitionCount}");
-            CCSSetupDiagnosticTrace.Log($"Missing required count={missing.Count}");
-
             // Phase 1: one entry — show required progress as soon as we evaluate (before enqueue / zero-missing completion).
             if (!CCSSetupState.IsSetupCompleted() && !CCSSetupState.IsSetupSkipped())
             {
                 logRequiredPhaseLifecycle = true;
-                CCSSetupDiagnosticTrace.Log("Calling ShowRequiredPhase (first-run path)");
                 CCSSetupProgressWindow.ShowRequiredPhase();
-                CCSSetupDiagnosticTrace.Log("Returned from ShowRequiredPhase");
                 CCSEditorLog.Info("CCS Hub: Required install phase started.");
             }
             else
             {
                 logRequiredPhaseLifecycle = false;
-                if (CCSSetupState.IsSetupCompleted())
-                {
-                    CCSSetupDiagnosticTrace.Log("Blocked ShowRequiredPhase — setupCompleted=True");
-                }
-
-                if (CCSSetupState.IsSetupSkipped())
-                {
-                    CCSSetupDiagnosticTrace.Log("Blocked ShowRequiredPhase — setupSkipped=True");
-                }
             }
 
             if (missing.Count == 0)
             {
-                CCSSetupDiagnosticTrace.Log("Branch — all required already installed (or none in manifest); scheduling completion on delayCall");
                 string summary = BuildAlreadyPresentSummary();
                 CCSSetupState.SetRequiredAutoDependenciesSatisfied(summary);
-                // Defer completion scheduling so the window paints at least one frame before Hub auto-open (never same frame as Show).
                 EditorApplication.delayCall += ScheduleRequiredAutoInstallCompletedNotification;
                 return;
             }
@@ -100,7 +153,6 @@ namespace CCS.Hub.Editor
                 CCSSetupState.ClearRequiredAutoDependenciesSatisfied();
             }
 
-            CCSSetupDiagnosticTrace.Log("EnqueueAutoRequiredDefinitions (missing packages)");
             CCSPackageInstallService.EnqueueAutoRequiredDefinitions(missing);
         }
 
@@ -153,19 +205,20 @@ namespace CCS.Hub.Editor
             ScheduleRequiredAutoInstallCompletedNotification();
         }
 
+        #endregion
+
+        #region Private Methods
+
         private static void ScheduleRequiredAutoInstallCompletedNotification()
         {
-            CCSSetupDiagnosticTrace.Log("ScheduleRequiredAutoInstallCompletedNotification — delayCall queued");
             EditorApplication.delayCall += () =>
             {
-                CCSSetupDiagnosticTrace.Log("Required completion — before NotifyRequiredPassCompleteThenRun");
                 CCSSetupProgressWindow.NotifyRequiredPassCompleteThenRun(NotifyRequiredAutoInstallCompletedSubscribers);
             };
         }
 
         private static void NotifyRequiredAutoInstallCompletedSubscribers()
         {
-            CCSSetupDiagnosticTrace.Log("NotifyRequiredAutoInstallCompletedSubscribers — before RequiredAutoInstallCompleted event");
             if (logRequiredPhaseLifecycle)
             {
                 CCSEditorLog.Info("CCS Hub: Required install phase complete.");
@@ -173,6 +226,7 @@ namespace CCS.Hub.Editor
             }
 
             RequiredAutoInstallCompleted?.Invoke();
+            requiredBootstrapCycleActive = false;
         }
 
         private static string BuildAlreadyPresentSummary()
@@ -192,5 +246,7 @@ namespace CCS.Hub.Editor
                 ? $"{builder} (already present)"
                 : "Required dependencies already satisfied.";
         }
+
+        #endregion
     }
 }

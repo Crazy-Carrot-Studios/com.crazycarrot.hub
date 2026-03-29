@@ -34,7 +34,7 @@ namespace CCS.Hub.Editor
 
             CCSSetupState.ResetAllFirstRunStateForThisProject();
             CCSEditorLog.Info("CCS Hub: Internal reset — first-run state cleared; rerunning pipeline.");
-            EditorApplication.delayCall += CCSSetupBootstrap.RunFirstRunPipelineNow;
+            EditorApplication.delayCall += () => CCSSetupBootstrap.RunFirstRunPipelineNow(true);
         }
     }
 }

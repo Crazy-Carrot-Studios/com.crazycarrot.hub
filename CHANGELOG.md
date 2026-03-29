@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.25] - 2026-03-27
+
+### Fixed
+
+- **Package Manager list failure:** `Client.List` failure no longer sets `listReady` or pretends the installed set is valid. Added `IsLastPackageListRefreshFailed()` / `IsListRefreshInProgress()`; required evaluation aborts with **Error** instead of treating every package as missing. Install queue dequeue path stops spinning when the list stays broken.
+
+### Changed
+
+- **First-run bootstrap:** Cheap early-out on editor load when setup is **completed** and there is no pending install queue, pending Hub auto-open, or busy install service (`RunFirstRunPipelineNow(forceRun: false)`). Internal reset / forced rerun uses **`RunFirstRunPipelineNow(true)`** so the pipeline always runs after clearing state.
+- **Required bootstrap:** Re-entry guard (`requiredBootstrapCycleActive`) prevents overlapping `TryScheduleAutoInstall` runs until `RequiredAutoInstallCompleted` clears the cycle; reset via **`ResetRequiredBootstrapCycleGuard()`** from `ResetAllFirstRunStateForThisProject`.
+- **Restore vs UI:** `CCSPackageInstallService` no longer calls `ShowRequiredPhase` directly after domain reload; it calls **`CCSHubRequiredDependencyBootstrap.RequestRequiredProgressUiForRestoredAutoRequiredQueue()`** so required progress UI is owned in one place.
+- **`CCSSetupProgressWindow`:** Required-phase rows use **`EnumerateRequiredDefinitionsForProgress`**, **`GetStatusForRequiredRow`**, and **`DrawDefinitionRowForRequiredPhase`** (optional batch still uses `DrawDefinitionRow`).
+- **Removed** temporary **`CCSSetupDiagnosticTrace`** (always-on QA logging).
+
 ## [0.2.24] - 2026-03-27
 
 ### Added

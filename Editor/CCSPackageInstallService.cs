@@ -372,8 +372,7 @@ namespace CCS.Hub.Editor
                 RaiseStateChanged();
                 if (autoRequiredPassActive)
                 {
-                    CCSSetupDiagnosticTrace.Log("InstallService restore — calling ShowRequiredPhase (auto-required queue after domain reload)");
-                    CCSSetupProgressWindow.ShowRequiredPhase();
+                    CCSHubRequiredDependencyBootstrap.RequestRequiredProgressUiForRestoredAutoRequiredQueue();
                 }
             }
         }
@@ -475,6 +474,15 @@ namespace CCS.Hub.Editor
 
             if (!CCSPackageStatusService.IsListReady())
             {
+                if (CCSPackageStatusService.IsLastPackageListRefreshFailed())
+                {
+                    CCSEditorLog.Error(
+                        "CCS Hub: Install queue cannot dequeue — Package Manager package list failed. "
+                        + "Fix Package Manager, then reload the project or clear the queue via internal reset.");
+                    waitingForPackageListBeforeDequeue = false;
+                    return;
+                }
+
                 if (!waitingForPackageListBeforeDequeue)
                 {
                     waitingForPackageListBeforeDequeue = true;
