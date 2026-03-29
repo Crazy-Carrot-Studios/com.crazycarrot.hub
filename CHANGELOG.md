@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.35] - 2026-03-28
+
+### Documentation
+
+- **README:** Added **Versioning (Hub and Branding)** — clarifies independent package versions (`com.crazycarrot.hub` vs `com.crazycarrot.branding`) and that the validated workflow uses Hub’s release semver plus Branding’s semver from its own repo when installed via manifest/Git.
+- **Documentation~:** Maintainer note on independent versioning and why Branding stays out of Hub’s `dependencies`.
+
 ## [0.2.34] - 2026-03-28
 
 ### Fixed

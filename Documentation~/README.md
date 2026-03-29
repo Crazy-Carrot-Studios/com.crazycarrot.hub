@@ -8,4 +8,12 @@ For the **authoritative** install and workflow guide, see the package **`README.
 
 ---
 
+## Versioning (maintainers)
+
+- **Hub** and **Branding** use **independent** semantic versions in their respective `package.json` files.
+- Do **not** add `com.crazycarrot.branding` to Hub’s `dependencies` for UPM validation reasons; required installs use the **manifest** + **Git URL** (see root `README.md` → *Versioning*).
+- When releasing, bump Hub’s version for Hub changes; bump Branding’s version in the [branding](https://github.com/Crazy-Carrot-Studios/com.crazycarrot.branding) repo for branding-only changes.
+
+---
+
 **Crazy Carrot Studios**
