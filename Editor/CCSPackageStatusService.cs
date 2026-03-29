@@ -99,7 +99,6 @@ namespace CCS.Hub.Editor
 
                     listReady = true;
                     lastListRefreshFailed = false;
-                    CCSEditorLog.Info($"Package list refresh succeeded with {InstalledPackageNames.Count} entries.");
                 }
                 else
                 {

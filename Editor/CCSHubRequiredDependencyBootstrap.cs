@@ -24,11 +24,6 @@ namespace CCS.Hub.Editor
         #region Variables
 
         /// <summary>
-        /// When true, <see cref="TryScheduleAutoInstall"/> showed the required progress window and we pair one completion <see cref="CCSEditorLog.Info"/> with it.
-        /// </summary>
-        private static bool logRequiredPhaseLifecycle;
-
-        /// <summary>
         /// Prevents overlapping required evaluations (delayCall re-entry, duplicate bootstrap, etc.). Cleared when the required pass completes or on explicit reset.
         /// </summary>
         private static bool requiredBootstrapCycleActive;
@@ -131,13 +126,7 @@ namespace CCS.Hub.Editor
             // Phase 1: one entry — show required progress as soon as we evaluate (before enqueue / zero-missing completion).
             if (!CCSSetupState.IsSetupCompleted() && !CCSSetupState.IsSetupSkipped())
             {
-                logRequiredPhaseLifecycle = true;
                 CCSSetupProgressWindow.ShowRequiredPhase();
-                CCSEditorLog.Info("CCS Hub: Required install phase started.");
-            }
-            else
-            {
-                logRequiredPhaseLifecycle = false;
             }
 
             if (missing.Count == 0)
@@ -219,12 +208,6 @@ namespace CCS.Hub.Editor
 
         private static void NotifyRequiredAutoInstallCompletedSubscribers()
         {
-            if (logRequiredPhaseLifecycle)
-            {
-                CCSEditorLog.Info("CCS Hub: Required install phase complete.");
-                logRequiredPhaseLifecycle = false;
-            }
-
             RequiredAutoInstallCompleted?.Invoke();
             requiredBootstrapCycleActive = false;
         }

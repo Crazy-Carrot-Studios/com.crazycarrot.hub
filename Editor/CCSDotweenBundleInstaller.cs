@@ -81,7 +81,6 @@ namespace CCS.Hub.Editor
             }
 
             AssetDatabase.Refresh();
-            CCSEditorLog.Info("CCS Hub: Copied Demigiant DOTween bundle into Assets/Plugins and Assets/Resources.");
             errorMessage = null;
             return true;
         }

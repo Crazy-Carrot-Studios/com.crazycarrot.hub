@@ -99,11 +99,6 @@ namespace CCS.Hub.Editor
             ApplyHubWindowLayoutAndFocus(window);
 
             CCSSetupState.MarkAutoOpenedThisSession();
-            if (!SessionState.GetBool(CCSSetupConstants.SessionStateLoggedFirstRunAutoOpenInfoThisSession, false))
-            {
-                SessionState.SetBool(CCSSetupConstants.SessionStateLoggedFirstRunAutoOpenInfoThisSession, true);
-                CCSEditorLog.Info("CCS Hub auto-open triggered (first-run).");
-            }
         }
 
         private static CCSSetupWindow AcquireHubWindowForReuse(out bool createdNewInstance)
@@ -338,7 +333,7 @@ namespace CCS.Hub.Editor
                     if (GUILayout.Button("Skip for now", GUILayout.Height(28f), GUILayout.Width(118f)))
                     {
                         CCSSetupState.SetSetupSkipped(true);
-                        statusLine = "Skipped. Open CCS → CCS Hub → Open CCS Hub anytime.";
+                        statusLine = "Skipped. You can open CCS Hub from the menu anytime.";
                         Close();
                     }
                 }
@@ -412,28 +407,7 @@ namespace CCS.Hub.Editor
                 return;
             }
 
-            string doneMessage;
-            if (skippedAlreadyImported > 0 && wantsDotween)
-            {
-                doneMessage =
-                    "Character Controller was already in the project; DOTween (Demigiant) is ready. Setup complete.";
-            }
-            else if (skippedAlreadyImported > 0)
-            {
-                doneMessage =
-                    "Character Controller is already imported under Assets/CCS/CharacterController. Setup complete.";
-            }
-            else if (wantsDotween)
-            {
-                doneMessage = "DOTween (Demigiant) is ready. Setup complete.";
-            }
-            else
-            {
-                doneMessage = "Setup complete.";
-            }
-
             CCSSetupState.SetSetupCompleted(true);
-            CCSEditorLog.Info($"CCS Hub: {doneMessage}");
             Close();
             EditorApplication.delayCall += CloseAllInstances;
         }

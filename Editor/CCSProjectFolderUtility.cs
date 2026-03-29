@@ -32,7 +32,6 @@ namespace CCS.Hub.Editor
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
-            CCSEditorLog.Info($"Assets/CCS folder pass complete. Created {createdCount} new folder node(s).");
             return createdCount;
         }
 

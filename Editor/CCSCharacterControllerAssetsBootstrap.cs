@@ -156,7 +156,6 @@ namespace CCS.Hub.Editor
 
             CCSAssetFolderCopyUtility.CopyFilesOnlySkipEmptyDirectories(samplesBasic, destBasic, skipUpmPackageManifest: false);
             AssetDatabase.Refresh();
-            CCSEditorLog.Info("CCS Hub: Materialized Samples~/BasicSetup into Assets/CCS/CharacterController/BasicSetup.");
         }
 
         private static void OnPackageInstallSucceeded(CCSPackageDefinition definition)
@@ -275,9 +274,6 @@ namespace CCS.Hub.Editor
                 TryMaterializeSamplesBasicSetupIfNeeded();
                 EditorUtility.ClearProgressBar();
 
-                CCSEditorLog.Info(
-                    $"CCS Hub: Character Controller sources copied to {CCSSetupConstants.CharacterControllerAssetsRoot}. Removing UPM package entry to avoid duplicate scripts.");
-
                 BeginRemovePackage(packageId);
             }
             catch (Exception exception)
@@ -336,8 +332,6 @@ namespace CCS.Hub.Editor
                     skipUpmPackageManifest: true);
                 if (copied > 0)
                 {
-                    CCSEditorLog.Info(
-                        "CCS Hub: Copied Character Controller from package path Assets/CCS/CharacterController (Starter Assets, template Scenes/Settings, and other project folders are excluded).");
                     SupplementPackageRootFoldersIfMissing(packageRoot, destRoot);
                     CopyPluginsAndResourcesToAssetsRoot(packageRoot, embeddedCcs);
                     return;
@@ -356,10 +350,6 @@ namespace CCS.Hub.Editor
             {
                 CCSEditorLog.Error(
                     "CCS Hub: Character Controller package has no bootstrappable folders. Expected either Assets/CCS/CharacterController/{Scripts|Content|…} or package-root {Runtime|Editor|Content|…}.");
-            }
-            else
-            {
-                CCSEditorLog.Info("CCS Hub: Copied Character Controller from package root (Runtime/Editor/Content/…).");
             }
 
             CopyPluginsAndResourcesToAssetsRoot(packageRoot, embeddedCcs);
@@ -382,7 +372,6 @@ namespace CCS.Hub.Editor
 
                 string destPath = Path.Combine(assetsDataPath, destName);
                 CCSAssetFolderCopyUtility.CopyFilesOnlySkipEmptyDirectories(sourceDir, destPath, skipUpmPackageManifest: true);
-                CCSEditorLog.Info($"CCS Hub: Merged '{destName}' into Assets/{destName}/ (project root, not under CCS).");
             }
 
             if (!string.IsNullOrEmpty(embeddedCcsPath) && Directory.Exists(embeddedCcsPath))
@@ -431,7 +420,6 @@ namespace CCS.Hub.Editor
 
                 string dst = Path.Combine(destRoot, name);
                 CCSAssetFolderCopyUtility.CopyFilesOnlySkipEmptyDirectories(src, dst, skipUpmPackageManifest: true);
-                CCSEditorLog.Info($"CCS Hub: Supplemented '{name}' from package root (not present under embedded Assets/CCS/CharacterController).");
             }
         }
 
@@ -457,12 +445,7 @@ namespace CCS.Hub.Editor
 
             EditorApplication.update -= PollRemoveRequest;
 
-            if (activeRemoveRequest.Status == StatusCode.Success)
-            {
-                CCSEditorLog.Info(
-                    "CCS Hub: Removed the Character Controller package entry from Package Manager after copying into Assets (expected; your editable copy lives under Assets/CCS/CharacterController).");
-            }
-            else
+            if (activeRemoveRequest.Status != StatusCode.Success)
             {
                 string message = activeRemoveRequest.Error != null ? activeRemoveRequest.Error.message : "Unknown error.";
                 CCSEditorLog.Error(

@@ -183,13 +183,11 @@ namespace CCS.Hub.Editor
 
             if (definition.Id == CCSSetupConstants.UnityUrpDefinitionId && CCSPackageProjectContext.IsUrpEffectivelyPresent())
             {
-                CCSEditorLog.Info("Queue skipped Universal RP because URP is already detected for this project.");
                 return true;
             }
 
             if (CCSPackageStatusService.IsListReady() && CCSPackageStatusService.IsPackageInstalled(definition.PackageId))
             {
-                CCSEditorLog.Info($"Queue skipped '{definition.DisplayName}' because Package Manager reports it as installed.");
                 return true;
             }
 
@@ -222,7 +220,6 @@ namespace CCS.Hub.Editor
             PersistQueueToSession();
             RegisterEditorUpdate();
             RaiseStateChanged();
-            CCSEditorLog.Info($"Retry queued for '{definition.DisplayName}' ({definition.Id}).");
         }
 
         public static bool IsBusy()
@@ -367,7 +364,6 @@ namespace CCS.Hub.Editor
                 batchProgressIndeterminate = true;
                 batchProgressTotal = 0;
                 batchProgressProcessed = 0;
-                CCSEditorLog.Info("Restored pending CCS Hub install queue from session state after domain reload.");
                 RegisterEditorUpdate();
                 RaiseStateChanged();
                 if (autoRequiredPassActive)
@@ -501,7 +497,6 @@ namespace CCS.Hub.Editor
 
             if (next.Id == CCSSetupConstants.UnityUrpDefinitionId && CCSPackageProjectContext.IsUrpEffectivelyPresent())
             {
-                CCSEditorLog.Info("Install step skipped; Universal RP already detected for this project.");
                 SkippedDefinitionIds.Add(next.Id);
                 IncrementBatchProgressProcessed();
                 RaiseStateChanged();
@@ -510,7 +505,6 @@ namespace CCS.Hub.Editor
 
             if (CCSPackageStatusService.IsPackageInstalled(next.PackageId))
             {
-                CCSEditorLog.Info($"Install step skipped; already present: {next.DisplayName}");
                 SkippedDefinitionIds.Add(next.Id);
                 IncrementBatchProgressProcessed();
                 RaiseStateChanged();
@@ -519,7 +513,6 @@ namespace CCS.Hub.Editor
 
             activeDefinition = next;
             FailedDefinitionIds.Remove(next.Id);
-            CCSEditorLog.Info($"Package Manager Client.Add starting for definition '{next.Id}' using '{next.InstallIdentifier}'.");
             activeAddRequest = Client.Add(next.InstallIdentifier);
             RaiseStateChanged();
         }
@@ -533,7 +526,6 @@ namespace CCS.Hub.Editor
 
             if (activeAddRequest.Status == StatusCode.Success)
             {
-                CCSEditorLog.Info($"Client.Add succeeded for '{finished.DisplayName}'.");
                 LastBatchSuccessDisplayNames.Add(finished.DisplayName);
                 PackageInstallSucceeded?.Invoke(finished);
             }

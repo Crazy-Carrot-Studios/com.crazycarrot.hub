@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.30] - 2026-03-28
+
+### Changed
+
+- **Logging:** Reduced **Info**-level console noise for normal operation (auto-open, package list success, required phase, EditorPrefs changes, install queue / Client.Add chatter, Character Controller & DOTween & folder bootstrap success). **Warning** / **Error** retained for real issues. **`CCSSetupState.LogFirstRunStateSnapshot`** still emits a full **Info** dump when invoked explicitly.
+- **Hub window copy:** Skip path status line simplified; optional “nothing left to install” path no longer logs completion lines (outcome is already clear in the UI).
+
 ## [0.2.29] - 2026-03-28
 
 ### Fixed

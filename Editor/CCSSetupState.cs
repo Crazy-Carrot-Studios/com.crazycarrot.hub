@@ -43,13 +43,11 @@ namespace CCS.Hub.Editor
         public static void SetSetupCompleted(bool value)
         {
             EditorPrefs.SetBool(ProjectEditorPrefsKey(CCSSetupConstants.EditorPrefsSetupCompletedKey), value);
-            CCSEditorLog.Info($"First-run: EditorPrefs SetupCompleted = {value} (this project).");
         }
 
         public static void SetSetupSkipped(bool value)
         {
             EditorPrefs.SetBool(ProjectEditorPrefsKey(CCSSetupConstants.EditorPrefsSetupSkippedKey), value);
-            CCSEditorLog.Info($"First-run: EditorPrefs SetupSkipped = {value} (this project).");
         }
 
         public static bool AreRequiredAutoDependenciesSatisfied()
@@ -143,15 +141,11 @@ namespace CCS.Hub.Editor
             if (SessionState.GetBool(CCSSetupConstants.SessionStateAutoOpenedThisSession, false))
             {
                 SessionState.EraseBool(CCSSetupConstants.SessionStateAutoOpenedThisSession);
-                CCSEditorLog.Info(
-                    "CCS Hub: Recovered stale autoOpenedThisSession (no Hub window, setup not completed/skipped).");
             }
 
             if (SessionState.GetBool(CCSSetupConstants.SessionStatePendingHubAutoOpenAfterRequiredPhase, false))
             {
                 SessionState.EraseBool(CCSSetupConstants.SessionStatePendingHubAutoOpenAfterRequiredPhase);
-                CCSEditorLog.Info(
-                    "CCS Hub: Recovered stale pendingHubAutoOpenAfterRequiredPhase (no Hub window exists).");
             }
         }
 
@@ -202,7 +196,6 @@ namespace CCS.Hub.Editor
             SessionState.EraseInt(CCSSetupConstants.SessionStateOptionalUserStepTotal);
             SessionState.EraseString(CCSSetupConstants.SessionStateOptionalBatchDefinitionIds);
 
-            CCSEditorLog.Info("First-run: full reset applied for this project (EditorPrefs + SessionState + install pipeline markers).");
         }
 
         /// <summary>Logs every Hub first-run related value for the current project (scan-friendly, consistent prefix).</summary>

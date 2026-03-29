@@ -71,8 +71,6 @@ namespace CCS.Hub.Editor
 
             if (!CCSSetupState.ShouldAutoOpenMainHubAfterRequiredPhase(out string blockReason))
             {
-                CCSEditorLog.Info(
-                    $"CCS Hub: Main Hub auto-open skipped (reason={blockReason}, trigger={trigger}).");
                 return;
             }
 
@@ -103,7 +101,6 @@ namespace CCS.Hub.Editor
             if (!CCSSetupState.ShouldAutoOpenMainHubAfterRequiredPhase(out string blockReason))
             {
                 CCSSetupState.ClearPendingHubAutoOpenAfterRequiredPhase();
-                CCSEditorLog.Info($"CCS Hub: Main Hub auto-open — cancelled before show (reason={blockReason}).");
                 return;
             }
 
