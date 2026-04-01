@@ -63,8 +63,8 @@
       "autoInstallSupported": true,
       "showInFirstRunWizard": false,
       "showInPackageHub": false,
-      "description": "CCS locomotion and character controller. Installed via UPM then bootstrapped into Assets/CCS/CharacterController.",
-      "installNotes": "UPM installs under Packages/; Hub can copy into Assets/CCS/CharacterController and remove duplicate UPM entry.",
+      "description": "CCS locomotion and character controller (New Input System + Cinemachine are required; installed with Hub first-run required packages).",
+      "installNotes": "UPM installs under Packages/; Hub copies into Assets/CCS/CharacterController then removes the duplicate UPM entry. Keep com.unity.inputsystem@1.18.0 and com.unity.cinemachine@3.1.6 from the Hub required pass — the controller foundation depends on them.",
       "showInOptionalToolsHub": true
     },
     {

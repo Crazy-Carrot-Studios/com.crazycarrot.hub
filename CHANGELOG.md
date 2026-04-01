@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.36] - 2026-03-30
+
+### Documentation
+
+- **CCSDependencyManifest:** **CCS Character Controller** optional entry now states that **com.unity.inputsystem@1.18.0** and **com.unity.cinemachine@3.1.6** are required for the controller foundation and are delivered by the same Hub **required** first-run installs (not optional).
+- **README:** Note under **Optional Installs** clarifies the Character Controller package’s dependency on those Unity packages and that they must remain in the project manifest.
+- **Documentation~:** Maintainer section **Character Controller (optional CCS package)** documents the Input System / Cinemachine requirement path.
+
 ## [0.2.35] - 2026-03-28
 
 ### Documentation

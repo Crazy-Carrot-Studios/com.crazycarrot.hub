@@ -14,6 +14,10 @@ For the **authoritative** install and workflow guide, see the package **`README.
 - Do **not** add `com.crazycarrot.branding` to Hub’s `dependencies` for UPM validation reasons; required installs use the **manifest** + **Git URL** (see root `README.md` → *Versioning*).
 - When releasing, bump Hub’s version for Hub changes; bump Branding’s version in the [branding](https://github.com/Crazy-Carrot-Studios/com.crazycarrot.branding) repo for branding-only changes.
 
+## Character Controller (optional CCS package)
+
+The **CCS Character Controller** optional install assumes **com.unity.inputsystem** and **com.unity.cinemachine** are already present. Those versions are pinned under **`required`** in `Runtime/Resources/CCSDependencyManifest.json` and installed in the Hub first-run **required** phase—not as nested entries in Hub’s `package.json`.
+
 ---
 
 **Crazy Carrot Studios**
