@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.37] - 2026-04-10
+
+### Changed
+
+- **Character Controller (optional):** Hub manifest and `CCSPackageRegistry` now install **`com.crazycarrot.charactercontroller`** from the published repo pinned to Git tag **`v0.1.0-base-locomotion`** (Base Locomotion baseline). Descriptions/notes call out baseline scope and testing intent.
+- **Character Controller bootstrap:** Root and embedded copy lists include **`Scripts`**, **`Scenes`**, **`Settings`**, and **`Art`** so UPM packages that use the new baseline layout (no root `Runtime`/`Editor` folders) still import correctly into `Assets/CCS/CharacterController`.
+
 ## [0.2.36] - 2026-03-30
 
 ### Documentation

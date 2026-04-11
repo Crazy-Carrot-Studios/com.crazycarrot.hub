@@ -114,7 +114,7 @@ namespace CCS.Hub
                     "CCS Character Controller",
                     "com.crazycarrot.charactercontroller",
                     CCSPackageSourceType.GitUrl,
-                    "https://github.com/Crazy-Carrot-Studios/com.crazycarrot.charactercontroller.git",
+                    "https://github.com/Crazy-Carrot-Studios/com.crazycarrot.charactercontroller.git#v0.1.0-base-locomotion",
                     CCSPackageCategory.OptionalCCS,
                     isRequired: false,
                     defaultSelected: true,
@@ -122,9 +122,9 @@ namespace CCS.Hub
                     showInFirstRunWizard: false,
                     showInPackageHub: false,
                     description:
-                    "CCS locomotion and character controller. Package Manager installs the Git package under Packages/; CCS Hub then imports that source into Assets/CCS/CharacterController so you can edit it like an imported .unitypackage (the Hub removes the UPM entry afterward to avoid compiling the same scripts twice).",
+                    "CCS Base Locomotion baseline (pinned tag v0.1.0-base-locomotion). UPM installs the Git package under Packages/; Hub bootstraps into Assets/CCS/CharacterController and removes the UPM entry so you edit sources in Assets (no duplicate assemblies).",
                     installNotes:
-                    "Technically accurate: UPM keeps the Git checkout under Packages/ only. The Hub’s second step copies/bootstraps into Assets/CCS/CharacterController and removes the package dependency so your project owns the files.",
+                    "Git URL includes #v0.1.0-base-locomotion for the published baseline. UPM resolves under Packages/; Hub copies bootstrappable folders then removes the package dependency.",
                     showInOptionalToolsHub: true),
                 new CCSPackageDefinition(
                     "ccs-inventory",

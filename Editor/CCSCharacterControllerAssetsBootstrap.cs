@@ -42,16 +42,23 @@ namespace CCS.Hub.Editor
             "Scripts",
             "Content",
             "Animations",
+            "Scenes",
+            "Settings",
+            "Art",
             "Samples~",
         };
 
-        /// <summary>Standard UPM layout at package root when no embedded Assets/CCS tree exists.</summary>
+        /// <summary>Standard UPM layout at package root when no embedded Assets/CCS tree exists (includes com.crazycarrot.charactercontroller baseline: Scripts/, Scenes/, Settings/, Art/).</summary>
         private static readonly string[] RootUpmPackageFolders =
         {
+            "Scripts",
+            "Animations",
+            "Scenes",
+            "Settings",
+            "Art",
             "Runtime",
             "Editor",
             "Content",
-            "Animations",
             "Samples~",
         };
 
@@ -64,6 +71,9 @@ namespace CCS.Hub.Editor
             "Editor",
             "Content",
             "Animations",
+            "Scenes",
+            "Settings",
+            "Art",
             "Samples~",
         };
 
@@ -349,7 +359,7 @@ namespace CCS.Hub.Editor
             if (rootCopied == 0)
             {
                 CCSEditorLog.Error(
-                    "CCS Hub: Character Controller package has no bootstrappable folders. Expected either Assets/CCS/CharacterController/{Scripts|Content|…} or package-root {Runtime|Editor|Content|…}.");
+                    "CCS Hub: Character Controller package has no bootstrappable folders. Expected either Assets/CCS/CharacterController/{Scripts|Content|Animations|…} or package-root {Scripts|Animations|Scenes|Settings|Art|Runtime|Editor|Content|…}.");
             }
 
             CopyPluginsAndResourcesToAssetsRoot(packageRoot, embeddedCcs);

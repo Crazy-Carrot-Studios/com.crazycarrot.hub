@@ -40,7 +40,7 @@ Use the Hub to install optional CCS tools into:
 
 Assets/CCS/
 
-**CCS Character Controller:** The locomotion foundation expects **Unity New Input System** and **Cinemachine** (pinned in `CCSDependencyManifest.json` as Hub **required** packages). Hub installs them in the first-run required pass before optional CCS Git packages; do not strip them from `Packages/manifest.json` if you use the controller.
+**CCS Character Controller:** Optional install uses the published package **`com.crazycarrot.charactercontroller`** from Git, pinned to tag **`v0.1.0-base-locomotion`** (Base Locomotion baseline for integration testing). The locomotion foundation expects **Unity New Input System** and **Cinemachine** (pinned in `CCSDependencyManifest.json` as Hub **required** packages). Hub installs them in the first-run required pass before optional CCS Git packages; do not strip them from `Packages/manifest.json` if you use the controller.
 
 ---
 
