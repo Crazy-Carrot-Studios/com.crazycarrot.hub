@@ -1,6 +1,6 @@
 # CCS Hub (com.crazycarrot.hub)
 
-**Version:** 0.2.36
+**Version:** 0.2.37
 
 First-run setup and package hub for Crazy Carrot Studios Unity projects.
 
@@ -56,7 +56,7 @@ These are **two separate UPM packages**, each with its **own** `version` in its 
 
 | Package | Version source | Typical use |
 |--------|----------------|-------------|
-| **com.crazycarrot.hub** | Hub repo `package.json` (e.g. **0.2.35**) | Hub release you add from Git; changelog tracks Hub-only fixes. |
+| **com.crazycarrot.hub** | Hub repo `package.json` (e.g. **0.2.37**) | Hub release you add from Git; changelog tracks Hub-only fixes. |
 | **com.crazycarrot.branding** | Branding repo `package.json` (e.g. **1.1.x**) | Resolved when UPM installs branding from Git; shown in Package Manager for that package. |
 
 **Important:** Hub **does not** list Branding as a nested `dependencies` entry (Unity requires semver-only there for nested deps). Branding is installed on **first run** from **`CCSDependencyManifest.json`** via **Git URL**. The combination—**Hub version** + **Branding version** as installed from the branding repo—is the supported, validated setup.
