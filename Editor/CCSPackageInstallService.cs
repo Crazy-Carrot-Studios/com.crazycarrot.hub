@@ -551,7 +551,8 @@ namespace CCS.Hub.Editor
         private static void LogSuccessfulPackageInstallToConsole(CCSPackageDefinition finished)
         {
             string version = "unknown";
-            PackageInfo info = PackageInfo.FindForAssetPath($"Packages/{finished.PackageId}/package.json");
+            UnityEditor.PackageManager.PackageInfo info =
+                UnityEditor.PackageManager.PackageInfo.FindForAssetPath($"Packages/{finished.PackageId}/package.json");
             if (info != null && !string.IsNullOrEmpty(info.version))
             {
                 version = info.version;
