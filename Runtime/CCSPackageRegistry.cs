@@ -114,7 +114,7 @@ namespace CCS.Hub
                     "CCS Character Controller",
                     "com.crazycarrot.charactercontroller",
                     CCSPackageSourceType.GitUrl,
-                    "https://github.com/Crazy-Carrot-Studios/com.crazycarrot.charactercontroller.git#v0.1.9-preview.1",
+                    "https://github.com/Crazy-Carrot-Studios/com.crazycarrot.charactercontroller.git#v0.1.10-preview.1",
                     CCSPackageCategory.OptionalCCS,
                     isRequired: false,
                     defaultSelected: true,
@@ -122,9 +122,9 @@ namespace CCS.Hub
                     showInFirstRunWizard: false,
                     showInPackageHub: false,
                     description:
-                    "CCS Base Locomotion preview (pinned tag v0.1.9-preview.1): Humanoid validation, Avatar handoff, Input System 1.18.0 aligned with Hub required packages, default profile under Scripts/Profiles/camera/. UPM installs under Packages/; Hub bootstraps into Assets/CCS/CharacterController then removes the UPM entry.",
+                    "CCS Base Locomotion preview (pinned tag v0.1.10-preview.1): Humanoid validation, Avatar handoff, Input System 1.18.0 aligned with Hub required packages, default profile under Scripts/Profiles/camera/. UPM installs under Packages/; Hub bootstraps into Assets/CCS/CharacterController then removes the UPM entry.",
                     installNotes:
-                    "Git URL includes #v0.1.9-preview.1. UPM resolves under Packages/; Hub copies bootstrappable folders then removes the package dependency. Check Console for [CCS Hub] install/bootstrap version logs.",
+                    "Git URL includes #v0.1.10-preview.1. UPM resolves under Packages/; Hub copies bootstrappable folders then removes the package dependency. Check Console for [CCS Hub] install/bootstrap version logs.",
                     showInOptionalToolsHub: true),
                 new CCSPackageDefinition(
                     "ccs-inventory",
