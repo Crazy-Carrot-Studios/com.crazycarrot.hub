@@ -284,6 +284,12 @@ namespace CCS.Hub.Editor
                 TryMaterializeSamplesBasicSetupIfNeeded();
                 EditorUtility.ClearProgressBar();
 
+                Debug.Log(
+                    "[CCS Hub] Character Controller bootstrapped to Assets/CCS/CharacterController "
+                    + "(UPM package version "
+                    + info.version
+                    + "). Removing com.crazycarrot.charactercontroller from Package Manager next to avoid duplicate assemblies.");
+
                 BeginRemovePackage(packageId);
             }
             catch (Exception exception)
@@ -461,6 +467,12 @@ namespace CCS.Hub.Editor
                 CCSEditorLog.Error(
                     $"CCS Hub: Could not remove the Character Controller package after copy. Remove it manually in Package Manager to avoid duplicate scripts: {message}");
                 BootstrapFailedDefinitionIds.Add(CCSSetupConstants.CharacterControllerDefinitionId);
+            }
+            else
+            {
+                Debug.Log(
+                    "[CCS Hub] Removed com.crazycarrot.charactercontroller from Package Manager after Assets copy. "
+                    + "Edit Character Controller sources under Assets/CCS/CharacterController.");
             }
 
             activeRemoveRequest = null;

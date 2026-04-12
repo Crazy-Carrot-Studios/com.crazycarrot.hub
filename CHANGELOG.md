@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.40] - 2026-04-12
+
+### Changed
+
+- **Character Controller** optional Git pin: **`v0.1.7-preview.1`** (Input System **1.18.0** aligned with Hub required packages; registry + manifest + README).
+- **README:** version banner **0.2.40**.
+- **`CCSDependencyManifest.json`:** optional Character Controller description aligned with preview scope.
+
+## [0.2.39] - 2026-04-12
+
+### Changed
+
+- **Character Controller** optional Git pin: **`v0.1.6-preview.1`** (default follow profile path `Scripts/Profiles/camera/CCS_Default_TP_Follow_CameraProfile.asset`; registry + `CCSDependencyManifest.json` + README).
+
+## [0.2.38] - 2026-04-10
+
+### Added
+
+- **Console logging:** On successful **`Client.Add`**, logs **`[CCS Hub] Installed successfully:`** with display name, package id, and **resolved version** from Package Manager (branding, character controller, and any queued Git package).
+- **Character Controller bootstrap:** After copy to **`Assets/CCS/CharacterController`**, logs package **version** and intent to remove the UPM entry; on successful remove, logs that sources live under **Assets**.
+
+### Changed
+
+- **Character Controller** optional Git pin updated from **`v0.1.0-base-locomotion`** to **`v0.1.5-preview.1`** in **`CCSPackageRegistry`**, **`CCSDependencyManifest.json`**, and **README** (preview build with Humanoid validation, Avatar handoff, and **`camera.meta`** YAML fix).
+
 ## [0.2.37] - 2026-04-10
 
 ### Changed

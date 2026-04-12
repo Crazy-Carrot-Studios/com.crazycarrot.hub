@@ -1,6 +1,6 @@
 # CCS Hub (com.crazycarrot.hub)
 
-**Version:** 0.2.37
+**Version:** 0.2.40
 
 First-run setup and package hub for Crazy Carrot Studios Unity projects.
 
@@ -40,7 +40,7 @@ Use the Hub to install optional CCS tools into:
 
 Assets/CCS/
 
-**CCS Character Controller:** Optional install uses the published package **`com.crazycarrot.charactercontroller`** from Git, pinned to tag **`v0.1.0-base-locomotion`** (Base Locomotion baseline for integration testing). The locomotion foundation expects **Unity New Input System** and **Cinemachine** (pinned in `CCSDependencyManifest.json` as Hub **required** packages). Hub installs them in the first-run required pass before optional CCS Git packages; do not strip them from `Packages/manifest.json` if you use the controller.
+**CCS Character Controller:** Optional install uses **`com.crazycarrot.charactercontroller`** from Git, pinned to **`v0.1.7-preview.1`** (Base Locomotion preview; default camera profile under **`Scripts/Profiles/camera/`**). Expect **New Input System** and **Cinemachine** from Hub **required** installs. The Console logs **`[CCS Hub] Installed successfully: …`** with the resolved **version** after each successful Git package add, and additional lines when the controller is copied to **Assets** and when the UPM entry is removed.
 
 ---
 

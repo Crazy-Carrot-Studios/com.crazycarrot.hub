@@ -527,6 +527,7 @@ namespace CCS.Hub.Editor
             if (activeAddRequest.Status == StatusCode.Success)
             {
                 LastBatchSuccessDisplayNames.Add(finished.DisplayName);
+                LogSuccessfulPackageInstallToConsole(finished);
                 PackageInstallSucceeded?.Invoke(finished);
             }
             else
@@ -542,6 +543,22 @@ namespace CCS.Hub.Editor
         private static void RaiseStateChanged()
         {
             StateChanged?.Invoke();
+        }
+
+        /// <summary>
+        /// Writes a clear Unity Console line with the resolved package version after <see cref="Client.Add"/> succeeds.
+        /// </summary>
+        private static void LogSuccessfulPackageInstallToConsole(CCSPackageDefinition finished)
+        {
+            string version = "unknown";
+            PackageInfo info = PackageInfo.FindForAssetPath($"Packages/{finished.PackageId}/package.json");
+            if (info != null && !string.IsNullOrEmpty(info.version))
+            {
+                version = info.version;
+            }
+
+            Debug.Log(
+                $"[CCS Hub] Installed successfully: {finished.DisplayName} ({finished.PackageId}) version {version}.");
         }
 
         #endregion
