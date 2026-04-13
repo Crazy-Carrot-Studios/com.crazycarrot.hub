@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.45] - 2026-04-12
+
+### Changed
+
+- **Character Controller** optional Git pin: **`v0.1.0-base-locomotion`** (repository **`main`** rolled back to first public baseline; newer preview work is no longer on **`main`** — see tags **`v0.1.*-preview.1`** for prior commits).
+- **README:** version banner **0.2.45**; optional controller description aligned with **0.1.0** layout (**`Scripts/Profiles/`** default profile).
+
 ## [0.2.44] - 2026-04-12
 
 ### Changed

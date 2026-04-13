@@ -114,7 +114,7 @@ namespace CCS.Hub
                     "CCS Character Controller",
                     "com.crazycarrot.charactercontroller",
                     CCSPackageSourceType.GitUrl,
-                    "https://github.com/Crazy-Carrot-Studios/com.crazycarrot.charactercontroller.git#v0.1.11-preview.1",
+                    "https://github.com/Crazy-Carrot-Studios/com.crazycarrot.charactercontroller.git#v0.1.0-base-locomotion",
                     CCSPackageCategory.OptionalCCS,
                     isRequired: false,
                     defaultSelected: true,
@@ -122,9 +122,9 @@ namespace CCS.Hub
                     showInFirstRunWizard: false,
                     showInPackageHub: false,
                     description:
-                    "CCS Base Locomotion preview (pinned tag v0.1.11-preview.1): Humanoid validation, Avatar handoff, Input System 1.18.0 aligned with Hub required packages, default profile under Scripts/Profiles/camera/. UPM installs under Packages/; Hub bootstraps into Assets/CCS/CharacterController then removes the UPM entry.",
+                    "CCS Base Locomotion baseline (pinned tag v0.1.0-base-locomotion): first public milestone — wizard, Cinemachine rig, CCS_Base_locomotion_controller. Default camera profile Scripts/Profiles/CCS_Default_TP_Follow_CameraProfile.asset. Package.json lists Input System 1.8.0; Hub required pass still installs 1.18.0 (compatible). UPM under Packages/; Hub bootstraps into Assets/CCS/CharacterController then removes UPM entry.",
                     installNotes:
-                    "Git URL includes #v0.1.11-preview.1. UPM resolves under Packages/; Hub copies bootstrappable folders then removes the package dependency. Check Console for [CCS Hub] install/bootstrap version logs.",
+                    "Git URL includes #v0.1.0-base-locomotion. UPM resolves under Packages/; Hub copies bootstrappable folders then removes the package dependency. Check Console for [CCS Hub] install/bootstrap version logs.",
                     showInOptionalToolsHub: true),
                 new CCSPackageDefinition(
                     "ccs-inventory",
