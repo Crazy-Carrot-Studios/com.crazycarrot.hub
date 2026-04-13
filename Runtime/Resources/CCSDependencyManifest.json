@@ -56,15 +56,15 @@
       "displayName": "CCS Character Controller",
       "packageId": "com.crazycarrot.charactercontroller",
       "sourceType": 1,
-      "installIdentifier": "https://github.com/Crazy-Carrot-Studios/com.crazycarrot.charactercontroller.git#v0.1.0-base-locomotion",
+      "installIdentifier": "https://github.com/Crazy-Carrot-Studios/com.crazycarrot.charactercontroller.git#v0.2.0",
       "category": 2,
       "isRequired": false,
       "defaultSelected": true,
       "autoInstallSupported": true,
       "showInFirstRunWizard": false,
       "showInPackageHub": false,
-      "description": "CCS Base Locomotion baseline v0.1.0 (com.crazycarrot.charactercontroller): wizard, Cinemachine rig, locomotion controller + driver. Default profile Scripts/Profiles/CCS_Default_TP_Follow_CameraProfile.asset. Not feature-complete. Requires Input System + Cinemachine (Hub required packages).",
-      "installNotes": "Pinned Git tag v0.1.0-base-locomotion (first public baseline; main branch rolled back to match). UPM installs under Packages/; Hub copies into Assets/CCS/CharacterController then removes the duplicate UPM entry. Hub required pass uses com.unity.inputsystem@1.18.0 (package.json on tag lists 1.8.0; UPM resolves).",
+      "description": "CCS Character Controller baseline v0.2.0: Unity CharacterController + Cinemachine 3 wizard rig; camera tuning serialized on CCS_CameraRig (no profile assets). No packaged Mecanim locomotion. Not feature-complete. Requires Input System + Cinemachine (Hub required packages).",
+      "installNotes": "Pinned Git tag v0.2.0. UPM installs under Packages/; Hub copies into Assets/CCS/CharacterController then removes the duplicate UPM entry.",
       "showInOptionalToolsHub": true
     },
     {
