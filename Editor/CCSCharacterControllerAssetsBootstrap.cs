@@ -42,6 +42,8 @@ namespace CCS.Hub.Editor
             "Scripts",
             "Content",
             "Animations",
+            "Characters",
+            "Prefabs",
             "Scenes",
             "Settings",
             "Art",
@@ -53,6 +55,8 @@ namespace CCS.Hub.Editor
         {
             "Scripts",
             "Animations",
+            "Characters",
+            "Prefabs",
             "Scenes",
             "Settings",
             "Art",
@@ -71,6 +75,8 @@ namespace CCS.Hub.Editor
             "Editor",
             "Content",
             "Animations",
+            "Characters",
+            "Prefabs",
             "Scenes",
             "Settings",
             "Art",
@@ -365,7 +371,7 @@ namespace CCS.Hub.Editor
             if (rootCopied == 0)
             {
                 CCSEditorLog.Error(
-                    "CCS Hub: Character Controller package has no bootstrappable folders. Expected either Assets/CCS/CharacterController/{Scripts|Content|Animations|…} or package-root {Scripts|Animations|Scenes|Settings|Art|Runtime|Editor|Content|…}.");
+                    "CCS Hub: Character Controller package has no bootstrappable folders. Expected either Assets/CCS/CharacterController/{Scripts|Content|Animations|Characters|Prefabs|…} or package-root {Scripts|Animations|Characters|Prefabs|Scenes|Settings|Art|Runtime|Editor|Content|…}.");
             }
 
             CopyPluginsAndResourcesToAssetsRoot(packageRoot, embeddedCcs);

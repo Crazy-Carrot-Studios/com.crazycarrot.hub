@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.48] - 2026-04-15
+
+### Fixed
+
+- **Character Controller bootstrap** (**`CCSCharacterControllerAssetsBootstrap`**): copy lists now include **`Characters/`** and **`Prefabs/`** so Hub imports match the UPM package (starter visual, **`PF_CCS_BasicController_Template`**, etc.). Previously only **`Scripts`**, **`Animations`**, **`Scenes`**, **`Settings`**, and **`Art`** were copied to **`Assets/CCS/CharacterController`**.
+
+### Changed
+
+- **README:** version banner **0.2.48**.
+
 ## [0.2.47] - 2026-04-15
 
 ### Changed
