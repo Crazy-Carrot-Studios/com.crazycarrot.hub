@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.47] - 2026-04-15
+
+### Changed
+
+- **CCSDependencyManifest** (and legacy **CCSPackageRegistry** fallback): all Crazy Carrot **Git** `installIdentifier` URLs now end with **`#main`** so Package Manager resolves the **tip of the default branch** (always-current installs). Applies to **Branding**, **Character Controller**, and **catalog** optional CCS packages.
+- **README:** version **0.2.47**; documents rolling **`#main`** vs pinning **`#tag`** in **`manifest.json`**, and clearing **`Library/PackageCache`** when Unity serves a stale Git checkout.
+
 ## [0.2.46] - 2026-04-15
 
 ### Changed

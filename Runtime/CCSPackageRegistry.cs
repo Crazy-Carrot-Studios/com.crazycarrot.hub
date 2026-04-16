@@ -4,7 +4,7 @@
 // GameObject: N/A
 // Author: James Schilz (Developer)
 // Created: March 25, 2025
-// Last Modified: March 27, 2026
+// Last Modified: April 15, 2026
 // Summary: Data-driven registry from Runtime/Resources/CCSDependencyManifest.json (CCSDependencyManifest); legacy fallback if the manifest is missing or invalid.
 // Required Components: None
 // Where to Place: Packages/com.crazycarrot.hub/Runtime/
@@ -42,7 +42,7 @@ namespace CCS.Hub
                     "CCS Branding",
                     "com.crazycarrot.branding",
                     CCSPackageSourceType.GitUrl,
-                    "https://github.com/Crazy-Carrot-Studios/com.crazycarrot.branding.git",
+                    "https://github.com/Crazy-Carrot-Studios/com.crazycarrot.branding.git#main",
                     CCSPackageCategory.Required,
                     isRequired: true,
                     defaultSelected: true,
@@ -100,7 +100,7 @@ namespace CCS.Hub
                     "CCS Character Creator",
                     "com.crazycarrot.charactercreator",
                     CCSPackageSourceType.GitUrl,
-                    "https://github.com/Crazy-Carrot-Studios/com.crazycarrot.charactercreator.git",
+                    "https://github.com/Crazy-Carrot-Studios/com.crazycarrot.charactercreator.git#main",
                     CCSPackageCategory.OptionalCCS,
                     isRequired: false,
                     defaultSelected: false,
@@ -114,7 +114,7 @@ namespace CCS.Hub
                     "CCS Character Controller",
                     "com.crazycarrot.charactercontroller",
                     CCSPackageSourceType.GitUrl,
-                    "https://github.com/Crazy-Carrot-Studios/com.crazycarrot.charactercontroller.git#v0.1.0-base-locomotion",
+                    "https://github.com/Crazy-Carrot-Studios/com.crazycarrot.charactercontroller.git#main",
                     CCSPackageCategory.OptionalCCS,
                     isRequired: false,
                     defaultSelected: true,
@@ -122,16 +122,16 @@ namespace CCS.Hub
                     showInFirstRunWizard: false,
                     showInPackageHub: false,
                     description:
-                    "CCS Base Locomotion baseline (pinned tag v0.1.0-base-locomotion): first public milestone — wizard, Cinemachine rig, CCS_Base_locomotion_controller. Default camera profile Scripts/Profiles/CCS_Default_TP_Follow_CameraProfile.asset. Package.json lists Input System 1.8.0; Hub required pass still installs 1.18.0 (compatible). UPM under Packages/; Hub bootstraps into Assets/CCS/CharacterController then removes UPM entry.",
+                    "CCS Character Controller (tracks repository main): locomotion baseline, Cinemachine rig, optional bootstrap into Assets/CCS/CharacterController. UPM under Packages/ first; Hub may remove UPM entry after copy.",
                     installNotes:
-                    "Git URL includes #v0.1.0-base-locomotion. UPM resolves under Packages/; Hub copies bootstrappable folders then removes the package dependency. Check Console for [CCS Hub] install/bootstrap version logs.",
+                    "Fallback registry only if CCSDependencyManifest.json is missing. Git URL uses #main. UPM resolves under Packages/; Hub copies bootstrappable folders then removes the package dependency when bootstrapping.",
                     showInOptionalToolsHub: true),
                 new CCSPackageDefinition(
                     "ccs-inventory",
                     "CCS Inventory",
                     "com.crazycarrot.inventory",
                     CCSPackageSourceType.GitUrl,
-                    "https://github.com/Crazy-Carrot-Studios/com.crazycarrot.inventory.git",
+                    "https://github.com/Crazy-Carrot-Studios/com.crazycarrot.inventory.git#main",
                     CCSPackageCategory.OptionalCCS,
                     isRequired: false,
                     defaultSelected: false,
@@ -145,7 +145,7 @@ namespace CCS.Hub
                     "CCS Attributes",
                     "com.crazycarrot.attributes",
                     CCSPackageSourceType.GitUrl,
-                    "https://github.com/Crazy-Carrot-Studios/com.crazycarrot.attributes.git",
+                    "https://github.com/Crazy-Carrot-Studios/com.crazycarrot.attributes.git#main",
                     CCSPackageCategory.OptionalCCS,
                     isRequired: false,
                     defaultSelected: false,
@@ -159,7 +159,7 @@ namespace CCS.Hub
                     "CCS Vitals",
                     "com.crazycarrot.vitals",
                     CCSPackageSourceType.GitUrl,
-                    "https://github.com/Crazy-Carrot-Studios/com.crazycarrot.vitals.git",
+                    "https://github.com/Crazy-Carrot-Studios/com.crazycarrot.vitals.git#main",
                     CCSPackageCategory.OptionalCCS,
                     isRequired: false,
                     defaultSelected: false,
@@ -173,7 +173,7 @@ namespace CCS.Hub
                     "CCS UMA Tools",
                     "com.crazycarrot.umatools",
                     CCSPackageSourceType.GitUrl,
-                    "https://github.com/Crazy-Carrot-Studios/com.crazycarrot.umatools.git",
+                    "https://github.com/Crazy-Carrot-Studios/com.crazycarrot.umatools.git#main",
                     CCSPackageCategory.OptionalCCS,
                     isRequired: false,
                     defaultSelected: false,
