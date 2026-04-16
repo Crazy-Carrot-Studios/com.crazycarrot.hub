@@ -1,6 +1,6 @@
 # CCS Hub (com.crazycarrot.hub)
 
-**Version:** 0.2.45
+**Version:** 0.2.46
 
 First-run setup and package hub for Crazy Carrot Studios Unity projects.
 
@@ -40,7 +40,7 @@ Use the Hub to install optional CCS tools into:
 
 Assets/CCS/
 
-**CCS Character Controller:** Optional install uses **`com.crazycarrot.charactercontroller`** from Git, pinned to **`v0.1.0-base-locomotion`** (first Base Locomotion baseline; default camera profile **`Scripts/Profiles/CCS_Default_TP_Follow_CameraProfile.asset`**). Expect **New Input System** and **Cinemachine** from Hub **required** installs. The Console logs **`[CCS Hub] Installed successfully: …`** with the resolved **version** after each successful Git package add, and additional lines when the controller is copied to **Assets** and when the UPM entry is removed.
+**CCS Character Controller:** Optional install uses **`com.crazycarrot.charactercontroller`** from Git, pinned to **`v0.3.0`** (Phase 1 minimal locomotion, template prefab, Create Basic Controller flow; see [controller README](https://github.com/Crazy-Carrot-Studios/com.crazycarrot.charactercontroller/blob/main/README.md)). Expect **New Input System** and **Cinemachine** from Hub **required** installs. The Console logs **`[CCS Hub] Installed successfully: …`** with the resolved **version** after each successful Git package add, and additional lines when the controller is copied to **Assets** and when the UPM entry is removed.
 
 ---
 
@@ -56,7 +56,7 @@ These are **two separate UPM packages**, each with its **own** `version` in its 
 
 | Package | Version source | Typical use |
 |--------|----------------|-------------|
-| **com.crazycarrot.hub** | Hub repo `package.json` (e.g. **0.2.37**) | Hub release you add from Git; changelog tracks Hub-only fixes. |
+| **com.crazycarrot.hub** | Hub repo `package.json` (e.g. **0.2.46**) | Hub release you add from Git; changelog tracks Hub-only fixes. |
 | **com.crazycarrot.branding** | Branding repo `package.json` (e.g. **1.1.x**) | Resolved when UPM installs branding from Git; shown in Package Manager for that package. |
 
 **Important:** Hub **does not** list Branding as a nested `dependencies` entry (Unity requires semver-only there for nested deps). Branding is installed on **first run** from **`CCSDependencyManifest.json`** via **Git URL**. The combination—**Hub version** + **Branding version** as installed from the branding repo—is the supported, validated setup.

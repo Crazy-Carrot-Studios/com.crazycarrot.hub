@@ -56,15 +56,15 @@
       "displayName": "CCS Character Controller",
       "packageId": "com.crazycarrot.charactercontroller",
       "sourceType": 1,
-      "installIdentifier": "https://github.com/Crazy-Carrot-Studios/com.crazycarrot.charactercontroller.git#v0.2.1",
+      "installIdentifier": "https://github.com/Crazy-Carrot-Studios/com.crazycarrot.charactercontroller.git#v0.3.0",
       "category": 2,
       "isRequired": false,
       "defaultSelected": true,
       "autoInstallSupported": true,
       "showInFirstRunWizard": false,
       "showInPackageHub": false,
-      "description": "CCS Character Controller baseline v0.2.1: CharacterController walk/sprint + Cinemachine 3 wizard rig; tuning on CCS_CameraRig only. Gameplay Move/Look/Sprint. No profiles or Mecanim in package. Requires Input System + Cinemachine (Hub required packages).",
-      "installNotes": "Pinned Git tag v0.2.1. UPM installs under Packages/; Hub copies into Assets/CCS/CharacterController then removes the duplicate UPM entry.",
+      "description": "CCS Character Controller v0.3.0 (Phase 1): CharacterController walk/sprint + Cinemachine 3, AC_CCS_BasicLocomotion_Minimal on visual Animator, Create Basic Controller window, PF_CCS_BasicController_Template, starter visual, demo scene. Gameplay Move/Look/Sprint. Requires Input System + Cinemachine (Hub required packages).",
+      "installNotes": "Pinned Git tag v0.3.0. UPM installs under Packages/; Hub copies into Assets/CCS/CharacterController then removes the duplicate UPM entry.",
       "showInOptionalToolsHub": true
     },
     {
